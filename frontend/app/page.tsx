@@ -6,6 +6,7 @@ import { LoadingState } from "@/components/LoadingState";
 import { ResultCard } from "@/components/ResultCard";
 import { SourcesPanel } from "@/components/SourcesPanel";
 import { ErrorBanner } from "@/components/ErrorBanner";
+import { GitHubIngestor } from "@/components/GitHubIngestor";
 import { useAsk } from "@/hooks/useAsk";
 
 export default function Home() {
@@ -15,6 +16,8 @@ export default function Home() {
     <main className="min-h-screen bg-background flex flex-col items-center">
       <Header />
       <div className="w-full max-w-3xl px-4 py-8 flex flex-col gap-6">
+        <GitHubIngestor />
+
         <QueryInput
           value={query}
           onChange={setQuery}

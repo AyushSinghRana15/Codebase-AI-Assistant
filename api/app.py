@@ -3,9 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 import time
 import logging
 import json
+from typing import Optional
 
 from api.schemas import QueryRequest, QueryResponse, SourceReference
 from pipeline.ask import ask
+from ingestion.github_ingestor import ingest_github_repo, cleanup_repo
 
 logging.basicConfig(level=logging.INFO, format='{"time": "%(asctime)s", "level": "%(levelname)s", "msg": "%(message)s", "module": "%(module)s"}')
 
@@ -57,3 +59,30 @@ def stats():
         "total_chunks": _index.ntotal if _index else 0,
         "index_loaded": _index is not None
     }
+
+
+@app.post("/ingest/github")
+def ingest_github(repo_url: str, branch: Optional[str] = None):
+    """Clone and ingest a GitHub repository."""
+    try:
+        from ingestion.chunker import chunk_files
+        from embeddings.embedder import embed_and_store
+        
+        files = ingest_github_repo(repo_url, branch)
+        if not files:
+            raise HTTPException(status_code=400, detail="No supported files found in repository")
+        
+        chunks = chunk_files(files)
+        if not chunks:
+            raise HTTPException(status_code=400, detail="No chunks generated from repository")
+        
+        embed_and_store(chunks)
+        
+        return {
+            "status": "success",
+            "files_processed": len(files),
+            "chunks_created": len(chunks),
+            "repo_url": repo_url
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
