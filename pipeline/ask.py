@@ -11,6 +11,7 @@ from pipeline.context_expander import expand_context
 from llm.generator import generate_answer
 from pipeline.reflector import reflect
 from pipeline.validator import validate_answer, score_confidence, shape_response
+from pipeline.query_corrector import correct_query, get_query_suggestions
 
 
 def normalize_query(q: str) -> str:
@@ -71,8 +72,16 @@ def _ask_impl(query: str) -> Dict:
 
 def ask(query: str, top_k: int = 5, score_threshold: float = 1.4) -> Dict:
     """
-    Full RAG pipeline: query → classify → retrieve → rerank → expand → generate → reflect.
+    Full RAG pipeline: query → spell-check → classify → retrieve → rerank → expand → generate → reflect.
     """
+    # Spell-check the query
+    corrected_query, was_corrected = correct_query(query)
+    original_query = query if was_corrected else None
+    
+    if was_corrected:
+        print(f"[Query Correction] '{query}' → '{corrected_query}'")
+        query = corrected_query
+
     rewritten = rewrite_query(query) if 'rewrite_query' in globals() else query
 
     results = retrieve(rewritten, top_k=TOP_K_RETRIEVE)
@@ -101,5 +110,7 @@ def ask(query: str, top_k: int = 5, score_threshold: float = 1.4) -> Dict:
         "sources": sources,
         "retrieved_count": len(relevant),
         "rewritten_query": rewritten if rewritten != query else None,
+        "corrected_query": corrected_query if was_corrected else None,
+        "original_query": original_query,
         "validation": validation
     }

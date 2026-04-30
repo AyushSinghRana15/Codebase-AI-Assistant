@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     if (BACKEND_KEY) headers["X-API-Key"] = BACKEND_KEY;
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30000);
+    const timeout = setTimeout(() => controller.abort(), 60000); // 60s timeout
 
     try {
       const response = await fetch(`${BACKEND_URL}/ask`, {
@@ -38,8 +38,8 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: err }, { status: response.status });
       }
 
-      const data = await response.json();
-      return NextResponse.json(data);
+       const data = await response.json();
+       return NextResponse.json(data);
     } catch (fetchErr: unknown) {
       clearTimeout(timeout);
       if (fetchErr instanceof Error && fetchErr.name === "AbortError") {

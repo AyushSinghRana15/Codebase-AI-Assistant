@@ -10,6 +10,8 @@ export interface AskResponse {
   sources: SourceReference[];
   retrieved_count: number;
   rewritten_query?: string;
+  original_query?: string;
+  corrected_query?: string;
   confidence: "high" | "medium" | "low" | "none";
   latency_ms: number;
 }

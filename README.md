@@ -5,33 +5,55 @@
 ## Architecture
 
 ```
-User Query → Query Rewrite → Retrieve(k=10) → Rerank(k=5) → LLM Generate → Validate → API Response
-                                   ↓
-                            FAISS Vector Store (all-MiniLM-L6-v2)
+User Query → Spell Check → Query Classification → Hybrid Retrieval (FAISS + BM25) → Rerank → Context Expansion → LLM Generate → Self-Reflection → Validate → API Response
+                                        ↓
+                            FAISS Vector Store + Dependency Graph + BM25 Index
+```
+
+### Frontend (New!)
+```
+Browser → Next.js Frontend (localhost:3000) → API Proxy → FastAPI Backend (localhost:8000) → RAG Pipeline → Answer + Sources
 ```
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Ingestion | Python, regex-based chunker |
-| Embeddings | sentence-transformers (all-MiniLM-L6-v2) |
-| Vector Store | FAISS (IndexFlatL2) |
-| Reranking | CrossEncoder (ms-marco-MiniLM-L-6-v2) |
-| LLM | OpenRouter gpt-oss-120b (free) |
-| API | FastAPI + uvicorn |
-| Validation | Keyword-grounding checks |
+| **Frontend** | Next.js 14, TypeScript, Tailwind CSS, shadcn/ui |
+| **Ingestion** | Python, AST parser, code-aware chunker |
+| **Embeddings** | sentence-transformers (all-MiniLM-L6-v2) |
+| **Vector Store** | FAISS (IndexFlatL2) + BM25 |
+| **Hybrid Retrieval** | FAISS semantics + BM25 exact match |
+| **Reranking** | CrossEncoder (ms-marco-MiniLM-L-6-v2) |
+| **Context Expansion** | Multi-hop via Dependency Graph |
+| **LLM** | OpenRouter gpt-oss-120b (free) |
+| **Self-Reflection** | Two-pass LLM verification |
+| **API** | FastAPI + uvicorn |
+| **Validation** | Confidence scoring + keyword grounding |
+| **Evaluation** | RAGAS metrics |
+| **Spell-Check** | pyspellchecker |
 
 ## Features
 
-- **Code-Aware Chunking** — splits at function/class boundaries, not arbitrary lines
-- **Semantic Search** — FAISS vector search with 384-dim embeddings
-- **Reranking** — CrossEncoder improves relevance over pure vector similarity
-- **LLM-Powered Answers** — grounded in retrieved code, with file citations
-- **Anti-Hallucination** — score threshold + validation check before/after LLM
-- **FastAPI Layer** — `/ask` endpoint with Pydantic schemas, rate limiting, CORS
-- **Structured Logging** — JSON logs for query traces and debugging
-- **Caching** — `lru_cache` for identical queries
+### Backend (Elite RAG Pipeline)
+- **Spell-Check** — automatic query correction (e.g., "chunkier" → "chunker")
+- **Code-Aware Chunking** — AST parser splits at function/class boundaries
+- **Hybrid Retrieval** — FAISS semantics + BM25 exact match
+- **Query Classification** — intent-aware pipeline configuration
+- **Context Expansion** — multi-hop reasoning via dependency graph
+- **Self-Reflection** — two-pass LLM verification loop
+- **Confidence Scoring** — high/medium/low/none with response shaping
+- **RAGAS Evaluation** — automated scoring (80% achieved)
+- **GitHub Ingestion** — clone and process any GitHub repository
+- **Anti-Hallucination** — score threshold + validation checks
+
+### Frontend (Next.js)
+- **Chat Interface** — clean, dark-themed UI inspired by ChatGPT
+- **Markdown Rendering** — syntax-highlighted code blocks
+- **Source References** — collapsible panel with file paths and scores
+- **GitHub Integration** — ingest repos via URL
+- **Loading States** — animated skeleton with rotating status messages
+- **Error Handling** — retry functionality with user-friendly messages
 
 ## Demo Queries
 
@@ -43,12 +65,44 @@ User Query → Query Rewrite → Retrieve(k=10) → Rerank(k=5) → LLM Generate
 
 ## Quick Start
 
-### 1. Install Dependencies
+### 1. Install Backend Dependencies
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
+
+### 2. Set API Key
+Create `.env` and add your OpenRouter API key:
+```
+OPENAI_API_KEY=sk-or-v1-...
+```
+Get a free key at https://openrouter.ai
+
+### 3. Ingest a Repository (Local)
+```bash
+python3 main.py --repo /path/to/repo --output output/chunks.json
+python3 main.py --embed
+```
+
+### 4. Start Backend API
+```bash
+uvicorn api.app:app --reload --port 8000
+```
+
+### 5. Start Frontend (New!)
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Open http://localhost:3000 in your browser.
+
+### 6. Ingest GitHub Repository (via Frontend)
+1. Open http://localhost:3000
+2. Paste GitHub repo URL (e.g., `https://github.com/pallets/flask`)
+3. Click "Ingest" — automatically clones and processes the repo
+4. Start asking questions!
 
 ### 2. Set API Key
 Edit `.env` and add your OpenRouter API key:
@@ -93,12 +147,20 @@ Target: ≥ 80% score before public demo.
 
 ## API Endpoints
 
+### Backend (FastAPI - localhost:8000)
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/health` | GET | Health check |
 | `/stats` | GET | Index statistics |
 | `/ask` | POST | Ask a question (returns answer + sources) |
+| `/ingest/github` | POST | Clone and ingest GitHub repo |
 | `/docs` | GET | Swagger UI |
+
+### Frontend (Next.js - localhost:3000)
+| Route | Method | Description |
+|-------|--------|-------------|
+| `/api/ask` | POST | Proxy to backend /ask |
+| `/api/ingest/github` | POST | Proxy to backend /ingest/github |
 
 ## Example Response
 
@@ -121,21 +183,33 @@ Target: ≥ 80% score before public demo.
 ```
 CodeBase AI Assistant/
 ├── api/                    # FastAPI layer
-│   ├── app.py            # Routes: /ask, /health, /stats
-│   ├── schemas.py        # Pydantic request/response models
-│   └── middleware.py     # Rate limiting, CORS
+│   ├── app.py            # Routes: /ask, /health, /stats, /ingest/github
+│   └── schemas.py        # Pydantic request/response models
 ├── pipeline/              # Core RAG pipeline
-│   ├── ask.py            # Full pipeline: rewrite → retrieve → rerank → generate → validate
+│   ├── ask.py            # Full pipeline with spell-check
+│   ├── query_corrector.py # Spell-checking for queries
+│   ├── query_classifier.py # Intent classification
+│   ├── hybrid_retriever.py # FAISS + BM25 hybrid search
+│   ├── context_expander.py # Multi-hop context expansion
+│   ├── reflector.py      # Self-reflection loop
 │   ├── reranker.py       # CrossEncoder reranking
-│   ├── query_rewriter.py  # Query expansion/rewriting
-│   └── validator.py      # Response grounding check
-├── ingestion/            # Step 1: Chunking
-├── embeddings/           # Step 2: Vector store
-├── llm/                  # Step 3: LLM integration
-├── eval/                 # Evaluation harness
+│   └── validator.py      # Confidence scoring + validation
+├── ingestion/            # Code ingestion
+│   ├── chunker.py       # AST-based code chunking
+│   ├── ast_parser.py    # Python AST parsing
+│   └── github_ingestor.py # GitHub repo cloning
+├── graph/                 # Dependency graph
+│   └── dependency_graph.py # Multi-hop reasoning
+├── embeddings/           # Vector store
+├── llm/                  # LLM integration
+├── eval/                 # Evaluation
+│   └── ragas_eval.py    # RAGAS metrics
+├── frontend/             # Next.js frontend
+│   ├── app/             # App router pages + API routes
+│   ├── components/       # UI components
+│   └── lib/             # Types + utilities
 ├── config.py             # All tunable parameters
-├── main.py               # CLI entrypoint
-└── README.md
+└── documentation.md      # Detailed development log
 ```
 
 ## Resume Bullet

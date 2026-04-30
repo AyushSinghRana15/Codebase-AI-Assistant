@@ -2026,3 +2026,95 @@ pip install rank-bm25 ragas datasets langchain-openai
 
 **End of Documentation (Updated: 2026-05-01)**
 
+
+---
+
+## Spell-Check & Frontend Updates (2026-04-30)
+
+### Feature: Query Spell-Checking
+**File:** `pipeline/query_corrector.py` (NEW)
+- Added automatic spell-checking for user queries
+- Uses `pyspellchecker` library
+- Preserves technical terms (TECH_TERMS set)
+- Corrects queries like "chunkier" → "chunker", "retreiver" → "retriever"
+- Returns corrected query and flag indicating if correction occurred
+
+**Integration:** `pipeline/ask.py`
+- Imports `correct_query` and `get_query_suggestions`
+- Applies spell-check before query processing
+- Returns `corrected_query` and `original_query` in response
+- Logs corrections: `[Query Correction] 'chunkier' → 'chunker'`
+
+### Feature: Next.js Frontend Enhancements
+**Files Updated:**
+- `frontend/components/ResultCard.tsx` - Shows query correction notification
+- `frontend/lib/types.ts` - Added `corrected_query` and `original_query` fields
+- `frontend/app/api/ask/route.ts` - Proxy to backend
+
+**UI Feature:**
+- When a query is corrected, shows: 📝 Query corrected: ~~chunkier.py~~ → chunker.py
+- Displayed in a muted box above the answer
+
+### GitHub Ingestion Feature
+**Backend:** `api/app.py` - New endpoint `/ingest/github`
+- Accepts `repo_url` and optional `branch` parameters
+- Clones repo to temp directory
+- Processes supported file types (.py, .js, .ts, etc.)
+- Creates chunks and embeddings automatically
+- Returns file count and chunk count
+
+**Frontend:** `frontend/components/GitHubIngestor.tsx` (NEW)
+- Input for GitHub repo URL
+- Optional branch field
+- Shows loading state during clone
+- Displays success/error messages
+- Trigger callback on completion
+
+**API Proxy:** `frontend/app/api/ingest/github/route.ts` (NEW)
+- Secure proxy to backend
+- 2-minute timeout for large repos
+- Error handling
+
+### Evaluation Results (After Elite Upgrade)
+**Score: 16/20 (80.0%)** ✅ PASSED
+
+| Query | Score | Status |
+|-------|-------|--------|
+| "Where is file loading implemented?" | 3/4 | ✅ |
+| "Explain the ingestion flow step by step" | 2/4 | ✅ |
+| "Which file handles chunking?" | 4/4 | ✅ |
+| "Where is the payment gateway?" | 3/4 | ✅ |
+| "Where is the AI recommendation module?" | 4/4 | ✅ |
+
+### Deployment
+**Frontend (Vercel-ready):**
+- Root directory: `frontend/`
+- Environment variable: `BACKEND_URL=https://your-api.onrender.com`
+- `vercel.json` with 30s function timeout
+
+**Backend (Render/Railway):**
+- Start command: `uvicorn api.app:app --host 0.0.0.0 --port $PORT`
+- Add `BACKEND_URL` env var pointing to backend
+
+### How to Run (Local Development)
+**Terminal 1 (Backend):**
+```bash
+cd "/Users/ayushsingh/Projects/CodeBase AI Assistant"
+source venv/bin/activate
+uvicorn api.app:app --reload --port 8000
+```
+
+**Terminal 2 (Frontend):**
+```bash
+cd "/Users/ayushsingh/Projects/CodeBase AI Assistant/frontend"
+npm run dev
+```
+
+**Open:** http://localhost:3000
+
+### Key Learnings
+1. **Module imports:** FastAPI apps use `module.path:app` format (e.g., `api.app:app`)
+2. **shadcn/ui:** Requires `components.json` and `tsconfig.json` in frontend root
+3. **Next.js API routes:** Use `route.ts` naming convention in App Router
+4. **Proxy pattern:** Keep backend URL + keys server-side in API routes
+5. **Spell-checking:** Effective for technical queries when preserving domain terms
