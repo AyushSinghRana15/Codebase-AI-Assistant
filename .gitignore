@@ -25,3 +25,4 @@ data/raw_repo/
 vector_store/
 *.faiss
 *.pkl
+venv/
