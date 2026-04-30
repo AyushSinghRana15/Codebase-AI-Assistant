@@ -3,7 +3,11 @@
 # Step 2 - Embeddings + Vector DB
 sentence-transformers==2.7.0
 faiss-cpu==1.8.0
-numpy>=1.24.0
+numpy>=1.24.0,<2.0
 
-# Step 2 - Testing
+# Step 3 - LLM Integration
+openai>=1.30.0
+python-dotenv>=1.0.0
+
+# Testing
 pytest>=7.0.0

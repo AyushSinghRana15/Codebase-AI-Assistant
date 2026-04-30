@@ -52,12 +52,29 @@ def run_query(query):
     print("-" * 40)
 
 
+def run_ask(query):
+    from pipeline.ask import ask
+    result = ask(query, top_k=5)
+
+    print(f'Query: "{query}"')
+    print("-" * 40)
+    print("Answer:")
+    print(result["answer"])
+    if result["sources"]:
+        print("\nSources Used:")
+        for s in result["sources"]:
+            print(f"  • {s['file_path']} :: {s['name']}  [score: {s['score']}]")
+    print(f"\nRetrieved {result['retrieved_count']} chunks")
+    print("-" * 40)
+
+
 def main():
     parser = argparse.ArgumentParser(description="CodeBase AI Assistant")
     parser.add_argument("--repo", help="Path to the repo to ingest (Step 1)")
     parser.add_argument("--output", default="./output/chunks.json", help="Output JSON file path")
     parser.add_argument("--embed", action="store_true", help="Run embedding step (Step 2)")
     parser.add_argument("--query", help="Test retrieval with a query")
+    parser.add_argument("--ask", help="Ask a question (Step 3: LLM-powered)")
     args = parser.parse_args()
 
     if args.repo:
@@ -66,7 +83,9 @@ def main():
         run_embedding()
     if args.query:
         run_query(args.query)
-    if not any([args.repo, args.embed, args.query]):
+    if args.ask:
+        run_ask(args.ask)
+    if not any([args.repo, args.embed, args.query, args.ask]):
         parser.print_help()
 
 

@@ -994,3 +994,266 @@ python main.py --query "Where is file loading implemented?"
 ---
 
 **Next Step:** Step 3 — LLM Integration (connect retrieved chunks to an LLM for Q&A)
+
+#### Action 32: Created `llm/__init__.py`
+**File:** `llm/__init__.py`
+**Action:** Created empty file for llm package
+**Reason:** Required for importing `llm.context_builder`, `llm.generator`, etc.
+
+---
+
+#### Action 33: Created `llm/context_builder.py`
+**File:** `llm/context_builder.py` (Lines 1-40)
+**Functions Created:**
+| Function | Line | Purpose |
+|----------|------|---------|
+| `approx_tokens(text)` | 5-6 | Estimate token count (len//4) |
+| `build_context(results, max_tokens)` | 8-40 | Assemble chunks with headers |
+
+**Constants:**
+- `MAX_CONTEXT_TOKENS = 6000` (Line 3): Leaves room for system prompt + answer
+- `PER_CHUNK_MAX_TOKENS = 1500` (Line 4): Truncate large chunks
+
+**Context Format:**
+```
+[File: ingestion/loader.py] — function: walk_repo (lines 6–25)
+─────────────────────────────────────────
+def walk_repo(root_path):
+    ...
+```
+
+**Key Design:** Chunks sorted by score (best first), added until token budget exhausted.
+
+---
+
+#### Action 34: Created `llm/prompt_utils.py`
+**File:** `llm/prompt_utils.py` (Lines 1-42)
+**Functions Created:**
+| Function | Line | Purpose |
+|----------|------|---------|
+| `load_system_prompt()` | 10-25 | Load AGENT.md + append rules |
+| `approx_tokens(text)` | 28-29 | Estimate tokens |
+| `build_user_message(query, context)` | 31-33 | Format user message |
+| `assemble_messages(query, context)` | 35-42 | Build full messages array |
+
+**Additional Rules Appended to AGENT.md:**
+```
+ADDITIONAL RULES:
+- You MUST cite the file path and function name for every claim.
+- If the answer is not in the context, respond: "I could not find this in the provided codebase."
+- Do NOT use any knowledge outside the provided context.
+- Temperature is set to 0.2 — prioritize factual, code-grounded answers.
+```
+
+**Why Singleton Pattern for System Prompt?** Load once, cache in memory — avoids re-reading AGENT.md on every query.
+
+---
+
+#### Action 35: Created `llm/generator.py`
+**File:** `llm/generator.py` (Lines 1-45)
+**Functions Created:**
+| Function | Line | Purpose |
+|----------|------|---------|
+| `_get_client()` | 13-25 | Lazy-load OpenAI client (singleton) |
+| `generate_answer(query, results)` | 28-45 | Main LLM call with retries |
+
+**Model Used:** `openai/gpt-oss-120b:free` (via OpenRouter)
+- **Base URL:** `https://openrouter.ai/api/v1`
+- **Temperature:** 0.2 (low creativity = fewer hallucinations)
+- **Max Tokens:** 800
+- **Top P:** 0.9
+
+**Error Handling:**
+- API errors → log + return "Service temporarily unavailable"
+- Rate limit (429) → retry after 5s, max 2 retries
+- Empty results → short-circuit, return "not found" WITHOUT calling LLM
+
+**Why OpenRouter?** Free model access for development, no cost during testing.
+
+---
+
+#### Action 36: Created `pipeline/__init__.py`
+**File:** `pipeline/__init__.py`
+**Action:** Created empty file for pipeline package
+
+---
+
+#### Action 37: Created `pipeline/ask.py`
+**File:** `pipeline/ask.py` (Lines 1-38)
+**Function Created:**
+| Function | Line | Purpose |
+|----------|------|---------|
+| `ask(query, top_k, score_threshold)` | 6-38 | Full RAG pipeline |
+
+**Returns:**
+```python
+{
+    "answer": str,           # LLM-generated answer
+    "sources": [{"file_path": ..., "name": ..., "score": ...}],
+    "retrieved_count": int
+}
+```
+
+**Flow:**
+1. Retrieve → `retrieve(query, top_k)`
+2. Filter by score threshold (hallucination firewall)
+3. Generate → `generate_answer(query, relevant)`
+4. Return structured result with sources
+
+**Why Return Structured Result?** Enables frontend to display sources separately from answer text.
+
+---
+
+#### Action 38: Created `.env` File
+**File:** `.env` (gitignored)
+**Contents:**
+```
+OPENAI_API_KEY=your_openrouter_api_key_here
+```
+
+**Why `.env`?** Keep API keys out of version control, load via `python-dotenv`.
+
+---
+
+#### Action 39: Updated `requirements.txt`
+**File Modified:** `requirements.txt`
+**Additions:**
+```txt
+# Step 3 - LLM Integration
+openai>=1.30.0
+python-dotenv>=1.0.0
+```
+
+---
+
+#### Action 40: Updated `main.py` with `--ask` Flag
+**File Modified:** `main.py`
+**New Function Added:**
+| Function | Line | Purpose |
+|----------|------|---------|
+| `run_ask(query)` | 54-66 | Call `pipeline.ask()` and print formatted result |
+
+**New CLI Usage:**
+```bash
+python3 main.py --ask "your question here"
+```
+
+**Output Format:**
+```
+Query: "Where is file loading implemented?"
+----------------------------------------
+Answer:
+File loading is implemented in `ingestion/loader.py` via the `walk_repo` 
+function (lines 6-25)...
+Sources Used:
+  • ingestion/loader.py :: walk_repo    [score: 0.31]
+  • ingestion/loader.py :: read_file   [score: 0.77]
+Retrieved 2 chunks
+----------------------------------------
+```
+
+---
+
+#### Action 41: Updated `.gitignore` for `.env`
+**File Modified:** `.gitignore`
+**Addition:**
+```gitignore
+# Environment variables
+.env
+.env.*
+```
+
+**Reason:** Prevent accidentally committing API keys.
+
+---
+
+#### Action 42: Installed New Dependencies
+**Command:**
+```bash
+pip install openai python-dotenv
+```
+
+**Packages Added:**
+- `openai>=1.30.0`
+- `python-dotenv>=1.0.0`
+
+**Verified in venv:**
+```bash
+source venv/bin/activate
+python -c "import openai; from dotenv import load_dotenv; print('✅ LLM deps installed')"
+```
+
+---
+
+#### Action 43: Updated `documentation.md` with Step 3
+**File Modified:** `documentation.md`
+**Additions:**
+- Step 3 folder structure
+- All functions created with line numbers
+- LLM model selection rationale
+- Environment setup instructions
+- Verification tests checklist
+
+**Reason:** Track every implementation decision for future reference.
+
+---
+
+## Step 3: LLM Integration (Answer Generation)
+
+**Date Completed:** 2026-04-30  
+**Status:** ✅ Complete  
+**Goal:** Wire the retriever to an LLM to produce code-grounded, traceable answers.
+
+### 3.1 Folder Structure Added
+
+```
+CodeBase AI Assistant/
+├── llm/
+│   ├── __init__.py
+│   ├── context_builder.py     ← Formats retrieved chunks into LLM-ready text
+│   ├── generator.py           ← LLM call + answer generation
+│   └── prompt_utils.py        ← Token counting, truncation, prompt assembly
+├── pipeline/
+│   ├── __init__.py
+│   └── ask.py                 ← Full end-to-end ask(query) function
+├── .env                        ← API key (gitignored)
+├── main.py                     ← Updated: add --ask "query" flag
+└── requirements.txt           ← Updated with openai + dotenv
+```
+
+### 3.2 Key Design Decisions
+
+**Why OpenRouter with free model?**
+- Cost: $0 for development and testing
+- Quality: gpt-oss-120b is capable for code reasoning
+- Easy upgrade path: just change model name in `generator.py`
+
+**Why short-circuit empty results?**
+- Prevents wasting API calls on "not found" queries
+- Eliminates hallucination risk when retriever finds nothing
+- Returns immediately with "I could not find this..."
+
+**Why temperature=0.2?**
+- Low creativity = fewer hallucinations
+- Keeps answers factual and code-grounded
+- Matches the "answer from context only" requirement
+
+### 3.3 Verification Tests (6 Queries)
+
+| # | Query | Expected Result |
+|---|-------|-----------------|
+| 1 | "What does walk_repo do?" | Explains function, cites `ingestion/loader.py` |
+| 2 | "Where is file loading implemented?" | Returns exact file path |
+| 3 | "Explain the ingestion flow step by step" | Multi-file answer (2+ files) |
+| 4 | "What does process_payment do?" | "Could not find" — NOT invented |
+| 5 | "Where is AI module?" | "Could not find" |
+| 6 | "Which file handles chunking?" | Returns `ingestion/chunker.py` |
+
+**Checklist per Answer:**
+- ✅ Cites at least one file path
+- ✅ Cites at least one function name  
+- ✅ Logic matches retrieved code
+- ✅ Hallucination tests (#4, #5) return "not found"
+
+---
+
