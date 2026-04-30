@@ -39,3 +39,31 @@ CHUNKS_PATH      = "output/chunks.json"
 FAISS_INDEX_PATH = "vector_store/code_index.faiss"
 METADATA_PATH    = "vector_store/metadata.pkl"
 AGENT_MD_PATH    = "AGENT.md"
+
+# AST Parsing
+USE_AST_PYTHON  = True    # use ast module for .py files
+USE_AST_JS      = False   # set True after tree-sitter installed
+EXTRACT_CALLS   = True    # extract function call dependencies
+EXTRACT_DOCS    = True    # extract docstrings into metadata
+
+# Hybrid Retrieval
+ENABLE_HYBRID_RETRIEVAL = True
+BM25_TOP_K              = 15
+HYBRID_RRF_K            = 60   # RRF damping constant
+
+# Query Classification
+ENABLE_CLASSIFIER = True
+
+# Context Expansion
+CONTEXT_EXPANSION_ENABLED = True
+CONTEXT_EXPANSION_DEPTH   = 1       # hops to follow in call graph
+CONTEXT_MAX_ADDITIONS     = 3       # max extra chunks to add
+
+# Self-Reflection
+ENABLE_REFLECTION      = True
+REFLECTION_MODEL       = "openai/gpt-oss-120b:free"   # same model, cheap
+REFLECTION_MAX_TOKENS  = 600
+REFLECTION_TEMPERATURE = 0.1
+
+# Confidence Scoring
+ENABLE_CONFIDENCE_SCORING = True

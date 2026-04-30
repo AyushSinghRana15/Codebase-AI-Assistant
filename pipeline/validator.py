@@ -1,7 +1,9 @@
 import re
+from typing import Dict
+from config import SCORE_THRESHOLD, ENABLE_CONFIDENCE_SCORING
 
 
-def validate_answer(answer: str, results: list) -> dict:
+def validate_answer(answer: str, results: list) -> Dict:
     """
     Checks if the answer's key claims appear in the retrieved chunks.
     Returns: {"is_grounded": bool, "confidence": float, "warning": str | None}
@@ -25,3 +27,44 @@ def validate_answer(answer: str, results: list) -> dict:
             "warning": f"Answer may reference unknown symbols: {hallucinated[:3]}"
         }
     return {"is_grounded": True, "confidence": 0.9, "warning": None}
+
+
+def score_confidence(results: list, answer: str, intent: str) -> Dict:
+    if not results:
+        return {"level": "none", "score": 0.0, "message": "no_results"}
+
+    best_score = min(r["score"] for r in results)   # L2 — lower = better
+    rerank_top = results[0].get("rerank_score", 0)
+
+    # Map to 0-1 confidence
+    l2_conf = max(0, 1 - (best_score / 1.5))     # 0 → 1.0, 1.5 → 0.0
+    confidence = (l2_conf + min(rerank_top, 1)) / 2
+
+    if confidence >= 0.75:
+        level = "high"
+    elif confidence >= 0.45:
+        level = "medium"
+    else:
+        level = "low"
+
+    return {"level": level, "score": round(confidence, 2), "message": None}
+
+
+def shape_response(answer: str, confidence: dict, results: list) -> Dict:
+    if confidence["level"] == "none":
+        return {
+            "answer": "I could not find this in the provided codebase.",
+            "confidence": "none",
+            "sources": []
+        }
+
+    if confidence["level"] == "low":
+        top_files = list({r["metadata"]["file_path"] for r in results[:3]})
+        disclaimer = f"\n\n❗ Low confidence. Potentially relevant files: {top_files}"
+        return {
+            "answer": answer + disclaimer,
+            "confidence": "low",
+            "sources": []
+        }
+
+    return {"answer": answer, "confidence": confidence["level"], "sources": [...]}

@@ -1,20 +1,21 @@
 import re
 import os
 
+from ingestion.ast_parser import parse_python_ast
 
-def create_chunk(content, start_line, end_line, chunk_type, name, file_path, language):
-    return {
-        "content": content,
-        "metadata": {
-            "file_path": file_path,
-            "language": language,
-            "chunk_type": chunk_type,
-            "name": name,
-            "start_line": start_line,
-            "end_line": end_line,
-            "char_count": len(content),
-        }
+
+def create_chunk(content, start_line, end_line, chunk_type, name, file_path, language, **extra):
+    meta = {
+        "file_path": file_path,
+        "language": language,
+        "chunk_type": chunk_type,
+        "name": name,
+        "start_line": start_line,
+        "end_line": end_line,
+        "char_count": len(content),
     }
+    meta.update(extra)
+    return {"content": content, "metadata": meta}
 
 
 def split_large_chunk(content, start_line, chunk_type, name, file_path, language):
@@ -43,14 +44,16 @@ def split_large_chunk(content, start_line, chunk_type, name, file_path, language
 def parse_chunks(file_content, file_path, language):
     if not file_content.strip():
         return []
+
+    if language == 'python':
+        ast_chunks = parse_python_ast(file_content, file_path)
+        if ast_chunks:
+            return ast_chunks
+
     lines = file_content.split('\n')
     total_lines = len(lines)
 
     lang_patterns = {
-        'python': [
-            (re.compile(r'^(?:async\s+)?def\s+(\w+)\s*\('), 'function'),
-            (re.compile(r'^class\s+(\w+)'), 'class'),
-        ],
         'javascript': [
             (re.compile(r'^(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*\('), 'function'),
             (re.compile(r'^(?:export\s+)?(?:const|let)\s+(\w+)\s*=\s*(?:async\s+)?\(.*?\)\s*=>'), 'function'),
