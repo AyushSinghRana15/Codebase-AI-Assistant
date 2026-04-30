@@ -1257,3 +1257,323 @@ CodeBase AI Assistant/
 
 ---
 
+
+#### Action 44: Created `config.py`
+**File:** `config.py` (Lines 1-42)
+**Purpose:** Single source of truth for all tunable parameters.
+
+**Key Variables:**
+| Variable | Value | Purpose |
+|----------|-------|---------|
+| `EMBED_MODEL` | `"sentence-transformers/all-MiniLM-L6-v2"` | Embedding model name |
+| `TOP_K_RETRIEVE` | `10` | Wide net for reranker |
+| `TOP_K_RERANK` | `5` | Final chunks sent to LLM |
+| `SCORE_THRESHOLD` | `1.4` | L2 distance cutoff |
+| `RERANK_MODEL` | `"cross-encoder/ms-marco-MiniLM-L-6-v2"` | Reranker model |
+| `ENABLE_RERANKING` | `True` | Toggle reranking |
+| `LLM_MODEL` | `"openai/gpt-oss-120b:free"` | OpenRouter model |
+| `LLM_TEMPERATURE` | `0.2` | Low creativity |
+| `CACHE_MAX_SIZE` | `200` | lru_cache size |
+
+**Why Centralized Config?** Change one file, affect all modules. No hunting through multiple files.
+
+---
+
+#### Action 45: Created `pipeline/reranker.py`
+**File:** `pipeline/reranker.py` (Lines 1-28)
+**Functions:**
+| Function | Line | Purpose |
+|----------|------|---------|
+| `get_reranker()` | 10-13 | Lazy-load CrossEncoder (singleton) |
+| `rerank(query, results, top_n)` | 16-28 | Rerank chunks by relevance |
+
+**Model:** `cross-encoder/ms-marco-MiniLM-L-6-v2` (~80MB, runs offline)
+
+**Why Reranking?** FAISS retrieves by vector similarity, not semantic relevance. CrossEncoder reads (query, chunk) pairs and scores them more accurately.
+
+**Flow:**
+```
+retrieve(query, k=10) → rerank → take top 5 → send to LLM
+```
+
+---
+
+#### Action 46: Created `pipeline/query_rewriter.py`
+**File:** `pipeline/query_rewriter.py` (Lines 1-16)
+**Functions:**
+| Function | Line | Purpose |
+|----------|------|---------|
+| `rewrite_query(query)` | 10-16 | Rewrite query with templates |
+
+**Templates:**
+| Prefix | Template |
+|--------|-----------|
+| `"where"` | `"Find the code that implements: {query}"` |
+| `"how"` | `"Find the code that explains how: {query}"` |
+| `"what"` | `"Find the code definition and logic for: {query}"` |
+| `"explain"` | `"Find all code related to: {query}"` |
+| default | `"Find code related to: {query}"` |
+
+**Why Rewrite?** Real user queries are conversational ("Where is login?"). Vector search works best with technical phrasing.
+
+---
+
+#### Action 47: Created `pipeline/validator.py`
+**File:** `pipeline/validator.py` (Lines 1-30)
+**Functions:**
+| Function | Line | Purpose |
+|----------|------|---------|
+| `validate_answer(answer, results)` | 5-30 | Check if answer is grounded in chunks |
+
+**Returns:**
+```python
+{
+    "is_grounded": bool,
+    "confidence": float,
+    "warning": str | None
+}
+```
+
+**Level 1 Check (Keyword Presence):**
+- Extract function names/file paths from retrieved chunks
+- Check if answer mentions symbols NOT in context
+- Catch hallucinated function names in backticks
+
+**Why Validate?** Even with strong prompts, LLMs occasionally drift. This catches obvious hallucinations before the user sees them.
+
+---
+
+#### Action 48: Created `api/__init__.py`
+**File:** `api/__init__.py`
+**Purpose:** Make `api` a Python package.
+
+---
+
+#### Action 49: Created `api/schemas.py`
+**File:** `api/schemas.py` (Lines 1-27)
+**Pydantic Models:**
+| Model | Lines | Purpose |
+|-------|-------|---------|
+| `QueryRequest` | 4-6 | Request body: `query` + `top_k` |
+| `SourceReference` | 9-13 | Source file: `file_path`, `name`, `score` |
+| `QueryResponse` | 16-27 | Response: `answer`, `sources`, `validation`, `latency_ms` |
+
+**Why Pydantic?** Auto-generated API docs at `/docs`, input validation, clean serialization.
+
+---
+
+#### Action 50: Created `api/app.py`
+**File:** `api/app.py` (Lines 1-60)
+**Functions:**
+| Function | Line | Purpose |
+|----------|------|---------|
+| `health_check()` | 20-22 | GET `/health` endpoint |
+| `ask_endpoint(request)` | 25-37 | POST `/ask` endpoint |
+| `stats()` | 40-45 | GET `/stats` endpoint |
+
+**Middleware Added:**
+```python
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+```
+
+**Logging:**
+```python
+logging.info(json.dumps({
+    "event": "query",
+    "query": request.query,
+    "latency_ms": result["latency_ms"],
+    "is_grounded": result.get("validation", {}).get("is_grounded")
+}))
+```
+
+**Why FastAPI?** Auto-generated Swagger docs, Pydantic validation, async support for future streaming.
+
+---
+
+#### Action 51: Created `api/middleware.py`
+**File:** `api/middleware.py` (Lines 1-6)
+**Purpose:** Rate limiting with `slowapi`.
+
+**Configuration:**
+```python
+limiter = Limiter(key_func=get_remote_address, default_limits=["20/minute"])
+```
+
+**Why Rate Limiting?** Without it, a single user can drain your OpenRouter quota in minutes. 20 req/min per IP is reasonable for a demo.
+
+---
+
+#### Action 52: Updated `pipeline/ask.py` with Full Pipeline
+**File Modified:** `pipeline/ask.py`
+**New Functions:** `normalize_query()`, `cached_ask()`, `_ask_impl()`
+
+**Full Pipeline Flow:**
+```python
+def ask(query: str):
+    # 1. Normalize & rewrite query
+    rewritten = rewrite_query(query)
+    
+    # 2. Retrieve wider net (k=10)
+    results = retrieve(rewritten, top_k=TOP_K_RETRIEVE)
+    
+    # 3. Rerank to top 5
+    if ENABLE_RERANKING:
+        results = rerank(rewritten, results, top_n=TOP_K_RERANK)
+    
+    # 4. Filter by score threshold (hallucination firewall)
+    relevant = [r for r in results if r["score"] < SCORE_THRESHOLD]
+    
+    # 5. Generate answer
+    answer = generate_answer(query, relevant)
+    
+    # 6. Validate answer
+    validation = validate_answer(answer, relevant)
+    
+    # 7. Return structured result
+    return {
+        "answer": answer,
+        "sources": sources,
+        "validation": validation,
+        ...
+    }
+```
+
+**Caching Added:**
+```python
+@lru_cache(maxsize=CACHE_MAX_SIZE)
+def cached_ask(query: str):
+    return _ask_impl(query)
+```
+
+**Why `normalize_query()`?** Makes caching case-insensitive, ignores trailing "?".
+
+---
+
+#### Action 53: Created `eval/run_eval.py`
+**File:** `eval/run_eval.py` (Lines 1-90)
+**Purpose:** Evaluation harness that scores each query automatically.
+
+**Test Queries:**
+| # | Query | Expected | Type |
+|---|-------|----------|------|
+| 1 | "Where is file loading implemented?" | `loader` | should_find=True |
+| 2 | "Explain the ingestion flow" | `main` | should_find=True |
+| 3 | "Which file handles chunking?" | `chunker` | should_find=True |
+| 4 | "Where is payment gateway?" | None | should_find=False |
+| 5 | "Where is AI module?" | None | should_find=False |
+
+**Scoring (per query, max 4 points):**
+- +1 if `should_find=True` and expected file in sources
+- +1 if expected keywords present in answer
+- +1 if `should_find=False` and answer contains "not found"
+- +1 if `is_grounded=True`
+
+**Target:** ≥ 80% of max score (16 points) before demo.
+
+**Why Evaluation Harness?** Shows engineering maturity. Most RAG demos have no repeatable evaluation.
+
+---
+
+#### Action 54: Updated `requirements.txt`
+**Additions:**
+```txt
+# Production Upgrade
+fastapi>=0.110.0
+uvicorn>=0.29.0
+pydantic>=2.0.0
+slowapi>=0.1.9
+```
+
+**Full Dependencies Now:**
+- Step 1: (stdlib only)
+- Step 2: `sentence-transformers`, `faiss-cpu`, `numpy<2`
+- Step 3: `openai`, `python-dotenv`
+- Production: `fastapi`, `uvicorn`, `pydantic`, `slowapi`
+
+---
+
+#### Action 55: Updated `README.md` (Interview-Ready)
+**Complete Rewrite:**
+- Architecture diagram
+- Tech stack table
+- Demo queries list
+- Quick start guide (6 steps)
+- API endpoints table
+- Example response JSON
+- Project structure tree
+- Resume bullet point
+
+**Why Interview-Ready?** Recruiters want to see professional documentation, architecture clarity, and demo readiness.
+
+---
+
+#### Action 56: Tested API Startup
+**Command:**
+```bash
+source venv/bin/activate
+uvicorn api.app:app --reload --port 8000
+```
+
+**Result:**
+```
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Documentation available at http://localhost:8000/docs
+```
+
+**Endpoints Verified:**
+- `GET /health` → `{"status": "ok", "version": "1.0.0"}`
+- `GET /stats` → `{"total_chunks": 28, "index_loaded": true}`
+- `POST /ask` → Returns answer + sources (requires API key)
+
+---
+
+#### Action 57: Production Upgrade Complete
+**Date:** 2026-04-30  
+**Status:** ✅ Complete  
+
+**Upgrades Implemented:**
+1. ✅ Reranking (CrossEncoder, retrieve 10 → rerank to 5)
+2. ✅ Query Rewriting (rule-based templates)
+3. ✅ Response Validation (keyword presence check)
+4. ✅ FastAPI Layer (`/ask`, `/health`, `/stats`)
+5. ✅ Pydantic Schemas (request/response models)
+6. ✅ Rate Limiting (20 req/min per IP)
+7. ✅ Caching (`lru_cache`, 200 entries)
+8. ✅ Structured Logging (JSON format)
+9. ✅ Centralized Config (`config.py`)
+10. ✅ Evaluation Harness (`eval/run_eval.py`)
+11. ✅ README Polish (interview-ready)
+
+**Delivery Checklist:**
+- ✅ `pipeline/reranker.py`
+- ✅ `pipeline/query_rewriter.py`
+- ✅ `pipeline/validator.py`
+- ✅ `api/schemas.py`
+- ✅ `api/app.py`
+- ✅ `api/middleware.py`
+- ✅ `config.py`
+- ✅ `eval/run_eval.py`
+- ✅ `requirements.txt` updated
+- ✅ `README.md` polished
+- ✅ `documentation.md` updated
+
+---
+
+## Step 4: Frontend (Optional, Next Step)
+
+**Status:** ⏳ Not Started
+
+**Possible Implementations:**
+1. **Simple Web UI** — HTML + JavaScript, calls `/ask` endpoint
+2. **VS Code Extension** — Queries via sidebar
+3. **CLI Chat Interface** — `python main.py --chat`
+
+**Recommendation:** Build a minimal web UI first. It's demo-ready and interview-impressive.
+
+---
+
