@@ -1,0 +1,9 @@
+# Step 1 - Ingestion (stdlib only, no deps required)
+
+# Step 2 - Embeddings + Vector DB
+sentence-transformers==2.7.0
+faiss-cpu==1.8.0
+numpy>=1.24.0
+
+# Step 2 - Testing
+pytest>=7.0.0

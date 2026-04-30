@@ -41,6 +41,8 @@ def split_large_chunk(content, start_line, chunk_type, name, file_path, language
 
 
 def parse_chunks(file_content, file_path, language):
+    if not file_content.strip():
+        return []
     lines = file_content.split('\n')
     total_lines = len(lines)
 

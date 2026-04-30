@@ -7,14 +7,9 @@ from ingestion.loader import walk_repo, read_file
 from ingestion.chunker import parse_chunks
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Codebase ingestion pipeline")
-    parser.add_argument("--repo", required=True, help="Path to the repo to ingest")
-    parser.add_argument("--output", default="./output/chunks.json", help="Output JSON file path")
-    args = parser.parse_args()
-
-    repo_path = os.path.abspath(args.repo)
-    os.makedirs(os.path.dirname(args.output), exist_ok=True)
+def run_ingestion(repo_path, output_path):
+    repo_path = os.path.abspath(repo_path)
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
     all_chunks = []
     files_processed = 0
@@ -27,7 +22,7 @@ def main():
         all_chunks.extend(chunks)
         files_processed += 1
 
-    with open(args.output, "w", encoding="utf-8") as f:
+    with open(output_path, "w", encoding="utf-8") as f:
         json.dump(all_chunks, f, indent=2, ensure_ascii=False)
 
     type_counts = Counter(c["metadata"]["chunk_type"] for c in all_chunks)
@@ -38,7 +33,41 @@ def main():
     print(f"  Total chunks    : {len(all_chunks)}")
     print(f"  By type         : {', '.join(f'{k}={v}' for k, v in type_counts.items())}")
     print(f"  Languages       : {', '.join(f'{k}={v}' for k, v in lang_counts.items())}")
-    print(f"  Output          : {args.output}")
+    print(f"  Output          : {output_path}")
+
+
+def run_embedding():
+    from embeddings.embedder import embed_chunks
+    embed_chunks()
+
+
+def run_query(query):
+    from embeddings.retriever import retrieve
+    print(f'Query: "{query}"')
+    print("-" * 40)
+    results = retrieve(query, top_k=5)
+    for i, r in enumerate(results[:3], 1):
+        m = r["metadata"]
+        print(f"  #{i}  {m['file_path']} :: {m['name']}  [L2: {r['score']}]")
+    print("-" * 40)
+
+
+def main():
+    parser = argparse.ArgumentParser(description="CodeBase AI Assistant")
+    parser.add_argument("--repo", help="Path to the repo to ingest (Step 1)")
+    parser.add_argument("--output", default="./output/chunks.json", help="Output JSON file path")
+    parser.add_argument("--embed", action="store_true", help="Run embedding step (Step 2)")
+    parser.add_argument("--query", help="Test retrieval with a query")
+    args = parser.parse_args()
+
+    if args.repo:
+        run_ingestion(args.repo, args.output)
+    if args.embed:
+        run_embedding()
+    if args.query:
+        run_query(args.query)
+    if not any([args.repo, args.embed, args.query]):
+        parser.print_help()
 
 
 if __name__ == "__main__":

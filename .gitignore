@@ -22,3 +22,6 @@ Thumbs.db
 # Project
 output/chunks.json
 data/raw_repo/
+vector_store/
+*.faiss
+*.pkl

@@ -1,0 +1,33 @@
+[
+  {
+    "query": "Where is file loading implemented?",
+    "type": "location",
+    "expected_file_hint": "loader",
+    "expected_name_hint": "walk_repo"
+  },
+  {
+    "query": "Where are chunks created?",
+    "type": "location",
+    "expected_file_hint": "chunker",
+    "expected_name_hint": "create_chunk"
+  },
+  {
+    "query": "How does the ingestion pipeline work?",
+    "type": "explanation",
+    "expected_file_hint": "main",
+    "expected_name_hint": null
+  },
+  {
+    "query": "payment gateway logic",
+    "type": "edge",
+    "expected_file_hint": null,
+    "expected_name_hint": null,
+    "expect_empty": true
+  },
+  {
+    "query": "Where is AI module?",
+    "type": "failure",
+    "expected_file_hint": null,
+    "expect_empty": true
+  }
+]
