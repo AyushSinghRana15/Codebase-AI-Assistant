@@ -9,9 +9,9 @@ interface Props {
 }
 
 function getScoreColor(score: number): string {
-  if (score < 0.5) return "text-green-400";
-  if (score < 1.0) return "text-yellow-400";
-  return "text-orange-400";
+  if (score < 0.5) return "text-[#16a34a]";
+  if (score < 1.0) return "text-[#ca8a04]";
+  return "text-[#ea580c]";
 }
 
 export function SourcesPanel({ sources }: Props) {
@@ -23,36 +23,40 @@ export function SourcesPanel({ sources }: Props) {
     <div className="w-full">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex items-center gap-2 w-full text-left hover:bg-muted/50 px-2 py-2 rounded-md transition-colors"
+        className="flex items-center gap-2 w-full text-left px-3 py-2.5 rounded-lg transition-colors hover:opacity-80"
+        style={{ background: "transparent" }}
       >
         {expanded ? (
-          <ChevronDown className="h-4 w-4" />
+          <ChevronDown className="h-4 w-4" style={{ color: "var(--text-muted)" }} />
         ) : (
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-4 w-4" style={{ color: "var(--text-muted)" }} />
         )}
-        <span className="text-sm font-medium">
+        <span className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>
           Sources ({sources.length} chunks)
         </span>
       </button>
 
       {expanded && (
-        <div className="mt-2 space-y-2">
+        <div className="mt-2 space-y-2 pl-1">
           {sources.map((source, idx) => (
             <div
               key={`${source.file_path}-${idx}`}
-              className="border border-border rounded-lg p-3 text-sm"
+              className="rounded-lg p-4 text-sm transition-all duration-200 hover:opacity-80"
+              style={{ border: "1px solid var(--border-subtle)", background: "var(--bg-secondary)" }}
             >
-              <div className="flex items-center gap-2 mb-1">
-                <FileCode className="h-3 w-3 text-muted-foreground" />
-                <span className="font-mono text-xs">{source.file_path}</span>
+              <div className="flex items-center gap-2 mb-2">
+                <FileCode className="h-3.5 w-3.5 text-[#3b82f6]" />
+                <span className="font-mono text-xs" style={{ color: "var(--text-primary)" }}>{source.file_path}</span>
               </div>
-              <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                <span>{source.name}</span>
+              <div className="flex items-center gap-4 text-xs font-mono">
+                <span style={{ color: "var(--text-secondary)" }}>{source.name}</span>
                 <span className={getScoreColor(source.score)}>
-                  score: {source.score.toFixed(2)}
+                  L2: {source.score.toFixed(2)}
                 </span>
                 {source.rerank_score !== undefined && (
-                  <span>rerank: {source.rerank_score.toFixed(2)}</span>
+                  <span className="text-[#8b5cf6]">
+                    rerank: {source.rerank_score.toFixed(2)}
+                  </span>
                 )}
               </div>
             </div>

@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 
 const MESSAGES = [
   "Searching codebase...",
   "Retrieving relevant chunks...",
   "Reranking results...",
+  "Expanding context...",
   "Generating answer...",
+  "Validating response...",
 ];
 
 export function LoadingState() {
@@ -22,21 +22,28 @@ export function LoadingState() {
   }, []);
 
   return (
-    <Card className="w-full">
-      <CardContent className="pt-6">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-          <span className="text-sm text-muted-foreground">
-            {MESSAGES[messageIndex]}
-          </span>
+    <div
+      className="w-full rounded-xl p-6"
+      style={{
+        border: "1px solid var(--border-subtle)",
+        background: "var(--bg-card)",
+      }}
+    >
+      <div className="flex items-center gap-2 mb-4">
+        <div className="relative w-2 h-2">
+          <span className="absolute inset-0 rounded-full bg-[#3b82f6] animate-ping opacity-40" />
+          <span className="relative w-2 h-2 rounded-full bg-[#3b82f6]" />
         </div>
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-[90%]" />
-          <Skeleton className="h-4 w-[95%]" />
-          <Skeleton className="h-4 w-[70%]" />
-        </div>
-      </CardContent>
-    </Card>
+        <span className="text-sm font-mono" style={{ color: "var(--text-secondary)" }}>
+          {MESSAGES[messageIndex]}
+        </span>
+      </div>
+      <div className="space-y-3">
+        <div className="h-3 rounded-full w-full animate-pulse" style={{ background: "var(--border-subtle)" }} />
+        <div className="h-3 rounded-full w-[90%] animate-pulse" style={{ background: "var(--border-subtle)" }} />
+        <div className="h-3 rounded-full w-[95%] animate-pulse" style={{ background: "var(--border-subtle)" }} />
+        <div className="h-3 rounded-full w-[70%] animate-pulse" style={{ background: "var(--border-subtle)" }} />
+      </div>
+    </div>
   );
 }

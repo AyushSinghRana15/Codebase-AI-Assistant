@@ -1,20 +1,16 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Copy, Check } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import { AskResponse } from "@/lib/types";
 import { useState } from "react";
 
-const CONFIDENCE_STYLE = {
-  high: "bg-green-500/20 text-green-400 border-green-500/30",
-  medium: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  low: "bg-orange-500/20 text-orange-400 border-orange-500/30",
-  none: "bg-red-500/20 text-red-400 border-red-500/30",
+const CONFIDENCE_STYLE: Record<string, string> = {
+  high: "text-[#16a34a] bg-[#16a34a]/10 border-[#16a34a]/20",
+  medium: "text-[#ca8a04] bg-[#ca8a04]/10 border-[#ca8a04]/20",
+  low: "text-[#ea580c] bg-[#ea580c]/10 border-[#ea580c]/20",
+  none: "text-[#dc2626] bg-[#dc2626]/10 border-[#dc2626]/20",
 };
 
 interface Props {
@@ -31,55 +27,73 @@ export function ResultCard({ result }: Props) {
   };
 
   return (
-    <Card className="w-full">
-      <CardContent className="pt-6">
+    <div
+      className="w-full rounded-xl overflow-hidden"
+      style={{
+        border: "1px solid var(--border-subtle)",
+        background: "var(--bg-card)",
+      }}
+    >
+      <div className="h-1 bg-gradient-to-r from-[#3b82f6] to-transparent" />
+
+      <div className="p-6">
         {(result.corrected_query || result.original_query) && (
-          <div className="mb-3 text-xs text-muted-foreground bg-muted/50 rounded-md px-3 py-2">
+          <div className="mb-4 text-xs px-3 py-2 rounded-lg border"
+            style={{ color: "var(--text-secondary)", borderColor: "var(--border-subtle)", background: "var(--muted)" }}
+          >
             {result.original_query && result.corrected_query ? (
-              <span>📝 Query corrected: <span className="line-through">{result.original_query}</span> → <span className="text-foreground">{result.corrected_query}</span></span>
+              <span>
+                Query corrected:{" "}
+                <span className="line-through opacity-50">{result.original_query}</span>{" "}
+                → <span className="font-medium">{result.corrected_query}</span>
+              </span>
             ) : result.corrected_query ? (
-              <span>📝 Query corrected to: {result.corrected_query}</span>
+              <span>Query corrected to: {result.corrected_query}</span>
             ) : null}
           </div>
         )}
+
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Answer</span>
-            <Badge
-              variant="outline"
-              className={CONFIDENCE_STYLE[result.confidence]}
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Answer</span>
+            <span
+              className={`px-2 py-0.5 text-xs font-mono rounded-md border ${CONFIDENCE_STYLE[result.confidence]}`}
             >
-              confidence: {result.confidence} ●
-            </Badge>
+              {result.confidence}
+            </span>
           </div>
-          <Button
-            size="sm"
-            variant="ghost"
+          <button
             onClick={handleCopy}
-            className="h-8 px-2"
+            className="h-8 w-8 rounded-md flex items-center justify-center transition-colors hover:opacity-80"
+            style={{ color: "var(--text-muted)" }}
           >
             {copied ? (
-              <Check className="h-4 w-4" />
+              <Check className="h-4 w-4 text-[#16a34a]" />
             ) : (
               <Copy className="h-4 w-4" />
             )}
-          </Button>
+          </button>
         </div>
-        <Separator className="mb-4" />
-        <div className="prose prose-invert prose-sm max-w-none">
-          <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
-            {result.answer}
-          </ReactMarkdown>
+
+        <div
+          className="rounded-lg p-5 mb-4 text-sm leading-relaxed"
+          style={{ background: "var(--muted)" }}
+        >
+          <div className="prose prose-sm max-w-none" style={{ color: "var(--text-primary)" }}>
+            <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+              {result.answer}
+            </ReactMarkdown>
+          </div>
         </div>
-        <Separator className="my-4" />
-        <div className="text-xs text-muted-foreground flex gap-4 flex-wrap">
-          <span>Latency: {(result.latency_ms / 1000).toFixed(1)}s</span>
-          <span>Retrieved: {result.retrieved_count} chunks</span>
+
+        <div className="flex gap-4 flex-wrap text-xs font-mono" style={{ color: "var(--text-muted)" }}>
+          <span>{(result.latency_ms / 1000).toFixed(1)}s</span>
+          <span>{result.retrieved_count} chunks</span>
           {result.rewritten_query && (
             <span>Rewritten: {result.rewritten_query}</span>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

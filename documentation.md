@@ -2118,3 +2118,138 @@ npm run dev
 3. **Next.js API routes:** Use `route.ts` naming convention in App Router
 4. **Proxy pattern:** Keep backend URL + keys server-side in API routes
 5. **Spell-checking:** Effective for technical queries when preserving domain terms
+
+---
+
+## Step 5: CodeBaseAI Marketing Website (Next.js Landing Page)
+
+**Date:** 2026-05-01  
+**Status:** ✅ Complete  
+**Goal:** Build a product marketing website for CodeBaseAI — the RAG-powered code understanding assistant — as a `/website` route within the existing Next.js frontend.
+
+### 5.1 What This Project Is
+
+CodeBaseAI is a **production-ready RAG system for code understanding**. You ingest any Python repository (local or GitHub URL), it parses it with AST-aware chunking, builds a hybrid search index (FAISS + BM25), and answers natural language questions with precise file citations and zero hallucination.
+
+The website showcases this product — its architecture, features, demo queries, and a direct path to try the assistant at `/`.
+
+### 5.2 Design Approach
+
+Built inside the existing `frontend/` Next.js 16 app with Tailwind v4. Reuses existing globals.css tokens and adds CodeBaseAI-specific design tokens.
+
+**Design System:**
+- Background: `#080808` (dark), `#0f0f0f` (cards), `#141414` (elevated)
+- Accents: Blue `#3b82f6` → Purple `#8b5cf6` gradient
+- Typography: Geist Sans + Geist Mono (existing fonts)
+- Animations: CSS keyframes (gradient-shift, float, marquee, terminal-blink)
+
+### 5.3 Files Created
+
+| File | Purpose |
+|------|---------|
+| `app/website/page.tsx` | Main landing page (SSR layout) |
+| `app/globals.css` | Updated with new design tokens + animations |
+| `components/website/index.ts` | Barrel export for all components |
+| `components/website/Navbar.tsx` | Sticky nav with glassmorphism + mobile menu + "Try Assistant" CTA |
+| `components/website/Hero.tsx` | Hero: "Ask questions about any codebase, get grounded answers" |
+| `components/website/Terminal.tsx` | Typewriter terminal showing GitHub ingest + query flow |
+| `components/website/MetricsBar.tsx` | Animated counters (chunks indexed, files parsed, eval score, latency) |
+| `components/website/Features.tsx` | 6 feature cards: AST Chunking, Hybrid Retrieval, Reranking, Context Expansion, Anti-Hallucination, GitHub Ingest |
+| `components/website/TechStack.tsx` | Dual-row infinite marquee: Python, FAISS, BM25, FastAPI, Next.js, etc. |
+| `components/website/Architecture.tsx` | 11-stage pipeline visualization (Spell-Check → Cache) |
+| `components/website/DemoQueries.tsx` | 3 demo queries with answers and source citations |
+| `components/website/CodeShowcase.tsx` | Syntax-highlighted `ask()` function with copy button |
+| `components/website/About.tsx` | Project description + ethos bullets + metric cards |
+| `components/website/Blog.tsx` | 4 engineering deep-dive previews |
+| `components/website/CTA.tsx` | "Try it right now" section with quick-start commands |
+| `components/website/Footer.tsx` | Footer with nav, resources, social |
+| `components/website/ScrollReveal.tsx` | Client component for scroll-reveal observer |
+
+### 5.4 Key Design Decisions
+
+**Why `/website` route instead of standalone site?**
+- Shares existing Next.js infrastructure, Tailwind, font loading
+- Can coexist with the AI assistant app at `/`
+- Same deployment pipeline (Vercel)
+- Bidirectional linking: nav has "Try Assistant" → `/`, app header has "Website" → `/website`
+
+**Why CSS-only animations over JS?**
+- GPU-accelerated (transform + opacity only)
+- Zero JS overhead for visual effects
+- Respects `prefers-reduced-motion`
+
+**Why showcase the `ask()` function?**
+- It's the core of the product — the 9-line function that runs 11 pipeline stages
+- Shows engineering maturity at a glance
+
+### 5.5 Page Sections (in order)
+
+| # | Section | Content |
+|---|---------|---------|
+| 1 | Navbar | Sticky glassmorphism + "Try Assistant" gradient CTA |
+| 2 | Hero | "Ask questions about any codebase, get grounded answers" + terminal |
+| 3 | Metrics Bar | 387 chunks, 142 files, 80% eval, 1.2s latency, 11 stages |
+| 4 | Features | AST Chunking, Hybrid Retrieval, Reranking, Context Expansion, Anti-Hallucination, GitHub Ingest |
+| 5 | Architecture | 11-stage pipeline grid: Spell-Check → Classify → Rewrite → Retrieve → Rerank → Expand → Generate → Reflect → Validate → Shape → Cache |
+| 6 | Tech Stack | Dual marquee: Python, FAISS, BM25, CrossEncoder, FastAPI, Next.js, etc. |
+| 7 | Demo Queries | 3 real queries with grounded answers + source citations |
+| 8 | Code Showcase | `pipeline/ask.py` syntax-highlighted with copy button |
+| 9 | About | Project description, 6 ethos bullets, 4 metric cards |
+| 10 | Blog | 4 engineering deep-dives (AST, Hybrid Retrieval, Anti-Hallucination, RAGAS) |
+| 11 | CTA | "Try it right now" + quick-start commands |
+| 12 | Footer | Product nav, resources, social, copyright |
+
+### 5.6 Accessing the Website
+
+```bash
+cd frontend
+npm run dev
+# Open: http://localhost:3000/website
+```
+
+### 5.7 How to Run (Local Development)
+
+**Terminal 1 (Backend):**
+```bash
+cd "/Users/ayushsingh/Projects/CodeBase AI Assistant"
+source venv/bin/activate
+uvicorn api.app:app --reload --port 8000
+```
+
+**Terminal 2 (Frontend):**
+```bash
+cd "/Users/ayushsingh/Projects/CodeBase AI Assistant/frontend"
+npm run dev
+```
+
+**Open:**
+- AI Assistant App: http://localhost:3000
+- Marketing Website: http://localhost:3000/website
+
+### 5.8 Light/Dark Theme System
+
+**Implementation:**
+- `context/ThemeContext.tsx` — React context provider, persists to localStorage, sets `light`/`dark` class on `<html>`
+- `components/website/SettingsDropdown.tsx` — Collapsible dropdown menu with Light/Dark toggle
+- `app/globals.css` — CSS custom properties with `.dark` and `.light` overrides
+
+**CSS Variables (Dark vs Light):**
+| Variable | Dark | Light |
+|----------|------|-------|
+| `--bg-primary` | `#080808` | `#f8fafc` |
+| `--bg-secondary` | `#0f0f0f` | `#ffffff` |
+| `--bg-card` | `#141414` | `#f1f5f9` |
+| `--text-primary` | `#f8fafc` | `#0f172a` |
+| `--text-secondary` | `#94a3b8` | `#475569` |
+| `--text-muted` | `#475569` | `#94a3b8` |
+| `--border-subtle` | `rgba(255,255,255,0.06)` | `rgba(0,0,0,0.06)` |
+
+**Settings Menu Location:**
+- Website Navbar (top right, gear icon)
+- App Header (top right, gear icon)
+
+**Design Notes:**
+- Accent colors (blue/purple gradients) remain the same in both modes
+- Code syntax highlighting uses github-dark (acceptable in light mode)
+- All transitions include `transition: background 0.2s ease, color 0.2s ease`
+- shadcn/ui components automatically adapt via `bg-card`, `text-foreground`, `border` classes

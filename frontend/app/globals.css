@@ -5,15 +5,34 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
+  --color-card-foreground: var(--foreground);
   --color-border: var(--border);
   --color-primary: var(--primary);
+  --color-primary-foreground: #ffffff;
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  --color-accent: var(--muted);
+  --color-accent-foreground: var(--foreground);
+  --color-input: var(--border);
+  --color-ring: var(--primary);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-bg-card: var(--bg-card);
+  --color-accent-blue: #3b82f6;
+  --color-accent-purple: #8b5cf6;
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-glow-blue: rgba(59, 130, 246, 0.15);
+  --color-border-subtle: var(--border-subtle);
 }
 
-:root {
+:root,
+:root.dark {
   --background: #0a0a0a;
   --foreground: #ededed;
   --card: #1a1a1a;
@@ -21,12 +40,49 @@
   --primary: #3b82f6;
   --muted: #2a2a2a;
   --muted-foreground: #999999;
+
+  --bg-primary: #080808;
+  --bg-secondary: #0f0f0f;
+  --bg-card: #141414;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #475569;
+  --border-subtle: rgba(255, 255, 255, 0.06);
+}
+
+:root.light {
+  --background: #faf8f0;
+  --foreground: #1a1a2e;
+  --card: #ffffff;
+  --border: #e0ddd5;
+  --primary: #3b82f6;
+  --muted: #f0ede5;
+  --muted-foreground: #6b6860;
+
+  --bg-primary: #faf8f0;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --text-primary: #1a1a2e;
+  --text-secondary: #5a5850;
+  --text-muted: #9a978f;
+  --border-subtle: rgba(0, 0, 0, 0.08);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+body.light {
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(0,0,0,0.04) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+body.dark {
+  background-image: none;
 }
 
 @keyframes shimmer {
@@ -39,6 +95,184 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes marquee-reverse {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.1); }
+  50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.2); }
+}
+
+@keyframes border-glow {
+  0% { border-color: rgba(59, 130, 246, 0.3); }
+  50% { border-color: rgba(139, 92, 246, 0.3); }
+  100% { border-color: rgba(59, 130, 246, 0.3); }
+}
+
+@keyframes terminal-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
 .fade-in {
   animation: fadeIn 0.3s ease-in;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6, #3b82f6);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-shift 3s ease infinite;
+}
+
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.scroll-reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.glass-nav {
+  background: color-mix(in srgb, var(--bg-primary) 88%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.light .glass-nav {
+  background: rgba(250, 248, 240, 0.9);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+.gradient-border {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.light .gradient-border {
+  box-shadow:
+    0 1px 3px rgba(0,0,0,0.04),
+    0 4px 12px rgba(0,0,0,0.03);
+  border: 1px solid rgba(0,0,0,0.06);
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.5), rgba(139, 92, 246, 0.5));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.gradient-border:hover::before {
+  opacity: 1;
+}
+
+.card-glow {
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+}
+
+.card-glow:hover {
+  transform: translateY(-4px);
+}
+
+.dark .card-glow:hover {
+  box-shadow: 0 8px 32px rgba(59, 130, 246, 0.15);
+}
+
+.light .card-glow:hover {
+  box-shadow:
+    0 8px 24px rgba(0,0,0,0.06),
+    0 2px 8px rgba(0,0,0,0.04);
+}
+
+.terminal-cursor::after {
+  content: '█';
+  animation: terminal-blink 1s step-end infinite;
+  color: #3b82f6;
+  margin-left: 2px;
+}
+
+.light .terminal-cursor::after {
+  color: #2563eb;
+}
+
+.sketch-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  transition: all 0.3s ease;
+}
+
+.light .sketch-card {
+  border: 1.5px solid rgba(0,0,0,0.08);
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.02),
+    0 4px 16px rgba(0,0,0,0.04);
+}
+
+.light .sketch-input {
+  border: 1.5px solid rgba(0,0,0,0.1);
+  background: #ffffff;
+}
+
+.light .sketch-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.sketch-btn {
+  transition: all 0.2s ease;
+}
+
+.light .sketch-btn {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.light .sketch-btn:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transform: translateY(-1px);
+}
+
+.light .sketch-section {
+  border-top: 1px dashed rgba(0,0,0,0.1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gradient-text,
+  .scroll-reveal,
+  .terminal-cursor::after {
+    animation: none;
+  }
 }

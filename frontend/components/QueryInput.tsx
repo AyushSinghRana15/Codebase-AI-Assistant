@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import { ArrowUp } from "lucide-react";
 
 interface Props {
@@ -24,28 +22,39 @@ export function QueryInput({ value, onChange, onSubmit, disabled }: Props) {
 
   return (
     <div className="relative w-full">
-      <Textarea
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onKeyDown={handleKeyDown}
-        onCompositionStart={() => setIsComposing(true)}
-        onCompositionEnd={() => setIsComposing(false)}
-        placeholder="Ask anything about your codebase..."
-        disabled={disabled}
-        className="min-h-[60px] pr-12 resize-none"
-        rows={2}
-        maxLength={1000}
-      />
-      <Button
-        size="icon"
-        onClick={onSubmit}
-        disabled={disabled || !value.trim()}
-        className="absolute right-2 bottom-2 h-8 w-8"
+      <div
+        className="w-full rounded-xl overflow-hidden transition-all duration-200 focus-within:border-[#3b82f6]/40"
+        style={{
+          border: "1px solid var(--border-subtle)",
+          background: "var(--bg-card)",
+        }}
       >
-        <ArrowUp className="h-4 w-4" />
-      </Button>
+        <textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onCompositionStart={() => setIsComposing(true)}
+          onCompositionEnd={() => setIsComposing(false)}
+          placeholder="Ask anything about your codebase..."
+          disabled={disabled}
+          rows={2}
+          maxLength={1000}
+          className="w-full bg-transparent text-sm px-5 pt-4 pb-12 pr-14 resize-none focus:outline-none font-sans leading-relaxed disabled:opacity-50 placeholder:opacity-50"
+          style={{ color: "var(--text-primary)" }}
+        />
+        <button
+          onClick={onSubmit}
+          disabled={disabled || !value.trim()}
+          className="absolute right-3 bottom-3 h-9 w-9 rounded-lg flex items-center justify-center transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed hover:shadow-[0_0_16px_rgba(59,130,246,0.3)]"
+          style={{
+            background: value.trim() ? "linear-gradient(135deg, #3b82f6, #8b5cf6)" : "var(--muted)",
+          }}
+        >
+          <ArrowUp className="h-4 w-4 text-white" />
+        </button>
+      </div>
       {value.length > 800 && (
-        <span className="absolute right-14 bottom-2 text-xs text-muted-foreground">
+        <span className="absolute right-14 bottom-3 text-xs" style={{ color: "var(--text-muted)" }}>
           {value.length}/1000
         </span>
       )}

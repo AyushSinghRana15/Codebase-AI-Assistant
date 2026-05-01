@@ -19,7 +19,7 @@ export function GitHubIngestor({ onIngestComplete }: Props) {
 
   const handleIngest = async () => {
     if (!repoUrl.trim()) return;
-    
+
     setLoading(true);
     setError(null);
     setResult(null);
@@ -51,11 +51,15 @@ export function GitHubIngestor({ onIngestComplete }: Props) {
   };
 
   return (
-    <Card className="w-full">
+    <Card className="w-full border overflow-hidden" style={{ borderColor: "var(--border-subtle)", background: "var(--bg-card)" }}>
+      <div className="h-1 bg-gradient-to-r from-[#8b5cf6] to-transparent" />
+
       <CardContent className="pt-6">
         <div className="flex items-center gap-2 mb-4">
-          <GitBranch className="h-4 w-4" />
-          <span className="text-sm font-medium">Add GitHub Repository</span>
+          <GitBranch className="h-4 w-4 text-[#8b5cf6]" />
+          <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+            Add GitHub Repository
+          </span>
         </div>
 
         <div className="space-y-3">
@@ -76,6 +80,11 @@ export function GitHubIngestor({ onIngestComplete }: Props) {
             <Button
               onClick={handleIngest}
               disabled={loading || !repoUrl.trim()}
+              style={{
+                background: loading || !repoUrl.trim()
+                  ? undefined
+                  : "linear-gradient(135deg, #8b5cf6, #3b82f6)",
+              }}
             >
               {loading ? (
                 <>
@@ -89,14 +98,14 @@ export function GitHubIngestor({ onIngestComplete }: Props) {
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 text-sm text-destructive">
+            <div className="flex items-center gap-2 text-sm text-red-500">
               <AlertCircle className="h-4 w-4" />
               {error}
             </div>
           )}
 
           {result && (
-            <div className="flex items-center gap-2 text-sm text-green-400">
+            <div className="flex items-center gap-2 text-sm text-[#16a34a]">
               <CheckCircle className="h-4 w-4" />
               Processed {result.files} files, created {result.chunks} chunks
             </div>

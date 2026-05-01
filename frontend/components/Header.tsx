@@ -1,38 +1,30 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Sun, Moon } from "lucide-react";
+import Link from "next/link";
+import { SettingsDropdown } from "@/components/website/SettingsDropdown";
 
 export function Header() {
-  const [isDark, setIsDark] = useState(true);
-
-  const toggleTheme = () => {
-    setIsDark(!isDark);
-    document.documentElement.classList.toggle("dark");
-  };
-
   return (
-    <header className="w-full border-b border-border">
-      <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+    <header className="w-full border-b backdrop-blur-md" style={{ background: "color-mix(in srgb, var(--bg-secondary) 85%, transparent)", borderColor: "var(--border-subtle)" }}>
+      <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
+        <Link href="/website" className="flex items-center gap-2">
+          <span className="text-base font-bold gradient-text">&lt;/&gt;</span>
+          <span className="text-base font-bold" style={{ color: "var(--text-primary)" }}>
+            CodeBase<span className="text-[#3b82f6]">AI</span>
+            <span className="text-xs font-normal ml-2" style={{ color: "var(--text-muted)" }}>Assistant</span>
+          </span>
+        </Link>
+
         <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground text-xs font-bold">AI</span>
-          </div>
-          <h1 className="text-sm font-semibold">CodeBase AI Assistant</h1>
+          <Link
+            href="/website"
+            className="text-xs transition-colors hover:opacity-80"
+            style={{ color: "var(--text-muted)" }}
+          >
+            ← Back to site
+          </Link>
+          <SettingsDropdown />
         </div>
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={toggleTheme}
-          className="h-8 w-8"
-        >
-          {isDark ? (
-            <Sun className="h-4 w-4" />
-          ) : (
-            <Moon className="h-4 w-4" />
-          )}
-        </Button>
       </div>
     </header>
   );
