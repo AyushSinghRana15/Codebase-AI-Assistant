@@ -7,7 +7,7 @@ export function Header() {
   return (
     <header className="w-full border-b backdrop-blur-md" style={{ background: "color-mix(in srgb, var(--bg-secondary) 85%, transparent)", borderColor: "var(--border-subtle)" }}>
       <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
-        <Link href="/website" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2">
           <span className="text-base font-bold gradient-text">&lt;/&gt;</span>
           <span className="text-base font-bold" style={{ color: "var(--text-primary)" }}>
             CodeBase<span className="text-[#3b82f6]">AI</span>
@@ -17,7 +17,7 @@ export function Header() {
 
         <div className="flex items-center gap-2">
           <Link
-            href="/website"
+            href="/"
             className="text-xs transition-colors hover:opacity-80"
             style={{ color: "var(--text-muted)" }}
           >

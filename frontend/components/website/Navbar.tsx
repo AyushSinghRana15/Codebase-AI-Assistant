@@ -51,7 +51,7 @@ export function Navbar() {
 
         <div className="hidden md:flex items-center gap-4">
           <Link
-            href="/"
+            href="/agent"
             className="sketch-btn inline-flex items-center px-5 py-2 text-sm font-semibold text-white rounded-xl transition-all duration-300"
             style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)" }}
           >
@@ -100,7 +100,7 @@ export function Navbar() {
             </a>
           ))}
           <Link
-            href="/"
+            href="/agent"
             className="block text-center text-sm font-semibold text-white py-2.5 rounded-xl"
             style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)" }}
             onClick={() => setMobileOpen(false)}
