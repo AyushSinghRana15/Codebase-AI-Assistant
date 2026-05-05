@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     if (BACKEND_KEY) headers["X-API-Key"] = BACKEND_KEY;
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 120000); // 2 min timeout for cloning
+    const timeout = setTimeout(() => controller.abort(), 240000); // 4 min timeout for cloning
 
     try {
       const response = await fetch(
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
       clearTimeout(timeout);
       if (fetchErr instanceof Error && fetchErr.name === "AbortError") {
         return NextResponse.json(
-          { error: "GitHub clone timed out after 2 minutes" },
+          { error: "GitHub clone timed out after 4 minutes" },
           { status: 504 }
         );
       }

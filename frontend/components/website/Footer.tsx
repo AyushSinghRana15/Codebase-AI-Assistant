@@ -4,13 +4,13 @@ const navLinks = [
   { label: "Features", href: "#features" },
   { label: "Architecture", href: "#architecture" },
   { label: "Demos", href: "#demos" },
-  { label: "Docs", href: "#docs" },
+  { label: "Blog", href: "#blog" },
 ];
 
 const socials = [
-  { label: "GitHub", href: "#" },
-  { label: "LinkedIn", href: "#" },
-  { label: "Twitter/X", href: "#" },
+  { label: "GitHub", href: "https://github.com/AyushSinghRana15/Codebase-AI-Assistant" },
+  { label: "LinkedIn", href: "https://linkedin.com" },
+  { label: "Twitter/X", href: "https://twitter.com" },
 ];
 
 export function Footer() {
@@ -46,9 +46,13 @@ export function Footer() {
           <div>
             <h4 className="text-sm font-semibold mb-3" style={{ color: "var(--text-primary)" }}>Resources</h4>
             <ul className="space-y-2">
-              <li><a href="#" className="text-sm transition-colors hover:opacity-80" style={{ color: "var(--text-muted)" }}>Documentation</a></li>
-              <li><a href="#" className="text-sm transition-colors hover:opacity-80" style={{ color: "var(--text-muted)" }}>API Reference</a></li>
-              <li><a href="#" className="text-sm transition-colors hover:opacity-80" style={{ color: "var(--text-muted)" }}>GitHub Repo</a></li>
+              <li><a href="#docs" className="text-sm transition-colors hover:opacity-80" style={{ color: "var(--text-muted)" }}>Documentation</a></li>
+              <li><a href="/agent" className="text-sm transition-colors hover:opacity-80" style={{ color: "var(--text-muted)" }}>API Playground</a></li>
+              <li>
+                <a href="https://github.com/AyushSinghRana15/Codebase-AI-Assistant" target="_blank" rel="noopener noreferrer" className="text-sm transition-colors hover:opacity-80" style={{ color: "var(--text-muted)" }}>
+                  GitHub Repo
+                </a>
+              </li>
             </ul>
           </div>
 
@@ -57,7 +61,7 @@ export function Footer() {
             <ul className="space-y-2">
               {socials.map((s) => (
                 <li key={s.label}>
-                  <a href={s.href} className="text-sm transition-colors hover:opacity-80" style={{ color: "var(--text-muted)" }}>
+                  <a href={s.href} target="_blank" rel="noopener noreferrer" className="text-sm transition-colors hover:opacity-80" style={{ color: "var(--text-muted)" }}>
                     {s.label}
                   </a>
                 </li>

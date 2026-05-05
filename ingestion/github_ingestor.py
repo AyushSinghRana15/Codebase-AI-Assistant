@@ -11,42 +11,68 @@ def clone_github_repo(repo_url: str, branch: Optional[str] = None) -> str:
     Returns the path to the cloned repository.
     """
     temp_dir = tempfile.mkdtemp(prefix="codebase_github_")
-    
-    cmd = ["git", "clone", "--depth", "1"]
+
+    cmd = ["git", "clone", "--depth", "1", "--single-branch", "--filter=blob:none"]
     if branch:
         cmd.extend(["--branch", branch])
     cmd.extend([repo_url, temp_dir])
-    
+
     try:
-        subprocess.run(cmd, check=True, capture_output=True, timeout=60)
+        subprocess.run(cmd, check=True, capture_output=True, timeout=180)
         return temp_dir
     except subprocess.CalledProcessError as e:
         shutil.rmtree(temp_dir, ignore_errors=True)
         raise Exception(f"Failed to clone repository: {e.stderr.decode()}")
     except subprocess.TimeoutExpired:
         shutil.rmtree(temp_dir, ignore_errors=True)
-        raise Exception("Git clone timed out after 60 seconds")
+        raise Exception("Git clone timed out after 180 seconds. Try a smaller repo or a specific branch.")
 
 def ingest_github_repo(repo_url: str, branch: Optional[str] = None) -> List[str]:
     """
     Clone a GitHub repo and return list of supported file paths.
+    Skips dataset files and non-code directories.
     """
     repo_path = clone_github_repo(repo_url, branch)
-    
+
     supported_extensions = {
         '.py', '.js', '.ts', '.jsx', '.tsx', '.java', '.cpp', '.c',
         '.go', '.rs', '.rb', '.php', '.swift', '.kt', '.md', '.txt'
     }
-    
+
+    skip_dirs = {
+        '.git', 'node_modules', '__pycache__', 'venv', '.venv',
+        'data', 'datasets', 'dataset', 'assets', 'static',
+        'models', 'checkpoints', 'weights', '.ipynb_checkpoints',
+        'dist', 'build', '.tox', '.mypy_cache', '.pytest_cache',
+    }
+
+    skip_extensions = {
+        '.csv', '.tsv', '.jsonl', '.parquet', '.pickle', '.pkl',
+        '.h5', '.hdf5', '.npy', '.npz', '.bin', '.dat', '.db',
+        '.sqlite', '.sqlite3', '.arrow', '.feather',
+        '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.webp',
+        '.mp4', '.avi', '.mov', '.mp3', '.wav',
+        '.pth', '.pt', '.onnx', '.pb', '.tflite', '.gguf',
+        '.zip', '.tar', '.gz', '.bz2', '.rar', '.7z',
+        '.xlsx', '.xls', '.ods',
+        '.ipynb',
+    }
+
     files = []
     for file_path in Path(repo_path).rglob("*"):
-        if file_path.is_file() and file_path.suffix in supported_extensions:
-            # Skip common non-essential directories
-            parts = file_path.relative_to(repo_path).parts
-            if any(p in {'.git', 'node_modules', '__pycache__', 'venv', '.venv'} for p in parts):
-                continue
+        if not file_path.is_file():
+            continue
+
+        parts = file_path.relative_to(repo_path).parts
+        if any(p in skip_dirs for p in parts):
+            continue
+
+        if file_path.suffix in skip_extensions:
+            continue
+
+        if file_path.suffix in supported_extensions:
             files.append(str(file_path))
-    
+
     return files
 
 def cleanup_repo(repo_path: str):

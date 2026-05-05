@@ -9,6 +9,7 @@ type Theme = "light" | "dark";
 export function SettingsDropdown() {
   const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
+  const [toast, setToast] = useState("");
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -20,6 +21,12 @@ export function SettingsDropdown() {
     document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(""), 3000);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   return (
     <div ref={ref} className="relative">
@@ -48,7 +55,6 @@ export function SettingsDropdown() {
               : "0 16px 48px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.05)",
           }}
         >
-          {/* Profile Section */}
           <div className="p-4" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
             <div className="flex items-center gap-3">
               <div
@@ -68,7 +74,6 @@ export function SettingsDropdown() {
             </div>
           </div>
 
-          {/* Menu Items */}
           <div className="p-2">
             <Link href="/agent/profile" className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors hover:opacity-80" onClick={() => setOpen(false)}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: "var(--text-muted)" }}>
@@ -78,7 +83,10 @@ export function SettingsDropdown() {
               <span style={{ color: "var(--text-secondary)" }}>Profile</span>
             </Link>
 
-            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors hover:opacity-80">
+            <button
+              onClick={() => { setToast("Settings coming soon"); setOpen(false); }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors hover:opacity-80"
+            >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: "var(--text-muted)" }}>
                 <circle cx="12" cy="12" r="3" />
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
@@ -87,7 +95,6 @@ export function SettingsDropdown() {
             </button>
           </div>
 
-          {/* Theme Section */}
           <div className="p-2" style={{ borderTop: "1px solid var(--border-subtle)" }}>
             <p className="text-xs font-semibold uppercase tracking-wider px-3 py-2" style={{ color: "var(--text-muted)" }}>
               Theme
@@ -135,6 +142,18 @@ export function SettingsDropdown() {
               )}
             </button>
           </div>
+        </div>
+      )}
+
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] px-4 py-2.5 rounded-xl text-sm font-medium fade-in"
+          style={{
+            background: "var(--text-primary)",
+            color: "var(--bg-primary)",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
+          }}
+        >
+          {toast}
         </div>
       )}
     </div>

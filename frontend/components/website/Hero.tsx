@@ -52,7 +52,7 @@ export function Hero() {
 
           <div className="flex flex-wrap gap-4">
             <Link
-              href="/"
+              href="/agent"
               className="sketch-btn inline-flex items-center px-6 py-3 text-sm font-semibold text-white rounded-xl transition-all duration-300"
               style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)" }}
             >

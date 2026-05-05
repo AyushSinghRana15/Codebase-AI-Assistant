@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 const services = [
   {
     icon: (
@@ -115,16 +117,16 @@ const services = [
 
 export function Services() {
   return (
-    <section id="solutions" className="py-24">
+    <section id="solutions" className="py-24 border-t" style={{ background: "var(--bg-primary)", borderColor: "var(--border-subtle)" }}>
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-16 scroll-reveal">
           <p className="text-sm font-mono text-[#3b82f6] mb-3 tracking-wider uppercase">
             What We Build
           </p>
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#f8fafc] mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4" style={{ color: "var(--text-primary)" }}>
             AI Solutions
           </h2>
-          <p className="text-[#94a3b8] max-w-2xl mx-auto">
+          <p className="max-w-2xl mx-auto" style={{ color: "var(--text-secondary)" }}>
             From prototype to production — we build AI systems that scale.
           </p>
         </div>
@@ -133,33 +135,24 @@ export function Services() {
           {services.map((service) => (
             <div
               key={service.title}
-              className="gradient-border card-glow rounded-xl p-6 bg-[#141414]"
+              className="gradient-border card-glow rounded-xl p-6"
             >
               <div className="mb-4">{service.icon}</div>
-              <h3 className="text-lg font-semibold text-[#f8fafc] mb-2">
+              <h3 className="text-lg font-semibold mb-2" style={{ color: "var(--text-primary)" }}>
                 {service.title}
               </h3>
-              <p className="text-sm text-[#94a3b8] leading-relaxed mb-4">
+              <p className="text-sm leading-relaxed mb-4" style={{ color: "var(--text-secondary)" }}>
                 {service.description}
               </p>
-              <a
-                href="#contact"
+              <Link
+                href="/agent"
                 className="inline-flex items-center text-sm font-medium text-[#3b82f6] hover:text-[#8b5cf6] transition-colors"
               >
-                Explore
-                <svg
-                  className="ml-1 w-4 h-4"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                >
-                  <path
-                    d="M6 3L11 8L6 13"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
+                Try it
+                <svg className="ml-1 w-4 h-4" viewBox="0 0 16 16" fill="none">
+                  <path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                 </svg>
-              </a>
+              </Link>
             </div>
           ))}
         </div>
