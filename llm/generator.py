@@ -32,7 +32,7 @@ def _get_client():
 
 def generate_answer(query: str, results: List[Dict]) -> str:
     if not results:
-        return "I could not find this in the provided codebase."
+        return f"No matching code found for your query. Try rephrasing with specific function names, file names, or concepts from the codebase."
 
     context = build_context(results)
     messages = assemble_messages(query, context)

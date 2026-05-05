@@ -5,9 +5,9 @@ EMBED_MODEL      = "sentence-transformers/all-MiniLM-L6-v2"
 EMBED_BATCH_SIZE = 64
 
 # Retrieval
-TOP_K_RETRIEVE   = 10    # wider net for reranker
+TOP_K_RETRIEVE   = 15    # wider net for hybrid retrieval
 TOP_K_RERANK     = 5     # final chunks sent to LLM
-SCORE_THRESHOLD  = 1.4   # L2 distance cutoff ("not found" if all above this)
+SCORE_THRESHOLD  = 2.5   # L2 distance cutoff (relaxed for all-MiniLM-L6-v2)
 
 # Reranking
 RERANK_MODEL     = "cross-encoder/ms-marco-MiniLM-L-6-v2"

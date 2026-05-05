@@ -32,6 +32,18 @@ class BM25Index:
         return results
 
 
+_bm25_index = None
+
+
+def get_bm25_index() -> BM25Index:
+    global _bm25_index
+    if _bm25_index is None:
+        from embeddings.retriever import get_all_chunks
+        chunks = get_all_chunks()
+        _bm25_index = BM25Index(chunks)
+    return _bm25_index
+
+
 def reciprocal_rank_fusion(faiss_results: List[dict], bm25_results: List[dict], k: int = 60) -> List[dict]:
     scores = {}
     chunk_map = {}
@@ -50,17 +62,19 @@ def reciprocal_rank_fusion(faiss_results: List[dict], bm25_results: List[dict], 
     return [chunk_map[n] for n in sorted_names]
 
 
-def hybrid_retrieve(query: str, chunks: List[dict], top_k: int = 15) -> List[dict]:
+def hybrid_retrieve(query: str, top_k: int = 15) -> List[dict]:
+    """Hybrid retrieval: FAISS + BM25 fused via RRF."""
     from embeddings.retriever import retrieve
     faiss_results = retrieve(query, top_k=top_k)
 
-    if not hasattr(hybrid_retrieve, 'bm25_index'):
-        hybrid_retrieve.bm25_index = BM25Index(chunks)
+    bm25 = get_bm25_index()
+    if not bm25.available:
+        return faiss_results[:top_k]
 
-    bm25_results = hybrid_retrieve.bm25_index.search(query, top_k=top_k)
+    bm25_results = bm25.search(query, top_k=top_k)
 
     if not bm25_results:
-        return faiss_results
+        return faiss_results[:top_k]
 
     fused = reciprocal_rank_fusion(faiss_results, bm25_results)
     return fused[:top_k]

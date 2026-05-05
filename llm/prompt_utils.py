@@ -19,9 +19,11 @@ def load_system_prompt() -> str:
     additional = """
 ADDITIONAL RULES:
 - You MUST cite the file path and function name for every claim.
-- If the answer is not in the context, respond: "I could not find this in the provided codebase."
+- If the answer is not in the context, say what you CAN find related to the query rather than just "I could not find this."
+- If you have partial information, provide it and note what's missing.
 - Do NOT use any knowledge outside the provided context.
 - Temperature is set to 0.2 — prioritize factual, code-grounded answers.
+- Always try to be helpful — even with limited context, share what you know about the codebase.
 """
     _SYSTEM_PROMPT = base + "\n" + additional
     return _SYSTEM_PROMPT

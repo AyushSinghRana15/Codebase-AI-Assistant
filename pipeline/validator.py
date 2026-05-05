@@ -31,18 +31,18 @@ def validate_answer(answer: str, results: list) -> Dict:
 
 def score_confidence(results: list, answer: str, intent: str) -> Dict:
     if not results:
-        return {"level": "none", "score": 0.0, "message": "no_results"}
+        return {"level": "low", "score": 0.2, "message": "no_results"}
 
     best_score = min(r["score"] for r in results)   # L2 — lower = better
     rerank_top = results[0].get("rerank_score", 0)
 
-    # Map to 0-1 confidence
-    l2_conf = max(0, 1 - (best_score / 1.5))     # 0 → 1.0, 1.5 → 0.0
+    # Map to 0-1 confidence (relaxed threshold for all-MiniLM-L6-v2)
+    l2_conf = max(0, 1 - (best_score / 2.5))     # 0 → 1.0, 2.5 → 0.0
     confidence = (l2_conf + min(rerank_top, 1)) / 2
 
-    if confidence >= 0.75:
+    if confidence >= 0.5:
         level = "high"
-    elif confidence >= 0.45:
+    elif confidence >= 0.25:
         level = "medium"
     else:
         level = "low"
@@ -64,7 +64,10 @@ def shape_response(answer: str, confidence: dict, results: list) -> Dict:
         return {
             "answer": answer + disclaimer,
             "confidence": "low",
-            "sources": []
+            "sources": [
+                {"file_path": r["metadata"]["file_path"], "name": r["metadata"].get("name", ""), "score": round(r.get("score", 0), 3)}
+                for r in results[:3]
+            ]
         }
 
     return {"answer": answer, "confidence": confidence["level"], "sources": [...]}
