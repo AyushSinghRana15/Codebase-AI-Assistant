@@ -191,6 +191,17 @@ CodeBase AI Assistant/
 └── documentation.md      # Detailed development log
 ```
 
+## System Limits & Capacity
+
+| Constraint | Limit | Notes |
+|------------|-------|-------|
+| **Max Single File Size** | 500 KB | Larger files are skipped during ingestion (`ingestion/utils.py:29`) |
+| **Max Chunk Size** | 150 lines | Large chunks are split automatically |
+| **Max FAISS Vectors** | ~50,000 | `IndexFlatL2` is efficient up to ~50k vectors |
+| **Estimated Max Repo Size** | 1–5 GB | Depends on exclusion rules (node_modules, .git, etc.) |
+| **Embedding RAM Usage** | ~2 GB | Model + index loaded in memory |
+| **Concurrent Queries** | 5–10 | Higher concurrency increases latency significantly |
+
 ## Documentation
 
 The project maintains a comprehensive development log in [`documentation.md`](documentation.md). It tracks every implementation decision, code change, and bug fix chronologically.
