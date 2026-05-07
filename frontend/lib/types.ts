@@ -5,6 +5,12 @@ export interface SourceReference {
   rerank_score?: number;
 }
 
+export interface ValidationInfo {
+  is_grounded: boolean;
+  confidence: number;
+  warning: string | null;
+}
+
 export interface AskResponse {
   answer: string;
   sources: SourceReference[];
@@ -12,8 +18,9 @@ export interface AskResponse {
   rewritten_query?: string;
   original_query?: string;
   corrected_query?: string;
-  confidence: "high" | "medium" | "low" | "none";
-  latency_ms: number;
+  validation?: ValidationInfo;
+  confidence?: "high" | "medium" | "low" | "none";
+  latency_ms?: number;
 }
 
 export interface AskRequest {

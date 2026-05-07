@@ -15,7 +15,7 @@ LANGUAGE_MAP = {
 
 EXCLUDED_DIRS = {
     "node_modules", ".git", "venv", "__pycache__",
-    "dist", "build",
+    "dist", "build", ".next", "output", "vector_store",
 }
 
 EXCLUDED_FILES = {

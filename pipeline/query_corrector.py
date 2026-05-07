@@ -11,7 +11,7 @@ TECH_TERMS: Set[str] = {
     'api', 'url', 'http', 'https', 'json', 'yaml', 'xml', 'csv',
     'github', 'git', 'docker', 'kubernetes', 'aws', 'gcp', 'azure',
     'fastapi', 'nextjs', 'react', 'vue', 'angular', 'node', 'express',
-    'chunker', 'chunkier', 'retriever', 'embedder', 'ingestion', 'rag', 'llm', 'embedding',
+    'chunker', 'chunking', 'chunkier', 'retriever', 'embedder', 'ingestion', 'rag', 'llm', 'embedding',
     'faiss', 'bm25', 'reranker', 'hybrid', 'ast', 'parser',
 }
 
@@ -25,18 +25,23 @@ def correct_query(query: str) -> tuple[str, bool]:
     was_corrected = False
     
     for word in words:
+        # Strip punctuation for checking
+        clean_word = re.sub(r'[^\w]', '', word)
+        
         # Skip technical terms, file extensions, and code snippets
-        if (word.lower() in TECH_TERMS or 
+        if (clean_word.lower() in TECH_TERMS or 
             re.match(r'^\w+\.\w+$', word) or  # file.py
             re.match(r'^[._\-\w]+$', word) and len(word) < 3):
             corrected_words.append(word)
             continue
         
         # Check if word is misspelled
-        if word.lower() not in TECH_TERMS and len(word) > 2:
-            corrected = spell.correction(word)
-            if corrected and corrected != word.lower():
-                corrected_words.append(corrected)
+        if clean_word.lower() not in TECH_TERMS and len(clean_word) > 2:
+            corrected = spell.correction(clean_word)
+            if corrected and corrected.lower() != clean_word.lower():
+                # Preserve original punctuation
+                suffix = word[len(clean_word):]
+                corrected_words.append(corrected + suffix)
                 was_corrected = True
             else:
                 corrected_words.append(word)

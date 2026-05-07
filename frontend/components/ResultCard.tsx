@@ -20,6 +20,19 @@ interface Props {
 export function ResultCard({ result }: Props) {
   const [copied, setCopied] = useState(false);
 
+  // Get confidence level from either top-level or validation object
+  const confidenceLevel = result.confidence ?? (() => {
+    const conf = result.validation?.confidence;
+    if (conf === undefined) return "medium";
+    if (conf >= 0.75) return "high";
+    if (conf >= 0.45) return "medium";
+    if (conf > 0) return "low";
+    return "none";
+  })();
+
+  const latencyMs = result.latency_ms ?? 0;
+  const latencySec = (latencyMs / 1000).toFixed(1);
+
   const handleCopy = async () => {
     await navigator.clipboard.writeText(result.answer);
     setCopied(true);
@@ -57,9 +70,9 @@ export function ResultCard({ result }: Props) {
           <div className="flex items-center gap-3">
             <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Answer</span>
             <span
-              className={`px-2 py-0.5 text-xs font-mono rounded-md border ${CONFIDENCE_STYLE[result.confidence]}`}
+              className={`px-2 py-0.5 text-xs font-mono rounded-md border ${CONFIDENCE_STYLE[confidenceLevel]}`}
             >
-              {result.confidence}
+              {confidenceLevel}
             </span>
           </div>
           <button
@@ -87,8 +100,13 @@ export function ResultCard({ result }: Props) {
         </div>
 
         <div className="flex gap-4 flex-wrap text-xs font-mono" style={{ color: "var(--text-muted)" }}>
-          <span>{(result.latency_ms / 1000).toFixed(1)}s</span>
+          <span>{latencySec}s</span>
           <span>{result.retrieved_count} chunks</span>
+          {result.validation && (
+            <span>
+              {result.validation.is_grounded ? "✓ Grounded" : "⚠ May not be grounded"}
+            </span>
+          )}
           {result.rewritten_query && (
             <span>Rewritten: {result.rewritten_query}</span>
           )}
