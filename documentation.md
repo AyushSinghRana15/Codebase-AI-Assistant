@@ -2253,3 +2253,247 @@ npm run dev
 - Code syntax highlighting uses github-dark (acceptable in light mode)
 - All transitions include `transition: background 0.2s ease, color 0.2s ease`
 - shadcn/ui components automatically adapt via `bg-card`, `text-foreground`, `border` classes
+
+---
+
+## Step 6: UI Fixes, Spell-Checker Corrections, and Ingestion Improvements
+
+**Date:** 2026-05-07  
+**Status:** ✅ Complete  
+**Goal:** Fix TypeScript errors in the assistant UI, correct spell-checker bugs, and exclude build directories from ingestion.
+
+### 6.1 Problem: SourcesPanel TypeScript Error
+
+**Issue:** The `ResultCard` component crashed with a TypeScript error because the backend returns `validation.confidence` (nested object), but the frontend types expected `confidence` at the top level.
+
+**Root Cause:** Mismatch between backend response format and frontend TypeScript types.
+
+**Backend Response Format:**
+```json
+{
+  "answer": "...",
+  "sources": [...],
+  "validation": {
+    "is_grounded": true,
+    "confidence": 0.9,
+    "warning": null
+  },
+  "latency_ms": 1234.5
+}
+```
+
+**Frontend Expected:**
+```typescript
+interface AskResponse {
+  confidence: "high" | "medium" | "low" | "none";  // Required at top level
+  latency_ms: number;  // Required
+}
+```
+
+### 6.2 Files Modified
+
+| File | Change | Lines |
+|------|--------|-------|
+| `frontend/lib/types.ts` | Added `ValidationInfo` interface, made fields optional | 1-24 |
+| `frontend/components/ResultCard.tsx` | Added confidence fallback logic, null-safe latency | 1-99 |
+| `pipeline/query_corrector.py` | Fixed spell-checker punctuation handling and case comparison | 1-61 |
+| `ingestion/utils.py` | Added build directories to exclusion list | 16-19 |
+
+### 6.3 TypeScript Type Fix (`frontend/lib/types.ts`)
+
+**Changes:**
+1. Added `ValidationInfo` interface:
+```typescript
+export interface ValidationInfo {
+  is_grounded: boolean;
+  confidence: number;
+  warning: string | null;
+}
+```
+
+2. Updated `AskResponse` to handle both formats:
+```typescript
+export interface AskResponse {
+  validation?: ValidationInfo;      // NEW: nested validation object
+  confidence?: "high" | "medium" | "low" | "none";  // Made optional
+  latency_ms?: number;              // Made optional
+}
+```
+
+### 6.4 ResultCard Component Fix (`frontend/components/ResultCard.tsx`)
+
+**Added confidence level fallback:**
+```typescript
+const confidenceLevel = result.confidence ?? (() => {
+  const conf = result.validation?.confidence;
+  if (conf === undefined) return "medium";
+  if (conf >= 0.75) return "high";
+  if (conf >= 0.45) return "medium";
+  if (conf > 0) return "low";
+  return "none";
+})();
+```
+
+**Added null-safe latency:**
+```typescript
+const latencyMs = result.latency_ms ?? 0;
+const latencySec = (latencyMs / 1000).toFixed(1);
+```
+
+**Added grounded status display:**
+```tsx
+{result.validation && (
+  <span>
+    {result.validation.is_grounded ? "✓ Grounded" : "⚠ May not be grounded"}
+  </span>
+)}
+```
+
+### 6.5 Spell-Checker Fixes (`pipeline/query_corrector.py`)
+
+**Bug 1: Punctuation not stripped before checking**
+- **Issue:** "chunking?" didn't match "chunking" in TECH_TERMS
+- **Fix:** Strip punctuation with `re.sub(r'[^\w]', '', word)` before checking
+
+**Bug 2: Case-sensitive comparison**
+- **Issue:** "Which" → "Which" was flagged as a correction because "Which" != "which"
+- **Fix:** Compare with `.lower()` on both sides: `corrected.lower() != clean_word.lower()`
+
+**Bug 3: Missing technical term**
+- **Issue:** "chunking" was not in TECH_TERMS (only "chunker" and "chunkier")
+- **Fix:** Added "chunking" to TECH_TERMS set
+
+**Updated logic:**
+```python
+for word in words:
+    clean_word = re.sub(r'[^\w]', '', word)
+    
+    if clean_word.lower() in TECH_TERMS or ...:
+        corrected_words.append(word)
+        continue
+    
+    if clean_word.lower() not in TECH_TERMS and len(clean_word) > 2:
+        corrected = spell.correction(clean_word)
+        if corrected and corrected.lower() != clean_word.lower():
+            suffix = word[len(clean_word):]
+            corrected_words.append(corrected + suffix)
+            was_corrected = True
+```
+
+### 6.6 Ingestion Directory Exclusions (`ingestion/utils.py`)
+
+**Added to EXCLUDED_DIRS:**
+- `.next` — Next.js build output
+- `output` — Generated chunk files
+- `vector_store` — FAISS index and metadata
+
+**Before:**
+```python
+EXCLUDED_DIRS = {
+    "node_modules", ".git", "venv", "__pycache__",
+    "dist", "build",
+}
+```
+
+**After:**
+```python
+EXCLUDED_DIRS = {
+    "node_modules", ".git", "venv", "__pycache__",
+    "dist", "build", ".next", "output", "vector_store",
+}
+```
+
+**Impact:** Reduced ingestion from 282 files → 48 files, and 4217 chunks → 99 chunks.
+
+### 6.7 Verification Results
+
+**TypeScript Build:**
+```
+✓ Compiled successfully in 1782ms
+✓ Finished TypeScript in 1707ms
+✓ Generating static pages (8/8)
+```
+
+**Evaluation Score:**
+| Metric | Before | After |
+|--------|--------|-------|
+| Chunking Tests | 6/9 | 9/9 |
+| Evaluation Score | 50% | 80% |
+| Spell-checker bugs | 3 | 0 |
+| TypeScript errors | 2 | 0 |
+
+**Query Tests:**
+| Query | Before | After |
+|-------|--------|-------|
+| "Which file handles chunking?" | ❌ "chucking" → wrong results | ✅ Returns `chunker.py` |
+| "Where is file loading implemented?" | ❌ Wrong sources | ✅ Returns `loader.py` |
+| "Where is payment gateway?" | ❌ Hallucinated | ✅ Returns "not found" |
+
+### 6.8 Frontend Routes
+
+| Route | Purpose |
+|-------|---------|
+| `/` | Marketing landing page |
+| `/agent` | AI Assistant chat interface |
+| `/agent/profile` | Profile page |
+
+### 6.9 How to Run (Updated)
+
+**Terminal 1 (Backend):**
+```bash
+cd "/Users/ayushsingh/Projects/CodeBase AI Assistant"
+source venv/bin/activate
+uvicorn api.app:app --reload --port 8000
+```
+
+**Terminal 2 (Frontend):**
+```bash
+cd "/Users/ayushsingh/Projects/CodeBase AI Assistant/frontend"
+npm run dev
+```
+
+**Open:**
+- Landing page: http://localhost:3000
+- AI Assistant: http://localhost:3000/agent
+
+### 6.10 Git Commit
+
+| Commit | Message | Date |
+|--------|---------|------|
+| `a0f7073` | Fix UI and ingestion: resolve TypeScript errors, fix spell-checker, exclude build dirs | 2026-05-07 |
+
+---
+
+## Final Status (Updated: 2026-05-07)
+
+**Project:** CodeBase AI Assistant  
+**Version:** 2.1.0 (UI Fixes + Ingestion Improvements)  
+**Status:** ✅ Production-Ready + Code-Intelligent  
+
+**Completed Steps:**
+1. ✅ Step 1: Codebase Ingestion + Chunking (AST-powered)
+2. ✅ Step 2: Embeddings + Vector DB (FAISS)
+3. ✅ Step 3: LLM Integration (OpenRouter gpt-oss-120b:free)
+4. ✅ Production Upgrade: Reranking, FastAPI, Validation, Eval Harness (85%)
+5. ✅ Elite Upgrade: AST, Hybrid Retrieval, Multi-Hop, Self-Reflection (80%)
+6. ✅ UI Fixes + Spell-Checker Corrections + Ingestion Improvements
+
+**Evaluation Scores:**
+- Baseline (Production): 17/20 (85%)
+- After Elite Upgrade: 16/20 (80%)
+- After UI Fixes: 9/9 chunking tests pass
+
+**Frontend:**
+- Next.js 16 + TypeScript + Tailwind CSS v4
+- Routes: `/` (landing), `/agent` (assistant), `/agent/profile`
+- Features: GitHub ingestion, spell-check notifications, theme toggle
+
+**Next Steps (Optional):**
+1. Add Redis caching (persistent cache)
+2. Implement LLM-based query rewriting (Level 2)
+3. Add streaming responses to API
+4. Deploy to cloud (Render, Railway, or Fly.io)
+
+---
+
+**End of Documentation (Updated: 2026-05-07)**
