@@ -90,50 +90,29 @@ python3 main.py --embed
 uvicorn api.app:app --reload --port 8000
 ```
 
-### 5. Start Frontend (New!)
+### 5. Start Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+
 Open http://localhost:3000 in your browser.
 
 ### 6. Ingest GitHub Repository (via Frontend)
 1. Open http://localhost:3000
-2. Paste GitHub repo URL (e.g., `https://github.com/pallets/flask`)
-3. Click "Ingest" — automatically clones and processes the repo
-4. Start asking questions!
+2. Navigate to the AI Assistant at `/agent`
+3. Paste GitHub repo URL (e.g., `https://github.com/pallets/flask`)
+4. Click "Ingest" — automatically clones and processes the repo
+5. Start asking questions!
 
-### 2. Set API Key
-Edit `.env` and add your OpenRouter API key:
-```
-OPENAI_API_KEY=sk-or-v1-...
-```
-
-Get a free key at https://openrouter.ai
-
-### 3. Ingest a Repository
-```bash
-python3 main.py --repo /path/to/repo --output output/chunks.json
-```
-
-### 4. Generate Embeddings
-```bash
-python3 main.py --embed
-```
-
-### 5. Start the API
-```bash
-uvicorn api.app:app --reload --port 8000
-```
-
-### 6. Test the API
+### 7. Test the API
 - Swagger docs: http://localhost:8000/docs
 - Example query:
 ```bash
 curl -X POST "http://localhost:8000/ask" \
   -H "Content-Type: application/json" \
-  -d '{"query": "Where is file loading implemented?"}'
+  -d '{"query": "Which file handles chunking?"}'
 ```
 
 ## Evaluation
@@ -212,6 +191,25 @@ CodeBase AI Assistant/
 └── documentation.md      # Detailed development log
 ```
 
-## Resume Bullet
+## Documentation
 
-> Built a production-ready RAG system for code understanding with code-aware chunking, FAISS vector search, CrossEncoder reranking, and FastAPI layer with anti-hallucination checks. Achieved 80%+ evaluation score on test queries.
+The project maintains a comprehensive development log in [`documentation.md`](documentation.md). It tracks every implementation decision, code change, and bug fix chronologically.
+
+### What's Inside `documentation.md`
+
+| Section | Content |
+|---------|---------|
+| **Chronological Action Log** | Every action taken with timestamps, files affected, and reasoning |
+| **Step 1: Ingestion + Chunking** | Folder structure, functions, regex patterns, chunk schema |
+| **Step 2: Embeddings + Vector DB** | Model selection, FAISS index design, retrieval strategy |
+| **Step 3: LLM Integration** | Context builder, prompt engineering, generator setup |
+| **Step 4: Elite Upgrade** | AST parser, hybrid retrieval, multi-hop, self-reflection |
+| **Step 5: Marketing Website** | Next.js landing page, 12-section layout, design system |
+| **Step 6: UI Fixes** | TypeScript fixes, spell-checker corrections, ingestion improvements |
+
+### How to Use the Documentation
+
+- **Understanding architecture:** Read the Step sections in order
+- **Debugging a module:** Search for the filename in the Action Log
+- **Reproducing a decision:** Each entry includes the "why" behind changes
+- **Onboarding:** Start with the Project Overview, then follow Steps 1→6
