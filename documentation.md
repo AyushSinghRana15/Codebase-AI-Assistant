@@ -2496,4 +2496,135 @@ npm run dev
 
 ---
 
-**End of Documentation (Updated: 2026-05-07)**
+## Step 7: Google OAuth & Personalization (2026-05-12)
+
+### 7.1 Overview
+
+Added optional Google OAuth authentication via Supabase, user profiles, query history persistence, and connected repository tracking.
+
+**Key Design Decisions:**
+- **Supabase** chosen over DIY OAuth for built-in Google provider, Row-Level Security, and generous free tier (500 MB DB, 50K MAU)
+- **Auth is optional** — all existing functionality works without signing in
+- **Optional dependency injection** — `get_optional_user` returns `None` if no token, everything degrades gracefully
+- **Proxy pattern** — AuthContext uses lazy Supabase client initialization to avoid build-time errors
+
+### 7.2 New Files Created
+
+| File | Purpose |
+|------|---------|
+| `api/auth.py` | Supabase JWT verification, optional user dependency |
+| `api/db.py` | Supabase admin client — users, query_history, user_repos CRUD |
+| `frontend/lib/supabase.ts` | Lazy Supabase client initialization |
+| `frontend/context/AuthContext.tsx` | Auth provider — sign in/out, profile sync, session listener |
+| `frontend/app/api/auth/[...path]/route.ts` | API proxy for backend auth endpoints |
+| `supabase_migration.sql` | Database schema (users, query_history, user_repos) |
+
+### 7.3 Modified Files
+
+| File | Changes |
+|------|---------|
+| `api/app.py` | Added `/auth/*` endpoints, optional user injection on `/ask` and `/ingest/github` |
+| `api/schemas.py` | Added `UserProfile`, `UpdateProfileRequest`, `QueryHistoryItem`, `UserRepo`, `UserStats` |
+| `requirements.txt` | Added `supabase>=2.0.0`, `httpx>=0.27.0` |
+| `frontend/app/layout.tsx` | Wrapped with `AuthProvider` |
+| `frontend/components/Header.tsx` | "Sign in with Google" button when logged out |
+| `frontend/components/website/SettingsDropdown.tsx` | Real user avatar/name, sign out button |
+| `frontend/app/agent/profile/page.tsx` | Real data from backend (stats, history, repos) |
+| `frontend/lib/api.ts` | Attaches Supabase JWT to `/ask` requests |
+| `frontend/components/GitHubIngestor.tsx` | Passes auth token when ingesting repos |
+| `frontend/app/api/ingest/github/route.ts` | Forwards auth header to backend |
+
+### 7.4 Database Schema
+
+```sql
+-- Users synced from Supabase Auth
+CREATE TABLE users (
+  id UUID PRIMARY KEY,
+  email TEXT NOT NULL,
+  name TEXT NOT NULL DEFAULT '',
+  avatar_url TEXT DEFAULT '',
+  bio TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Query history for logged-in users
+CREATE TABLE query_history (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  query TEXT NOT NULL,
+  answer TEXT NOT NULL,
+  sources JSONB DEFAULT '[]',
+  latency_ms FLOAT DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Repositories ingested by each user
+CREATE TABLE user_repos (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  repo_url TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, repo_url)
+);
+```
+
+### 7.5 Auth API Endpoints
+
+| Endpoint | Method | Auth Required | Description |
+|----------|--------|---------------|-------------|
+| `/auth/me` | GET | No | Returns user profile or `{authenticated: false}` |
+| `/auth/profile` | PUT | Yes | Update display name and bio |
+| `/auth/history` | GET | Yes | Last 50 queries |
+| `/auth/repos` | GET | Yes | Connected repositories |
+| `/auth/stats` | GET | Yes | Query count + repo count |
+
+### 7.6 Setup Required
+
+1. Create Supabase project at https://supabase.com
+2. Enable Google OAuth in Auth → Providers
+3. Run `supabase_migration.sql` in SQL Editor
+4. Add Supabase keys to `.env` (backend) and `.env.local` (frontend)
+
+### 7.7 Git Commit
+
+| Commit | Message | Date |
+|--------|---------|------|
+| `HEAD` | Add Google OAuth, user profiles, query history, and repo tracking via Supabase | 2026-05-12 |
+
+---
+
+## Final Status (Updated: 2026-05-12)
+
+**Project:** CodeBase AI Assistant  
+**Version:** 2.2.0 (Google OAuth + Personalization)  
+**Status:** ✅ Production-Ready + Code-Intelligent + Personalized  
+
+**Completed Steps:**
+1. ✅ Step 1: Codebase Ingestion + Chunking (AST-powered)
+2. ✅ Step 2: Embeddings + Vector DB (FAISS)
+3. ✅ Step 3: LLM Integration (OpenRouter gpt-oss-120b:free)
+4. ✅ Production Upgrade: Reranking, FastAPI, Validation, Eval Harness (85%)
+5. ✅ Elite Upgrade: AST, Hybrid Retrieval, Multi-Hop, Self-Reflection (80%)
+6. ✅ UI Fixes + Spell-Checker Corrections + Ingestion Improvements
+7. ✅ Google OAuth + User Personalization (Supabase)
+
+**Evaluation Scores:**
+- Baseline (Production): 17/20 (85%)
+- After Elite Upgrade: 16/20 (80%)
+- After UI Fixes: 9/9 chunking tests pass
+
+**Frontend:**
+- Next.js 16 + TypeScript + Tailwind CSS v4
+- Routes: `/` (landing), `/agent` (assistant), `/agent/profile` (profile)
+- Features: GitHub ingestion, spell-check notifications, theme toggle, Google OAuth
+
+**Next Steps (Optional):**
+1. Add Redis caching (persistent cache)
+2. Implement LLM-based query rewriting (Level 2)
+3. Add streaming responses to API
+4. Deploy to cloud (Render, Railway, or Fly.io)
+
+---
+
+**End of Documentation (Updated: 2026-05-12)**

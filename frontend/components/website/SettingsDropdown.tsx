@@ -3,11 +3,13 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useTheme } from "@/context/ThemeContext";
+import { useAuth } from "@/context/AuthContext";
 
 type Theme = "light" | "dark";
 
 export function SettingsDropdown() {
   const { theme, setTheme } = useTheme();
+  const { user, profile, signOut, loading } = useAuth();
   const [open, setOpen] = useState(false);
   const [toast, setToast] = useState("");
   const ref = useRef<HTMLDivElement>(null);
@@ -27,6 +29,10 @@ export function SettingsDropdown() {
     const timer = setTimeout(() => setToast(""), 3000);
     return () => clearTimeout(timer);
   }, [toast]);
+
+  const initials = profile?.name
+    ? profile.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+    : "CB";
 
   return (
     <div ref={ref} className="relative">
@@ -57,31 +63,52 @@ export function SettingsDropdown() {
         >
           <div className="p-4" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
             <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-                style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)" }}
-              >
-                CB
-              </div>
+              {profile?.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt={profile.name}
+                  className="w-10 h-10 rounded-xl flex-shrink-0 object-cover"
+                />
+              ) : (
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
+                  style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)" }}
+                >
+                  {initials}
+                </div>
+              )}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold truncate" style={{ color: "var(--text-primary)" }}>
-                  CodeBaseAI
+                  {profile?.name || "CodeBaseAI"}
                 </p>
                 <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>
-                  AI Engineer
+                  {profile?.email || (user ? "Signed in" : "AI Engineer")}
                 </p>
               </div>
             </div>
           </div>
 
           <div className="p-2">
-            <Link href="/agent/profile" className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors hover:opacity-80" onClick={() => setOpen(false)}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: "var(--text-muted)" }}>
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-              <span style={{ color: "var(--text-secondary)" }}>Profile</span>
-            </Link>
+            {user ? (
+              <Link href="/agent/profile" className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors hover:opacity-80" onClick={() => setOpen(false)}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: "var(--text-muted)" }}>
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                <span style={{ color: "var(--text-secondary)" }}>Profile</span>
+              </Link>
+            ) : (
+              <button
+                onClick={() => { setToast("Sign in to access profile"); setOpen(false); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors hover:opacity-80"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: "var(--text-muted)" }}>
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                <span style={{ color: "var(--text-secondary)" }}>Profile</span>
+              </button>
+            )}
 
             <button
               onClick={() => { setToast("Settings coming soon"); setOpen(false); }}
@@ -96,6 +123,20 @@ export function SettingsDropdown() {
           </div>
 
           <div className="p-2" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+            {user && (
+              <button
+                onClick={() => { signOut(); setOpen(false); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors hover:opacity-80 mb-1"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: "var(--text-muted)" }}>
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                <span style={{ color: "var(--text-secondary)" }}>Sign Out</span>
+              </button>
+            )}
+
             <p className="text-xs font-semibold uppercase tracking-wider px-3 py-2" style={{ color: "var(--text-muted)" }}>
               Theme
             </p>

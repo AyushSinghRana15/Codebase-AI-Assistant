@@ -46,6 +46,7 @@ Browser → Next.js Frontend (localhost:3000) → API Proxy → FastAPI Backend 
 - **RAGAS Evaluation** — automated scoring (80% achieved)
 - **GitHub Ingestion** — clone and process any GitHub repository
 - **Anti-Hallucination** — score threshold + validation checks
+- **Personalization** — optional Google OAuth (Supabase), query history, user profile
 
 ### Frontend (Next.js)
 - **Chat Interface** — clean, dark-themed UI inspired by ChatGPT
@@ -54,6 +55,7 @@ Browser → Next.js Frontend (localhost:3000) → API Proxy → FastAPI Backend 
 - **GitHub Integration** — ingest repos via URL
 - **Loading States** — animated skeleton with rotating status messages
 - **Error Handling** — retry functionality with user-friendly messages
+- **Google OAuth** — optional sign-in, profile management, query history
 
 ## Demo Queries
 
@@ -72,12 +74,16 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Set API Key
-Create `.env` and add your OpenRouter API key:
+### 2. Set API Key & Supabase
+Create `.env` and add your keys:
 ```
 OPENAI_API_KEY=sk-or-v1-...
+SUPABASE_URL=https://your-project-id.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_KEY=your-service-role-key
 ```
-Get a free key at https://openrouter.ai
+- Get a free OpenRouter key at https://openrouter.ai
+- Create a free Supabase project at https://supabase.com, enable Google OAuth, and run `supabase_migration.sql`
 
 ### 3. Ingest a Repository (Local)
 ```bash
@@ -133,6 +139,11 @@ Target: ≥ 80% score before public demo.
 | `/stats` | GET | Index statistics |
 | `/ask` | POST | Ask a question (returns answer + sources) |
 | `/ingest/github` | POST | Clone and ingest GitHub repo |
+| `/auth/me` | GET | Get current user profile (auth optional) |
+| `/auth/profile` | PUT | Update profile name/bio (auth required) |
+| `/auth/history` | GET | User query history (auth required) |
+| `/auth/repos` | GET | User connected repos (auth required) |
+| `/auth/stats` | GET | User usage stats (auth required) |
 | `/docs` | GET | Swagger UI |
 
 ### Frontend (Next.js - localhost:3000)
@@ -140,6 +151,7 @@ Target: ≥ 80% score before public demo.
 |-------|--------|-------------|
 | `/api/ask` | POST | Proxy to backend /ask |
 | `/api/ingest/github` | POST | Proxy to backend /ingest/github |
+| `/api/auth/[...path]` | GET, PUT | Proxy to backend /auth/* |
 
 ## Example Response
 
@@ -162,10 +174,12 @@ Target: ≥ 80% score before public demo.
 ```
 CodeBase AI Assistant/
 ├── api/                    # FastAPI layer
-│   ├── app.py            # Routes: /ask, /health, /stats, /ingest/github
+│   ├── app.py            # Routes: /ask, /health, /stats, /ingest/github, /auth/*
+│   ├── auth.py           # Supabase JWT verification
+│   ├── db.py             # Supabase admin client (users, history, repos)
 │   └── schemas.py        # Pydantic request/response models
 ├── pipeline/              # Core RAG pipeline
-│   ├── ask.py            # Full pipeline with spell-check
+│   ├── ask.py            # Full pipeline orchestration
 │   ├── query_corrector.py # Spell-checking for queries
 │   ├── query_classifier.py # Intent classification
 │   ├── hybrid_retriever.py # FAISS + BM25 hybrid search
@@ -174,21 +188,34 @@ CodeBase AI Assistant/
 │   ├── reranker.py       # CrossEncoder reranking
 │   └── validator.py      # Confidence scoring + validation
 ├── ingestion/            # Code ingestion
+│   ├── loader.py        # Filesystem walker
 │   ├── chunker.py       # AST-based code chunking
 │   ├── ast_parser.py    # Python AST parsing
-│   └── github_ingestor.py # GitHub repo cloning
+│   ├── github_ingestor.py # GitHub repo cloning
+│   └── utils.py         # File filtering
 ├── graph/                 # Dependency graph
 │   └── dependency_graph.py # Multi-hop reasoning
 ├── embeddings/           # Vector store
+│   ├── embedder.py      # Sentence-transformer + FAISS builder
+│   └── retriever.py     # Similarity search
 ├── llm/                  # LLM integration
+│   ├── generator.py     # OpenRouter API client
+│   ├── context_builder.py # Token-aware context assembly
+│   └── prompt_utils.py  # System prompt management
 ├── eval/                 # Evaluation
-│   └── ragas_eval.py    # RAGAS metrics
+│   ├── ragas_eval.py    # RAGAS metrics
+│   ├── run_eval.py      # Evaluation runner
+│   └── test_queries.json # Query test set
 ├── frontend/             # Next.js frontend
 │   ├── app/             # App router pages + API routes
 │   ├── components/       # UI components
-│   └── lib/             # Types + utilities
+│   ├── context/         # Theme + Auth providers
+│   ├── hooks/           # Custom React hooks
+│   └── lib/             # Types, API client, Supabase
 ├── config.py             # All tunable parameters
-└── documentation.md      # Detailed development log
+├── documentation.md      # Detailed development log
+├── supabase_migration.sql # Database schema
+└── main.py               # CLI ingestion entry point
 ```
 
 ## System Limits & Capacity

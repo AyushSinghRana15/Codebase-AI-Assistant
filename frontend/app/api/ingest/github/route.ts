@@ -20,6 +20,8 @@ export async function POST(req: NextRequest) {
       "Content-Type": "application/json",
     };
     if (BACKEND_KEY) headers["X-API-Key"] = BACKEND_KEY;
+    const authHeader = req.headers.get("authorization");
+    if (authHeader) headers["Authorization"] = authHeader;
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 240000); // 4 min timeout for cloning

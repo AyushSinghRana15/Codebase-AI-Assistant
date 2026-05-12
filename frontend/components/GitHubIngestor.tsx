@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { GitBranch, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { getSupabase } from "@/lib/supabase";
 
 interface Props {
   onIngestComplete?: () => void;
@@ -28,8 +29,20 @@ export function GitHubIngestor({ onIngestComplete }: Props) {
       const params = new URLSearchParams({ repo_url: repoUrl });
       if (branch) params.append("branch", branch);
 
+      const headers: Record<string, string> = {};
+      try {
+        const supabase = getSupabase();
+        const { data } = await supabase.auth.getSession();
+        if (data.session?.access_token) {
+          headers["Authorization"] = `Bearer ${data.session.access_token}`;
+        }
+      } catch {
+        // User not logged in - proceed without auth
+      }
+
       const res = await fetch(`/api/ingest/github?${params}`, {
         method: "POST",
+        headers,
       });
 
       const data = await res.json();

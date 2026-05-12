@@ -1,37 +1,60 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 import time
 import logging
 import json
 from typing import Optional
 
-from api.schemas import QueryRequest, QueryResponse, SourceReference
+from api.schemas import (
+    QueryRequest,
+    QueryResponse,
+    SourceReference,
+    UpdateProfileRequest,
+    UserProfile,
+    QueryHistoryItem,
+    UserRepo,
+    UserStats,
+)
 from pipeline.ask import ask
 from ingestion.github_ingestor import ingest_github_repo, cleanup_repo
+from api.auth import get_optional_user
+from api.db import (
+    upsert_user,
+    get_user,
+    update_user_profile,
+    save_query_history,
+    get_query_history,
+    save_user_repo,
+    get_user_repos,
+    get_user_stats,
+)
 
 logging.basicConfig(level=logging.INFO, format='{"time": "%(asctime)s", "level": "%(levelname)s", "msg": "%(message)s", "module": "%(module)s"}')
 
 app = FastAPI(
     title="CodeBase AI Assistant",
     description="Natural language Q&A over code repositories",
-    version="1.0.0"
+    version="1.1.0"
 )
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
 
 @app.get("/health")
 def health_check():
-    return {"status": "ok", "version": "1.0.0"}
+    return {"status": "ok", "version": "1.1.0"}
 
 
 @app.post("/ask", response_model=QueryResponse)
-def ask_endpoint(request: QueryRequest):
+def ask_endpoint(
+    request: QueryRequest,
+    user=Depends(get_optional_user),
+):
     start = time.time()
     try:
         result = ask(request.query, top_k=request.top_k)
@@ -40,8 +63,21 @@ def ask_endpoint(request: QueryRequest):
 
     result["latency_ms"] = round((time.time() - start) * 1000, 1)
 
+    if user:
+        try:
+            save_query_history(
+                user_id=user.id,
+                query=request.query,
+                answer=result.get("answer", ""),
+                sources=result.get("sources", []),
+                latency_ms=result["latency_ms"],
+            )
+        except Exception as e:
+            logging.warning(f"Failed to save query history: {e}")
+
     logging.info(json.dumps({
         "event": "query",
+        "user_id": user.id if user else None,
         "query": request.query,
         "rewritten": result.get("rewritten_query"),
         "retrieved": result.get("retrieved_count"),
@@ -62,8 +98,7 @@ def stats():
 
 
 @app.post("/ingest/github")
-def ingest_github(repo_url: str, branch: Optional[str] = None):
-    """Clone and ingest a GitHub repository."""
+def ingest_github(repo_url: str, branch: Optional[str] = None, user=Depends(get_optional_user)):
     try:
         import json
         import os
@@ -132,6 +167,12 @@ def ingest_github(repo_url: str, branch: Optional[str] = None):
 
         logging.info(f"Indexing complete: {len(all_chunks)} chunks in {elapsed}s")
 
+        if user:
+            try:
+                save_user_repo(user_id=user.id, repo_url=repo_url)
+            except Exception as e:
+                logging.warning(f"Failed to save user repo: {e}")
+
         return {
             "status": "success",
             "files_processed": len(files),
@@ -143,3 +184,64 @@ def ingest_github(repo_url: str, branch: Optional[str] = None):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/auth/me")
+def auth_me(user=Depends(get_optional_user)):
+    if not user:
+        return {"authenticated": False, "user": None}
+    try:
+        profile = get_user(user.id)
+        if not profile:
+            profile = upsert_user(
+                user_id=user.id,
+                email=user.email or "",
+                name=user.user_metadata.get("full_name", user.email or "User"),
+                avatar_url=user.user_metadata.get("avatar_url", ""),
+            )
+        return {"authenticated": True, "user": profile}
+    except Exception as e:
+        logging.warning(f"Failed to fetch user profile: {e}")
+        return {
+            "authenticated": True,
+            "user": {
+                "id": user.id,
+                "email": user.email or "",
+                "name": user.user_metadata.get("full_name", user.email or "User"),
+            },
+        }
+
+
+@app.put("/auth/profile")
+def update_profile(request: UpdateProfileRequest, user=Depends(get_optional_user)):
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    profile = update_user_profile(
+        user_id=user.id,
+        name=request.name,
+        bio=request.bio,
+    )
+    if not profile:
+        raise HTTPException(status_code=404, detail="User not found")
+    return profile
+
+
+@app.get("/auth/history")
+def auth_history(limit: int = 50, user=Depends(get_optional_user)):
+    if not user:
+        return []
+    return get_query_history(user_id=user.id, limit=limit)
+
+
+@app.get("/auth/repos")
+def auth_repos(user=Depends(get_optional_user)):
+    if not user:
+        return []
+    return get_user_repos(user_id=user.id)
+
+
+@app.get("/auth/stats")
+def auth_stats(user=Depends(get_optional_user)):
+    if not user:
+        return {"query_count": 0, "repo_count": 0}
+    return get_user_stats(user_id=user.id)
