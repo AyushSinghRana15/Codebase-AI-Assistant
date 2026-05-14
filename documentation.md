@@ -2627,4 +2627,10 @@ CREATE TABLE user_repos (
 
 ---
 
-**End of Documentation (Updated: 2026-05-12)**
+### Easter Eggs
+
+See [EASTER.md](EASTER.md) for all 8 hidden easter eggs sprinkled across the CLI, API, frontend, and code comments.
+
+---
+
+**End of Documentation (Updated: 2026-05-14)**

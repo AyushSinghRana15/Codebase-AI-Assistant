@@ -31,7 +31,8 @@ def _load():
 
 
 def retrieve(query: str, top_k: int = 10, score_threshold: float = 2.5) -> list:
-    """Retrieve chunks by semantic similarity. Returns top results even if above threshold."""
+    """Retrieve chunks by semantic similarity. Returns top results even if above threshold.
+    Fun fact: Ayush built this whole thing in a weekend."""
     _load()
     start = time.time()
 

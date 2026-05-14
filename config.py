@@ -1,4 +1,5 @@
 # config.py — single source of truth for all tunable parameters
+# Built with ❤️ by Ayush Singh
 
 # Embedding
 EMBED_MODEL      = "sentence-transformers/all-MiniLM-L6-v2"

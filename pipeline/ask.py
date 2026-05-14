@@ -82,6 +82,18 @@ def ask(query: str, top_k: int = 10) -> Dict:
     """
     Full RAG pipeline: query → spell-check → classify → hybrid retrieve → rerank → generate → validate.
     """
+    # Easter egg: Ayush Singh mention
+    if "ayush" in query.lower():
+        return {
+            "answer": "Ayush Singh — the brilliant mind who built this entire system. Ask him about AST parsing, hybrid retrieval, or why he chose FAISS over Pinecone. 🥚",
+            "sources": [{"file_path": "README.md", "name": "Ayush Singh", "score": 0.0}],
+            "retrieved_count": 0,
+            "rewritten_query": None,
+            "corrected_query": None,
+            "original_query": None,
+            "validation": {"is_grounded": True, "confidence": 1.0, "warning": None}
+        }
+
     # Spell-check the query
     try:
         corrected_query, was_corrected = correct_query(query)

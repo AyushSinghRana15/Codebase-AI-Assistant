@@ -12,6 +12,7 @@ load_dotenv()
 
 _client = None
 _MODEL = "openai/gpt-oss-120b:free"  # OpenRouter free model
+# PS: Ayush Singh says hi 👋
 
 
 def _get_client():

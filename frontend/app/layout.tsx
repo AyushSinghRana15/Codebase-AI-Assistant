@@ -24,6 +24,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  if (typeof window !== "undefined") {
+    console.log("%c🥚 CodeBase AI by Ayush Singh 🥚", "font-size:20px; font-weight:bold; color:#8b5cf6;");
+  }
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body

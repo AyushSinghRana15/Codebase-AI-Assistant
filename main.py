@@ -68,6 +68,15 @@ def run_ask(query):
     print("-" * 40)
 
 
+def run_egg():
+    print("  🥚  🥚  🥚  🥚  🥚")
+    print("  🥚             🥚")
+    print("  🥚   Ayush    🥚")
+    print("  🥚   Singh    🥚")
+    print("  🥚             🥚")
+    print("  🥚  🥚  🥚  🥚  🥚")
+
+
 def main():
     parser = argparse.ArgumentParser(description="CodeBase AI Assistant")
     parser.add_argument("--repo", help="Path to the repo to ingest (Step 1)")
@@ -75,8 +84,12 @@ def main():
     parser.add_argument("--embed", action="store_true", help="Run embedding step (Step 2)")
     parser.add_argument("--query", help="Test retrieval with a query")
     parser.add_argument("--ask", help="Ask a question (Step 3: LLM-powered)")
+    parser.add_argument("--egg", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
 
+    if args.egg:
+        run_egg()
+        return
     if args.repo:
         run_ingestion(args.repo, args.output)
     if args.embed:

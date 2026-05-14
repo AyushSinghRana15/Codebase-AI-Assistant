@@ -47,7 +47,17 @@ app.add_middleware(
 
 @app.get("/health")
 def health_check():
-    return {"status": "ok", "version": "1.1.0"}
+    return {"status": "ok", "version": "1.1.0", "developer": "Ayush Singh"}
+
+
+@app.get("/egg")
+def easter_egg():
+    return {
+        "message": "You found the easter egg! 🥚",
+        "developer": "Ayush Singh",
+        "riddle": "What has keys but can't open locks?",
+        "answer": "A keyboard — and this codebase."
+    }
 
 
 @app.post("/ask", response_model=QueryResponse)
