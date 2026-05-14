@@ -32,9 +32,11 @@ export function GitHubIngestor({ onIngestComplete }: Props) {
       const headers: Record<string, string> = {};
       try {
         const supabase = getSupabase();
-        const { data } = await supabase.auth.getSession();
-        if (data.session?.access_token) {
-          headers["Authorization"] = `Bearer ${data.session.access_token}`;
+        if (supabase) {
+          const { data } = await supabase.auth.getSession();
+          if (data.session?.access_token) {
+            headers["Authorization"] = `Bearer ${data.session.access_token}`;
+          }
         }
       } catch {
         // User not logged in - proceed without auth
