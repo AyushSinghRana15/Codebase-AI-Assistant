@@ -1,10 +1,10 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 
 class QueryRequest(BaseModel):
     query: str
-    top_k: int = 5
+    top_k: int = 10
 
 
 class SourceReference(BaseModel):
@@ -14,13 +14,37 @@ class SourceReference(BaseModel):
     rerank_score: Optional[float] = None
 
 
+class ValidationInfo(BaseModel):
+    is_grounded: bool
+    confidence: Optional[float] = None
+    warning: Optional[str] = None
+
+
+class ConfidenceInfo(BaseModel):
+    level: str
+    score: float
+    message: Optional[str] = None
+
+
+class LanguageInfo(BaseModel):
+    natural_language: str
+    programming_language: Optional[str] = None
+
+
 class QueryResponse(BaseModel):
     answer: str
     sources: List[SourceReference]
     retrieved_count: int
     rewritten_query: Optional[str] = None
-    validation: Optional[dict] = None
-    latency_ms: float
+    corrected_query: Optional[str] = None
+    original_query: Optional[str] = None
+    entities: Optional[Dict] = None
+    language: Optional[LanguageInfo] = None
+    intent: Optional[str] = None
+    validation: Optional[ValidationInfo] = None
+    confidence: Optional[ConfidenceInfo] = None
+    pipeline_steps: Optional[Dict[str, float]] = None
+    latency_ms: float = 0
 
 
 class UserProfile(BaseModel):
