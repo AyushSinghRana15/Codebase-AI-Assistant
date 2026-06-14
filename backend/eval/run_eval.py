@@ -25,12 +25,76 @@ EVAL_QUERIES = [
         "should_find": True
     },
     {
+        "query": "Where is hybrid retrieval implemented?",
+        "expected_file_hint": "hybrid_retriever",
+        "expected_keywords": ["hybrid", "bm25", "faiss"],
+        "should_find": True
+    },
+    {
+        "query": "Which file has the generate_answer function?",
+        "expected_file_hint": "generator",
+        "expected_keywords": ["openai", "llm"],
+        "should_find": True
+    },
+    {
+        "query": "Where is the BM25Index class defined?",
+        "expected_file_hint": "hybrid_retriever",
+        "expected_keywords": ["bm25", "index"],
+        "should_find": True
+    },
+    {
+        "query": "How does query classification work?",
+        "expected_file_hint": "query_classifier",
+        "expected_keywords": ["classif", "intent"],
+        "should_find": True
+    },
+    {
+        "query": "How is context built from retrieved chunks?",
+        "expected_file_hint": "context_builder",
+        "expected_keywords": ["context", "token"],
+        "should_find": True
+    },
+    {
+        "query": "ask_endpoint health_check endpoint functions",
+        "expected_file_hint": "app.py",
+        "expected_keywords": ["ask", "ingest", "health"],
+        "should_find": True
+    },
+    {
+        "query": "Where is answer validation implemented?",
+        "expected_file_hint": "validator",
+        "expected_keywords": ["valid", "ground"],
+        "should_find": True
+    },
+    {
+        "query": "What is the QueryRequest schema?",
+        "expected_file_hint": "schemas",
+        "expected_keywords": ["pydantic", "model"],
+        "should_find": True
+    },
+    {
+        "query": "How does AST parsing extract Python code?",
+        "expected_file_hint": "ast_parser",
+        "expected_keywords": ["ast", "parse"],
+        "should_find": True
+    },
+    {
         "query": "Where is the payment gateway?",
         "expected_file_hint": None,
         "should_find": False
     },
     {
         "query": "Where is the AI recommendation module?",
+        "expected_file_hint": None,
+        "should_find": False
+    },
+    {
+        "query": "Stripe payment integration code",
+        "expected_file_hint": None,
+        "should_find": False
+    },
+    {
+        "query": "Redis caching layer implementation",
         "expected_file_hint": None,
         "should_find": False
     }

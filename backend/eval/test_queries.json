@@ -18,6 +18,60 @@
     "expected_name_hint": null
   },
   {
+    "query": "Where is hybrid retrieval implemented?",
+    "type": "location",
+    "expected_file_hint": "hybrid_retriever",
+    "expected_name_hint": "hybrid_retrieve"
+  },
+  {
+    "query": "Which file has the generate_answer function?",
+    "type": "location",
+    "expected_file_hint": "generator",
+    "expected_name_hint": "generate_answer"
+  },
+  {
+    "query": "Where is the BM25Index class defined?",
+    "type": "location",
+    "expected_file_hint": "hybrid_retriever",
+    "expected_name_hint": "BM25Index"
+  },
+  {
+    "query": "Which file contains the classify_query function?",
+    "type": "location",
+    "expected_file_hint": "query_classifier",
+    "expected_name_hint": "classify_query"
+  },
+  {
+    "query": "Where is the QueryRequest Pydantic model?",
+    "type": "location",
+    "expected_file_hint": "schemas",
+    "expected_name_hint": "QueryRequest"
+  },
+  {
+    "query": "How does AST parsing work for Python files?",
+    "type": "explanation",
+    "expected_file_hint": "ast_parser",
+    "expected_name_hint": "ASTChunk"
+  },
+  {
+    "query": "Which file has the validate_answer function?",
+    "type": "location",
+    "expected_file_hint": "validator",
+    "expected_name_hint": "validate_answer"
+  },
+  {
+    "query": "How is the context built from chunks?",
+    "type": "explanation",
+    "expected_file_hint": "context_builder",
+    "expected_name_hint": null
+  },
+  {
+    "query": "ask_endpoint health_check endpoint functions",
+    "type": "explanation",
+    "expected_file_hint": "app.py",
+    "expected_name_hint": null
+  },
+  {
     "query": "payment gateway logic",
     "type": "edge",
     "expected_file_hint": null,
@@ -25,9 +79,17 @@
     "expect_empty": true
   },
   {
-    "query": "Where is AI module?",
-    "type": "failure",
+    "query": "Stripe payment integration code",
+    "type": "edge",
     "expected_file_hint": null,
+    "expected_name_hint": null,
+    "expect_empty": true
+  },
+  {
+    "query": "Redis caching layer implementation",
+    "type": "edge",
+    "expected_file_hint": null,
+    "expected_name_hint": null,
     "expect_empty": true
   }
 ]
