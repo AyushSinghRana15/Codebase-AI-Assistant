@@ -2627,10 +2627,42 @@ CREATE TABLE user_repos (
 
 ---
 
+### Session: 2026-06-14 — Search Quality & Context Size Overhaul
+
+#### Changes Made
+
+| # | Change | Files Affected | Impact |
+|---|--------|---------------|--------|
+| 1 | **Tiktoken-based token counting** | `llm/tokenizer.py` (new), `llm/context_builder.py`, `llm/prompt_utils.py`, `config.py`, `requirements.txt` | Replaced crude `len(text)//4` with `tiktoken` (`o200k_harmony` encoding). Config values safely increased: `MAX_CONTEXT_TOKENS` 6000→16000, `LLM_MAX_TOKENS` 800→2000, `PER_CHUNK_MAX_TOKENS` 1500→2500 |
+| 2 | **LLM query rewriting** | `pipeline/query_rewriter.py` (rewritten), `pipeline/ask.py`, `config.py` | `ENABLE_LLM_REWRITE = True`. Queries rewritten via LLM before retrieval to extract key technical terms — bridges lexical gap |
+| 3 | **BM25 weight wired into RRF fusion** | `pipeline/hybrid_retriever.py`, `pipeline/ask.py` | Intent-specific `bm25_weight` (from `query_classifier.py`) now used in `reciprocal_rank_fusion()`. FAISS and BM25 contributions are weighted per intent |
+| 4 | **Composite dedup key for RRF** | `pipeline/hybrid_retriever.py` | Changed from single `name` key to `file_path:name:start_line` — prevents cross-file collision |
+| 5 | **Case-preserving BM25 tokenizer** | `pipeline/hybrid_retriever.py` | Code identifiers are case-sensitive. Tokenizer now preserves original case instead of lowercasing |
+| 6 | **Chunk overlapping windows** | `ingestion/chunker.py` | 3-line overlap between adjacent chunks prevents context from being cut off at boundaries. Overlap applied to both regex-split and large-chunk-split paths |
+| 7 | **MMR diversification** | `pipeline/reranker.py` (rewritten) | Maximal Marginal Relevance after reranking balances relevance with diversity — avoids returning 5 chunks from the same file |
+| 8 | **LRU cache on FAISS retrieval** | `embeddings/retriever.py` | `@lru_cache` on the internal `_cached_retrieve()` keyed by `(query, top_k, score_threshold)`. Cached up to `CACHE_MAX_SIZE=200` queries |
+| 9 | **Pre-warm all models at startup** | `api/app.py` | Embedding model, reranker, FAISS index, BM25 index, and tokenizer all loaded during FastAPI startup event — saves 8-12s on first request |
+| 10 | **Architecture diagram update** | `README.md` | Updated to reflect new pipeline stages: query rewrite, weighted hybrid fusion, MMR |
+
+#### Updated Pipeline Flow
+```
+User Query → Spell Check → LLM Query Rewrite → Query Classification → Weighted Hybrid Retrieval (FAISS + BM25) → CrossEncoder Rerank → MMR Diversify → Context Assembly (tiktoken-accounted) → LLM Generate → Validate → API Response
+```
+
+#### Config Changes
+| Parameter | Old | New |
+|-----------|-----|-----|
+| `MAX_CONTEXT_TOKENS` | 6000 | 16000 |
+| `PER_CHUNK_MAX_TOKENS` | 1500 | 2500 |
+| `LLM_MAX_TOKENS` | 800 | 2000 |
+| `ENABLE_LLM_REWRITE` | False | True |
+
+---
+
 ### Easter Eggs
 
 See [EASTER.md](EASTER.md) for all 8 hidden easter eggs sprinkled across the CLI, API, frontend, and code comments.
 
 ---
 
-**End of Documentation (Updated: 2026-05-14)**
+**End of Documentation (Updated: 2026-06-14)**

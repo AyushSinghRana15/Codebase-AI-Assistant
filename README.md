@@ -5,9 +5,9 @@
 ## Architecture
 
 ```
-User Query → Spell Check → Query Classification → Hybrid Retrieval (FAISS + BM25) → Rerank → Context Expansion → LLM Generate → Self-Reflection → Validate → API Response
-                                        ↓
-                            FAISS Vector Store + Dependency Graph + BM25 Index
+User Query → Spell Check → LLM Query Rewrite → Query Classification → Weighted Hybrid Retrieval (FAISS + BM25) → Rerank → MMR Diversify → Context Assembly (tiktoken) → LLM Generate → Validate → API Response
+                                                                  ↓
+                                              FAISS Vector Store + BM25 Index (case-aware) + Dependency Graph
 ```
 
 ### Frontend (New!)
@@ -19,33 +19,36 @@ Browser → Next.js Frontend (localhost:3000) → API Proxy → FastAPI Backend 
 
 | Layer | Technology |
 |-------|-----------|
-| **Frontend** | Next.js 14, TypeScript, Tailwind CSS, shadcn/ui |
-| **Ingestion** | Python, AST parser, code-aware chunker |
-| **Embeddings** | sentence-transformers (all-MiniLM-L6-v2) |
-| **Vector Store** | FAISS (IndexFlatL2) + BM25 |
-| **Hybrid Retrieval** | FAISS semantics + BM25 exact match |
-| **Reranking** | CrossEncoder (ms-marco-MiniLM-L-6-v2) |
-| **Context Expansion** | Multi-hop via Dependency Graph |
-| **LLM** | OpenRouter gpt-oss-120b (free) |
-| **Self-Reflection** | Two-pass LLM verification |
-| **API** | FastAPI + uvicorn |
+| **Frontend** | Next.js 16, TypeScript, Tailwind CSS v4, shadcn/ui |
+| **Ingestion** | Python, AST parser, code-aware chunker with overlapping windows |
+| **Embeddings** | sentence-transformers (all-MiniLM-L6-v2, 384d) |
+| **Vector Store** | FAISS (IndexFlatL2) + BM25 (case-aware) |
+| **Hybrid Retrieval** | FAISS semantics + BM25 exact match, weighted RRF fusion |
+| **Reranking** | CrossEncoder (ms-marco-MiniLM-L-6-v2) + MMR diversification |
+| **Query Rewriting** | LLM-based query expansion (OpenRouter) |
+| **LLM** | OpenRouter gpt-oss-120b (free, 32k+ context) |
+| **API** | FastAPI + uvicorn, pre-warmed models at startup |
 | **Validation** | Confidence scoring + keyword grounding |
-| **Evaluation** | RAGAS metrics |
+| **Tokenization** | tiktoken (o200k_harmony) — exact token accounting |
 | **Spell-Check** | pyspellchecker |
 
 ## Features
 
 ### Backend (Elite RAG Pipeline)
+- **16k Token Context** — tiktoken-accurate context assembly, safely doubled context window
 - **Spell-Check** — automatic query correction (e.g., "chunkier" → "chunker")
-- **Code-Aware Chunking** — AST parser splits at function/class boundaries
-- **Hybrid Retrieval** — FAISS semantics + BM25 exact match
-- **Query Classification** — intent-aware pipeline configuration
+- **LLM Query Rewriting** — rewrites questions into search-optimized queries before retrieval
+- **Code-Aware Chunking** — AST parser splits at function/class boundaries with 3-line overlap windows
+- **Weighted Hybrid Retrieval** — FAISS semantics + BM25 exact match fused via intent-weighted RRF
+- **Case-Aware BM25** — preserves identifier casing for better code matching
+- **MMR Diversification** — Maximal Marginal Relevance prevents redundant chunks from same file
+- **Query Classification** — intent-aware pipeline configuration (location/flow/explanation/debug/general)
 - **Context Expansion** — multi-hop reasoning via dependency graph
-- **Self-Reflection** — two-pass LLM verification loop
-- **Confidence Scoring** — high/medium/low/none with response shaping
-- **RAGAS Evaluation** — automated scoring (80% achieved)
+- **LLM Generation** — OpenRouter gpt-oss-120b (free), 16k context, 2000 token responses
+- **Validation** — confidence scoring + keyword grounding checks
+- **Pre-Warmed Models** — all models loaded at startup (embedding, reranker, FAISS, BM25, tokenizer)
+- **Query Caching** — LRU cache on FAISS retrieval for repeated queries
 - **GitHub Ingestion** — clone and process any GitHub repository
-- **Anti-Hallucination** — score threshold + validation checks
 - **Personalization** — optional Google OAuth (Supabase), query history, user profile
 
 ### Frontend (Next.js)
@@ -170,7 +173,7 @@ Target: ≥ 80% score before public demo.
     {"file_path": "ingestion/loader.py", "name": "read_file", "score": 0.77, "rerank_score": 0.85}
   ],
   "retrieved_count": 2,
-  "rewritten_query": "Find the code that implements: Where is file loading implemented?",
+  "rewritten_query": "ingestion loader walk_repo read_file file loading implementation",
   "validation": {"is_grounded": true, "confidence": 0.9, "warning": null},
   "latency_ms": 1234.5
 }
@@ -230,7 +233,8 @@ CodeBase AI Assistant/
 | Constraint | Limit | Notes |
 |------------|-------|-------|
 | **Max Single File Size** | 500 KB | Larger files are skipped during ingestion (`ingestion/utils.py:29`) |
-| **Max Chunk Size** | 150 lines | Large chunks are split automatically |
+| **Max Chunk Size** | 150 lines | Large chunks split automatically with 3-line overlap windows |
+| **Max Context Tokens** | 16,000 | tiktoken-accurate accounting (o200k_harmony encoding) |
 | **Max FAISS Vectors** | ~50,000 | `IndexFlatL2` is efficient up to ~50k vectors |
 | **Estimated Max Repo Size** | 1–5 GB | Depends on exclusion rules (node_modules, .git, etc.) |
 | **Embedding RAM Usage** | ~2 GB | Model + index loaded in memory |

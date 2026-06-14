@@ -9,6 +9,8 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from api.middleware import limiter
 
+from config import EMBED_MODEL, RERANK_MODEL
+
 from api.schemas import (
     QueryRequest,
     QueryResponse,
@@ -50,6 +52,54 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.on_event("startup")
+def warm_models():
+    logging.info("Pre-warming embedding model...")
+    try:
+        from sentence_transformers import SentenceTransformer
+        SentenceTransformer(EMBED_MODEL)
+        logging.info(f"Embedding model '{EMBED_MODEL}' loaded")
+    except Exception as e:
+        logging.warning(f"Failed to pre-warm embedding model: {e}")
+
+    logging.info("Pre-warming reranker model...")
+    try:
+        from sentence_transformers import CrossEncoder
+        CrossEncoder(RERANK_MODEL)
+        logging.info(f"Reranker model '{RERANK_MODEL}' loaded")
+    except Exception as e:
+        logging.warning(f"Failed to pre-warm reranker model: {e}")
+
+    logging.info("Pre-warming FAISS index...")
+    try:
+        from embeddings.retriever import get_all_chunks
+        count = len(get_all_chunks())
+        logging.info(f"FAISS index loaded with {count} chunks")
+    except Exception as e:
+        logging.warning(f"Failed to pre-warm FAISS index: {e}")
+
+    logging.info("Pre-warming BM25 index...")
+    try:
+        from pipeline.hybrid_retriever import get_bm25_index
+        bm25 = get_bm25_index()
+        if bm25.available:
+            logging.info("BM25 index loaded")
+        else:
+            logging.warning("BM25 not available (rank-bm25 not installed)")
+    except Exception as e:
+        logging.warning(f"Failed to pre-warm BM25 index: {e}")
+
+    logging.info("Pre-warming tokenizer...")
+    try:
+        from llm.tokenizer import count_tokens
+        count_tokens("warmup")
+        logging.info("Tokenizer ready")
+    except Exception as e:
+        logging.warning(f"Failed to pre-warm tokenizer: {e}")
+
+    logging.info("All models pre-warmed")
 
 
 @app.get("/health")

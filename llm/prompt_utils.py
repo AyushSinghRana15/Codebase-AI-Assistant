@@ -29,10 +29,6 @@ ADDITIONAL RULES:
     return _SYSTEM_PROMPT
 
 
-def approx_tokens(text: str) -> int:
-    return len(text) // 4
-
-
 def build_user_message(query: str, context: str) -> str:
     return f"Query: {query}\n\nContext:\n{context}"
 

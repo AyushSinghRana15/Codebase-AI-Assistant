@@ -1,3 +1,5 @@
+from typing import Optional
+
 TEMPLATES = {
     "where":   "Find the code that implements: {query}",
     "how":     "Find the code that explains how: {query}",
@@ -6,8 +8,39 @@ TEMPLATES = {
     "default": "Find code related to: {query}",
 }
 
+_REWRITE_SYSTEM = (
+    "You are a query rewriter for a code search engine. Given a user question, "
+    "rewrite it into a concise, search-engine-friendly query that extracts key "
+    "technical terms (function names, file paths, concepts). Remove conversational "
+    "fluff. Output ONLY the rewritten query, nothing else."
+)
 
-def rewrite_query(query: str) -> str:
+
+def rewrite_query(query: str, use_llm: bool = False) -> str:
+    if use_llm:
+        try:
+            from openai import OpenAI
+            from dotenv import load_dotenv
+            import os
+            load_dotenv()
+            api_key = os.getenv("OPENAI_API_KEY")
+            if api_key:
+                client = OpenAI(api_key=api_key, base_url="https://openrouter.ai/api/v1")
+                resp = client.chat.completions.create(
+                    model="openai/gpt-oss-120b:free",
+                    messages=[
+                        {"role": "system", "content": _REWRITE_SYSTEM},
+                        {"role": "user", "content": query},
+                    ],
+                    temperature=0.1,
+                    max_tokens=100,
+                )
+                rewritten = resp.choices[0].message.content.strip().strip('"\'')
+                if rewritten:
+                    return rewritten
+        except Exception:
+            pass
+
     q_lower = query.lower().strip()
     for keyword, template in TEMPLATES.items():
         if q_lower.startswith(keyword):

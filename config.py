@@ -15,17 +15,17 @@ RERANK_MODEL     = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 ENABLE_RERANKING = True
 
 # Query rewriting
-ENABLE_LLM_REWRITE = False   # set True to enable LLM-based rewriting
+ENABLE_LLM_REWRITE = True    # LLM-based query rewriting for better search
 
 # LLM
 LLM_MODEL        = "openai/gpt-oss-120b:free"   # OpenRouter free model
 LLM_TEMPERATURE  = 0.2
-LLM_MAX_TOKENS   = 800
+LLM_MAX_TOKENS   = 2000
 LLM_TOP_P        = 0.9
 
 # Context builder
-MAX_CONTEXT_TOKENS = 6000
-PER_CHUNK_MAX_TOKENS = 1500
+MAX_CONTEXT_TOKENS = 16000
+PER_CHUNK_MAX_TOKENS = 2500
 
 # Caching
 CACHE_MAX_SIZE   = 200

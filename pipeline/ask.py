@@ -2,12 +2,13 @@ from typing import Dict
 import time
 
 from config import *
-from pipeline.reranker import rerank
+from pipeline.reranker import rerank, mmr_diversify
 from pipeline.query_classifier import classify_query, get_pipeline_config
 from pipeline.hybrid_retriever import hybrid_retrieve
 from llm.generator import generate_answer
 from pipeline.validator import validate_answer
 from pipeline.query_corrector import correct_query
+from pipeline.query_rewriter import rewrite_query
 
 
 def ask(query: str, top_k: int = 10) -> Dict:
@@ -42,13 +43,26 @@ def ask(query: str, top_k: int = 10) -> Dict:
 
     # Classify intent
     intent = classify_query(query) if ENABLE_CLASSIFIER else "general"
-    cfg = get_pipeline_config(intent) if ENABLE_CLASSIFIER else {"top_k": top_k}
+    cfg = get_pipeline_config(intent) if ENABLE_CLASSIFIER else {"top_k": top_k, "bm25_weight": 0.5}
 
-    # Hybrid retrieval (FAISS + BM25)
-    results = hybrid_retrieve(query, top_k=cfg["top_k"])
+    # LLM query rewriting (if enabled)
+    rewritten_query = None
+    if ENABLE_LLM_REWRITE:
+        try:
+            rewritten = rewrite_query(query, use_llm=True)
+            if rewritten and rewritten != query:
+                print(f"[Query Rewrite] '{query}' → '{rewritten}'")
+                rewritten_query = query
+                query = rewritten
+        except Exception:
+            pass
+
+    # Hybrid retrieval (FAISS + BM25), using intent-specific bm25_weight
+    results = hybrid_retrieve(query, top_k=cfg["top_k"], bm25_weight=cfg.get("bm25_weight", 0.5))
 
     if ENABLE_RERANKING and len(results) > TOP_K_RERANK:
-        results = rerank(query, results, top_n=TOP_K_RERANK)
+        results = rerank(query, results, top_n=TOP_K_RERANK * 2)
+        results = mmr_diversify(results, query, top_n=TOP_K_RERANK)
     else:
         results = results[:TOP_K_RERANK]
 

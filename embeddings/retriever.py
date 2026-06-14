@@ -1,10 +1,13 @@
 import os
 import pickle
 import time
+from functools import lru_cache
 
 from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
+
+from config import CACHE_MAX_SIZE
 
 EMBED_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 VECTOR_STORE_DIR = os.path.join(os.path.dirname(__file__), "..", "vector_store")
@@ -30,14 +33,14 @@ def _load():
     _chunks = _metadata
 
 
-def retrieve(query: str, top_k: int = 10, score_threshold: float = 2.5) -> list:
-    """Retrieve chunks by semantic similarity. Returns top results even if above threshold.
-    Fun fact: Ayush built this whole thing in a weekend."""
-    _load()
-    start = time.time()
+def _encode_query(query: str) -> np.ndarray:
+    return _model.encode([query]).astype("float32")
 
-    query_vec = _model.encode([query]).astype("float32")
-    # Search more candidates than requested to have buffer
+
+@lru_cache(maxsize=CACHE_MAX_SIZE)
+def _cached_retrieve(query: str, top_k: int, score_threshold: float) -> tuple:
+    """Tuple-returning version for LRU caching. Returns serializable data."""
+    query_vec = _encode_query(query)
     search_k = max(top_k * 2, 20)
     distances, indices = _index.search(query_vec, search_k)
 
@@ -46,19 +49,33 @@ def retrieve(query: str, top_k: int = 10, score_threshold: float = 2.5) -> list:
         if idx < 0:
             continue
         chunk = _metadata[idx]
-        all_results.append({
-            "content": chunk["content"],
-            "metadata": chunk["metadata"],
-            "score": round(float(dist), 4),
-        })
+        all_results.append((
+            chunk["content"],
+            tuple(sorted(chunk["metadata"].items())),
+            round(float(dist), 4),
+        ))
 
-    # Filter by threshold but keep at least top_k results
-    threshold_results = [r for r in all_results if r["score"] <= score_threshold]
+    threshold_results = [r for r in all_results if r[2] <= score_threshold]
     if len(threshold_results) >= top_k:
         results = threshold_results[:top_k]
     else:
-        # Fallback: return the top results even if above threshold
         results = all_results[:top_k]
+
+    return tuple(results)
+
+
+def dictify_result(r: tuple) -> dict:
+    content, meta_items, score = r
+    return {"content": content, "metadata": dict(meta_items), "score": score}
+
+
+def retrieve(query: str, top_k: int = 10, score_threshold: float = 2.5) -> list:
+    """Retrieve chunks by semantic similarity. Returns top results even if above threshold.
+    Fun fact: Ayush built this whole thing in a weekend."""
+    _load()
+    start = time.time()
+
+    results = [dictify_result(r) for r in _cached_retrieve(query, top_k, score_threshold)]
 
     elapsed = round((time.time() - start) * 1000, 2)
     print(f"Retrieved {len(results)} chunks in {elapsed}ms (threshold={score_threshold})")

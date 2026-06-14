@@ -3,6 +3,9 @@ import os
 
 from ingestion.ast_parser import parse_python_ast
 
+CHUNK_MAX_LINES = 150
+CHUNK_OVERLAP_LINES = 3
+
 
 def create_chunk(content, start_line, end_line, chunk_type, name, file_path, language, **extra):
     meta = {
@@ -21,7 +24,7 @@ def create_chunk(content, start_line, end_line, chunk_type, name, file_path, lan
 def split_large_chunk(content, start_line, chunk_type, name, file_path, language, **extra):
     lines = content.split('\n')
     total = len(lines)
-    if total <= 150:
+    if total <= CHUNK_MAX_LINES:
         return [create_chunk(content, start_line, start_line + total - 1, chunk_type, name, file_path, language, **extra)]
 
     sub_chunks = []
@@ -29,14 +32,14 @@ def split_large_chunk(content, start_line, chunk_type, name, file_path, language
     idx = 0
     part = 1
     while idx < total:
-        end_idx = min(idx + 150, total)
+        end_idx = min(idx + CHUNK_MAX_LINES, total)
         sub = lines[idx:end_idx]
         sub_content = '\n'.join(sub)
         sub_end = cur_start + len(sub) - 1
         sub_name = f"{name}_part_{part}"
         sub_chunks.append(create_chunk(sub_content, cur_start, sub_end, chunk_type, sub_name, file_path, language, **extra))
-        idx = end_idx
-        cur_start = sub_end + 1
+        idx = end_idx - CHUNK_OVERLAP_LINES
+        cur_start = sub_end - CHUNK_OVERLAP_LINES + 1
         part += 1
     return sub_chunks
 
@@ -88,12 +91,26 @@ def parse_chunks(file_content, file_path, language):
                 content = '\n'.join(lines[start-1:end])
                 chunks.append(create_chunk(content, start, end, ctype, name, file_path, language))
 
-    # Post-process all chunks: split if they exceed 150 lines
+    # Add overlap between adjacent regex-based chunks (non-Python)
+    if language != 'python' and len(chunks) > 1:
+        overlapped = [chunks[0]]
+        for i in range(1, len(chunks)):
+            prev = chunks[i - 1]
+            curr = chunks[i]
+            prev_lines = prev["content"].split('\n')
+            overlap_lines = prev_lines[-CHUNK_OVERLAP_LINES:] if len(prev_lines) >= CHUNK_OVERLAP_LINES else prev_lines
+            curr["content"] = '\n'.join(overlap_lines) + '\n' + curr["content"]
+            curr["metadata"]["start_line"] = max(1, curr["metadata"]["start_line"] - CHUNK_OVERLAP_LINES)
+            curr["metadata"]["char_count"] = len(curr["content"])
+            overlapped.append(curr)
+        chunks = overlapped
+
+    # Post-process all chunks: split if they exceed CHUNK_MAX_LINES lines
     processed_chunks = []
     for c in chunks:
         content = c["content"]
         line_count = content.count('\n') + 1
-        if line_count > 150:
+        if line_count > CHUNK_MAX_LINES:
             meta = c["metadata"]
             extra = {k: v for k, v in meta.items() if k not in ["file_path", "language", "chunk_type", "name", "start_line", "end_line", "char_count"]}
             split_chunks = split_large_chunk(

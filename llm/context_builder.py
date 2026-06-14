@@ -1,12 +1,8 @@
 import os
 from typing import List, Dict
 
-MAX_CONTEXT_TOKENS = 6000
-PER_CHUNK_MAX_TOKENS = 1500
-
-
-def approx_tokens(text: str) -> int:
-    return len(text) // 4
+from config import MAX_CONTEXT_TOKENS, PER_CHUNK_MAX_TOKENS
+from llm.tokenizer import count_tokens, truncate_to_tokens
 
 
 def build_context(results: List[Dict], max_tokens: int = MAX_CONTEXT_TOKENS) -> str:
@@ -24,13 +20,11 @@ def build_context(results: List[Dict], max_tokens: int = MAX_CONTEXT_TOKENS) -> 
         divider = "─" * 40
         chunk_text = f"{header}\n{divider}\n{content}"
 
-        chunk_tokens = approx_tokens(chunk_text)
+        chunk_tokens = count_tokens(chunk_text)
 
         if chunk_tokens > PER_CHUNK_MAX_TOKENS:
-            chunk_tokens = PER_CHUNK_MAX_TOKENS
-            lines = content.split('\n')
-            truncated = '\n'.join(lines[:int(len(lines) * 0.8)])
-            chunk_text = f"{header}\n{divider}\n{truncated}\n# ... truncated ..."
+            chunk_text = f"{header}\n{divider}\n{truncate_to_tokens(content, PER_CHUNK_MAX_TOKENS)}\n# ... truncated ..."
+            chunk_tokens = count_tokens(chunk_text)
 
         if total_tokens + chunk_tokens > max_tokens:
             break

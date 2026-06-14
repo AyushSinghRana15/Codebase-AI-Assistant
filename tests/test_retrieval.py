@@ -28,7 +28,8 @@ def retriever(query: str, top_k: int = 5) -> List[Dict]:
     """
     from embeddings.retriever import retrieve
     results = retrieve(query, top_k=top_k, score_threshold=SCORE_THRESHOLD)
-    return [{"chunk": r["metadata"], "score": r["score"]} for r in results if r["score"] <= SCORE_THRESHOLD]
+    filtered = [r for r in results if r["score"] <= SCORE_THRESHOLD]
+    return [{"chunk": r, "score": r["score"]} for r in filtered]
 
 
 def run_retrieval_tests():
@@ -56,17 +57,18 @@ def run_retrieval_tests():
 
         for i, r in enumerate(results[:3], 1):
             chunk = r["chunk"]
-            print(f"  #{i}  {chunk['file_path']} :: {chunk['name']}  [L2: {r['score']:.4f}]")
+            meta = chunk["metadata"]
+            print(f"  #{i}  {meta['file_path']} :: {meta['name']}  [L2: {r['score']:.4f}]")
 
         passed = False
         if expected_file:
             for r in results:
-                if expected_file.lower() in r["chunk"]["file_path"].lower():
+                if expected_file.lower() in r["chunk"]["metadata"]["file_path"].lower():
                     passed = True
                     break
         if expected_name and not passed:
             for r in results:
-                if expected_name.lower() in r["chunk"]["name"].lower():
+                if expected_name.lower() in r["chunk"]["metadata"]["name"].lower():
                     passed = True
                     break
         if not expected_file and not expected_name:
