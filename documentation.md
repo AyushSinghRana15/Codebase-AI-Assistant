@@ -2659,10 +2659,39 @@ User Query → Spell Check → LLM Query Rewrite → Query Classification → We
 
 ---
 
-### Easter Eggs
+### Session: 2026-06-14 (Part 2) — Voice Assistant (Siri-like)
+
+#### Changes Made
+
+| # | Change | Files Affected | Impact |
+|---|--------|---------------|--------|
+| 1 | **`useVoiceAssistant` hook** | `frontend/hooks/useVoiceAssistant.ts` (new) | Core hook managing STT (Web Speech API), TTS (speechSynthesis), and continuous voice mode. States: `idle → listening → processing → speaking → listening...` |
+| 2 | **`VoiceButton` component** | `frontend/components/VoiceButton.tsx` (new) | Mic toggle button with animated states: pulse while listening, spin while processing, green while speaking. Ping dot indicator when mic active |
+| 3 | **`SpeakButton` component** | `frontend/components/SpeakButton.tsx` (new) | "Read aloud" / "Stop" toggle on the answer card |
+| 4 | **Web Speech API types** | `frontend/lib/speech.d.ts` (new) | TypeScript declarations for `SpeechRecognition`, `SpeechRecognitionEvent`, `Window` extensions |
+| 5 | **Voice in QueryInput** | `frontend/components/QueryInput.tsx` | Mic button in input bar; live interim transcript overlay while listening; dynamic placeholder text; blue ring indicator when listening |
+| 6 | **Voice in ResultCard** | `frontend/components/ResultCard.tsx` | Speak button next to copy button; `onSpeak`/`onStopSpeaking` props |
+| 7 | **Voice wired into agent page** | `frontend/app/agent/page.tsx` | Voice mode toggle submits queries via `setOnQueryReady` callback; auto-speaks answers when in voice mode; voice status badge (Listening/Processing/Speaking) |
+| 8 | **Hooks README** | `frontend/hooks/README.md` | Added `useVoiceAssistant` entry |
+
+#### How It Works
+```
+User taps mic → Voice mode ON → Mic activates (SpeechRecognition) → 
+User speaks → Silence detected (800ms) → Query submitted to API → 
+Answer received → speechSynthesis reads aloud → Mic re-activates → 
+Ready for next question (Siri-like loop)
+```
+
+#### Architecture
+- **Speech-to-Text:** Browser-native `webkitSpeechRecognition` / `SpeechRecognition` (no API keys)
+- **Text-to-Speech:** Browser-native `speechSynthesis` API (no API keys)
+- **Continuous mode:** Silence detection via `setTimeout` (800ms), auto-restart on `onend`
+- **Browser support:** Chrome, Edge, Safari (iOS 16+), Firefox (partial)
+
+---
 
 See [EASTER.md](EASTER.md) for all 8 hidden easter eggs sprinkled across the CLI, API, frontend, and code comments.
 
 ---
 
-**End of Documentation (Updated: 2026-06-14)**
+**End of Documentation (Updated: 2026-06-14, Part 2 — Voice Assistant)**
