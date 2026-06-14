@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 import time
 import logging
@@ -34,13 +34,15 @@ from api.db import (
     get_user_repos,
     get_user_stats,
 )
+from pipeline.context_awareness import set_user_profile, get_user_profile
 
 logging.basicConfig(level=logging.INFO, format='{"time": "%(asctime)s", "level": "%(levelname)s", "msg": "%(message)s", "module": "%(module)s"}')
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="CodeBase AI Assistant",
     description="Natural language Q&A over code repositories",
-    version="1.1.0"
+    version="1.2.0"
 )
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -104,7 +106,7 @@ def warm_models():
 
 @app.get("/health")
 def health_check():
-    return {"status": "ok", "version": "1.1.0", "developer": "Ayush Singh"}
+    return {"status": "ok", "version": "1.2.0", "developer": "Ayush Singh"}
 
 
 @app.get("/egg")
@@ -124,12 +126,19 @@ def ask_endpoint(
 ):
     start = time.time()
     try:
-        result = ask(request.query, top_k=request.top_k)
+        result = ask(
+            request.query,
+            top_k=request.top_k,
+            user_id=user.id if user else None,
+        )
     except Exception as e:
+        logger.error(f"Pipeline error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-    result["latency_ms"] = round((time.time() - start) * 1000, 1)
+    elapsed = round((time.time() - start) * 1000, 1)
+    result["latency_ms"] = elapsed
 
+    # Save query history
     if user:
         try:
             save_query_history(
@@ -137,20 +146,37 @@ def ask_endpoint(
                 query=request.query,
                 answer=result.get("answer", ""),
                 sources=result.get("sources", []),
-                latency_ms=result["latency_ms"],
+                latency_ms=elapsed,
             )
         except Exception as e:
-            logging.warning(f"Failed to save query history: {e}")
+            logger.warning(f"Failed to save query history: {e}")
 
-    logging.info(json.dumps({
+    # Sync user profile into context awareness
+    if user:
+        try:
+            existing = get_user(user.id)
+            if existing:
+                set_user_profile(user.id, existing)
+        except Exception:
+            pass
+
+    # Structured logging
+    log_entry = {
         "event": "query",
         "user_id": user.id if user else None,
         "query": request.query,
         "rewritten": result.get("rewritten_query"),
+        "corrected": result.get("corrected_query"),
+        "intent": result.get("intent"),
+        "entities": result.get("entities"),
+        "language": result.get("language"),
         "retrieved": result.get("retrieved_count"),
-        "latency_ms": result["latency_ms"],
-        "is_grounded": result.get("validation", {}).get("is_grounded") if result.get("validation") else None
-    }))
+        "confidence": result.get("confidence"),
+        "latency_ms": elapsed,
+        "pipeline_steps": result.get("pipeline_steps"),
+        "is_grounded": result.get("validation", {}).get("is_grounded") if result.get("validation") else None,
+    }
+    logger.info(json.dumps(log_entry, default=str))
 
     return result
 
@@ -211,11 +237,11 @@ def ingest_github(repo_url: str, branch: Optional[str] = None, user=Depends(get_
 
         os.makedirs(VECTOR_STORE_DIR, exist_ok=True)
 
-        logging.info(f"Loading model: {EMBED_MODEL}")
+        logger.info(f"Loading model: {EMBED_MODEL}")
         model = SentenceTransformer(EMBED_MODEL)
         texts = [build_embed_text(c) for c in all_chunks]
 
-        logging.info(f"Generating embeddings for {len(texts)} chunks...")
+        logger.info(f"Generating embeddings for {len(texts)} chunks...")
         start = time.time()
         embeddings = model.encode(texts, batch_size=BATCH_SIZE, show_progress_bar=False)
         elapsed = round(time.time() - start, 2)
@@ -223,7 +249,7 @@ def ingest_github(repo_url: str, branch: Optional[str] = None, user=Depends(get_
         embeddings = np.array(embeddings).astype("float32")
         dim = embeddings.shape[1]
 
-        logging.info(f"Building FAISS index (dim={dim})...")
+        logger.info(f"Building FAISS index (dim={dim})...")
         index = faiss.IndexFlatL2(dim)
         index.add(embeddings)
 
@@ -234,13 +260,13 @@ def ingest_github(repo_url: str, branch: Optional[str] = None, user=Depends(get_
         with open(metadata_path, "wb") as f:
             pickle.dump(all_chunks, f)
 
-        logging.info(f"Indexing complete: {len(all_chunks)} chunks in {elapsed}s")
+        logger.info(f"Indexing complete: {len(all_chunks)} chunks in {elapsed}s")
 
         if user:
             try:
                 save_user_repo(user_id=user.id, repo_url=repo_url)
             except Exception as e:
-                logging.warning(f"Failed to save user repo: {e}")
+                logger.warning(f"Failed to save user repo: {e}")
 
         return {
             "status": "success",
@@ -268,9 +294,11 @@ def auth_me(user=Depends(get_optional_user)):
                 name=user.user_metadata.get("full_name", user.email or "User"),
                 avatar_url=user.user_metadata.get("avatar_url", ""),
             )
+        if profile:
+            set_user_profile(user.id, profile)
         return {"authenticated": True, "user": profile}
     except Exception as e:
-        logging.warning(f"Failed to fetch user profile: {e}")
+        logger.warning(f"Failed to fetch user profile: {e}")
         return {
             "authenticated": True,
             "user": {
@@ -292,6 +320,8 @@ def update_profile(request: UpdateProfileRequest, user=Depends(get_optional_user
     )
     if not profile:
         raise HTTPException(status_code=404, detail="User not found")
+    if profile:
+        set_user_profile(user.id, profile)
     return profile
 
 
