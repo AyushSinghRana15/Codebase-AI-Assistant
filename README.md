@@ -134,12 +134,25 @@ curl -X POST "http://localhost:8000/ask" \
 
 ## Evaluation
 
-Run the evaluation harness to score the system:
+The system has three evaluation layers:
+
+### 1. Retrieval Accuracy (`test_queries.json` — 15 queries)
+Quick FAISS-only test of search precision. Each query has an `expected_file_hint` or `expected_name_hint`.
+```bash
+python3 -c "from tests.test_retrieval import run_retrieval_tests; run_retrieval_tests()"
+```
+**Current result:** **15/15 PASS** — 12 location/explanation queries hit their target files; 3 edge cases correctly return empty.
+
+### 2. End-to-End Pipeline (`run_eval.py` — 16 queries)
+Full RAG pipeline test scoring on 4 criteria per query (file hint found, keywords in answer, groundedness, sources).
 ```bash
 python3 eval/run_eval.py
 ```
+Scored /64 — target: ≥ 80%.
 
-Target: ≥ 80% score before public demo.
+### 3. Manual Review (`scorecard.md` — 16 queries)
+Human evaluation of correctness (1–5), relevance (1–5), clarity (1–5), and hallucination.
+Target: 41/48 for demo readiness.
 
 ## API Endpoints
 
