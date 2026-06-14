@@ -1,6 +1,10 @@
 # config.py — single source of truth for all tunable parameters
 # Built with ❤️ by Ayush Singh
 
+import os
+
+PROJECT_ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
+
 # Embedding
 EMBED_MODEL      = "sentence-transformers/all-MiniLM-L6-v2"
 EMBED_BATCH_SIZE = 64
@@ -35,11 +39,11 @@ API_HOST         = "0.0.0.0"
 API_PORT         = 8000
 RATE_LIMIT       = "20/minute"
 
-# Paths
-CHUNKS_PATH      = "output/chunks.json"
-FAISS_INDEX_PATH = "vector_store/code_index.faiss"
-METADATA_PATH    = "vector_store/metadata.pkl"
-AGENT_MD_PATH    = "AGENT.md"
+# Paths (absolute — resolved from PROJECT_ROOT)
+CHUNKS_PATH      = os.path.join(PROJECT_ROOT, "output", "chunks.json")
+FAISS_INDEX_PATH = os.path.join(PROJECT_ROOT, "vector_store", "code_index.faiss")
+METADATA_PATH    = os.path.join(PROJECT_ROOT, "vector_store", "metadata.pkl")
+AGENT_MD_PATH    = os.path.join(PROJECT_ROOT, "AGENT.md")
 
 # AST Parsing
 USE_AST_PYTHON  = True    # use ast module for .py files

@@ -1,7 +1,7 @@
 import os
 from typing import List, Dict
 
-CHUNKS_PATH = os.path.join(os.path.dirname(__file__), "..", "output", "chunks.json")
+CHUNKS_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "output", "chunks.json")
 
 
 def load_chunks():

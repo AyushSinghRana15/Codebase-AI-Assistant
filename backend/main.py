@@ -80,7 +80,7 @@ def run_egg():
 def main():
     parser = argparse.ArgumentParser(description="CodeBase AI Assistant")
     parser.add_argument("--repo", help="Path to the repo to ingest (Step 1)")
-    parser.add_argument("--output", default="./output/chunks.json", help="Output JSON file path")
+    parser.add_argument("--output", default=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "output", "chunks.json"), help="Output JSON file path")
     parser.add_argument("--embed", action="store_true", help="Run embedding step (Step 2)")
     parser.add_argument("--query", help="Test retrieval with a query")
     parser.add_argument("--ask", help="Ask a question (Step 3: LLM-powered)")

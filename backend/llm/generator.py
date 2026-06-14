@@ -5,10 +5,11 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import os
 
+from config import PROJECT_ROOT
 from llm.context_builder import build_context
 from llm.prompt_utils import assemble_messages
 
-load_dotenv()
+load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
 
 _client = None
 _MODEL = "openai/gpt-oss-120b:free"  # OpenRouter free model

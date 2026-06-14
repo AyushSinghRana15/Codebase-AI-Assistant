@@ -7,11 +7,12 @@ from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
 
+from config import PROJECT_ROOT
 
 EMBED_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 BATCH_SIZE = 64
-VECTOR_STORE_DIR = os.path.join(os.path.dirname(__file__), "..", "vector_store")
-CHUNKS_PATH = os.path.join(os.path.dirname(__file__), "..", "output", "chunks.json")
+VECTOR_STORE_DIR = os.path.join(PROJECT_ROOT, "vector_store")
+CHUNKS_PATH = os.path.join(PROJECT_ROOT, "output", "chunks.json")
 
 
 def build_embed_text(chunk: dict) -> str:

@@ -2,7 +2,7 @@ import json
 import os
 import pytest
 
-CHUNKS_PATH = os.path.join(os.path.dirname(__file__), "..", "output", "chunks.json")
+CHUNKS_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "output", "chunks.json")
 KNOWN_LANGUAGES = {
     "python", "javascript", "typescript", "java", "go", "ruby", "c", "cpp",
     "rust", "php", "swift", "kotlin", "markdown", "text"

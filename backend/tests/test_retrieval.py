@@ -1,11 +1,15 @@
 import os
 import sys
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+_TEST_ROOT = os.path.dirname(os.path.abspath(__file__))
+_BACKEND_ROOT = os.path.dirname(_TEST_ROOT)
+_PROJECT_ROOT = os.path.dirname(_BACKEND_ROOT)
+
+sys.path.insert(0, _BACKEND_ROOT)  # backend/ on path for package imports
 
 from typing import List, Dict
-
-CHUNKS_PATH = os.path.join(os.path.dirname(__file__), "..", "output", "chunks.json")
-QUERIES_PATH = os.path.join(os.path.dirname(__file__), "..", "eval", "test_queries.json")
+CHUNKS_PATH = os.path.join(_PROJECT_ROOT, "output", "chunks.json")
+QUERIES_PATH = os.path.join(_BACKEND_ROOT, "eval", "test_queries.json")
 SCORE_THRESHOLD = 1.4
 
 

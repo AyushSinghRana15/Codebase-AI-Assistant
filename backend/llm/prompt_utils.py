@@ -1,8 +1,10 @@
 import os
 from typing import List, Dict
 
+from config import PROJECT_ROOT
+
 _SYSTEM_PROMPT = None
-_SYSTEM_PROMPT_PATH = os.path.join(os.path.dirname(__file__), "..", "AGENT.md")
+_SYSTEM_PROMPT_PATH = os.path.join(PROJECT_ROOT, "AGENT.md")
 
 
 def load_system_prompt() -> str:

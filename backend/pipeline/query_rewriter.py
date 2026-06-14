@@ -1,4 +1,5 @@
 from typing import Optional
+from config import PROJECT_ROOT
 
 TEMPLATES = {
     "where":   "Find the code that implements: {query}",
@@ -22,7 +23,7 @@ def rewrite_query(query: str, use_llm: bool = False) -> str:
             from openai import OpenAI
             from dotenv import load_dotenv
             import os
-            load_dotenv()
+            load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
             api_key = os.getenv("OPENAI_API_KEY")
             if api_key:
                 client = OpenAI(api_key=api_key, base_url="https://openrouter.ai/api/v1")

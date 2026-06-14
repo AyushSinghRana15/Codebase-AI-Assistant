@@ -9,7 +9,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from api.middleware import limiter
 
-from config import EMBED_MODEL, RERANK_MODEL
+from config import EMBED_MODEL, RERANK_MODEL, PROJECT_ROOT
 
 from api.schemas import (
     QueryRequest,
@@ -203,7 +203,7 @@ def ingest_github(repo_url: str, branch: Optional[str] = None, user=Depends(get_
         import pickle
         import time
 
-        CHUNKS_PATH = os.path.join(os.path.dirname(__file__), "..", "output", "chunks.json")
+        CHUNKS_PATH = os.path.join(PROJECT_ROOT, "output", "chunks.json")
 
         lang_map = {
             ".py": "python", ".js": "javascript", ".ts": "typescript",

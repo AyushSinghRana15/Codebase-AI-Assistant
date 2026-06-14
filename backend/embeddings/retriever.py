@@ -7,10 +7,10 @@ from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
 
-from config import CACHE_MAX_SIZE
+from config import CACHE_MAX_SIZE, PROJECT_ROOT
 
 EMBED_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-VECTOR_STORE_DIR = os.path.join(os.path.dirname(__file__), "..", "vector_store")
+VECTOR_STORE_DIR = os.path.join(PROJECT_ROOT, "vector_store")
 
 _model = None
 _index = None
