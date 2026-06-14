@@ -8,9 +8,49 @@ import { SourcesPanel } from "@/components/SourcesPanel";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { GitHubIngestor } from "@/components/GitHubIngestor";
 import { useAsk } from "@/hooks/useAsk";
+import { useVoiceAssistant } from "@/hooks/useVoiceAssistant";
+import { useEffect, useCallback, useRef } from "react";
 
 export default function Home() {
   const { query, setQuery, result, state, error, submit, reset } = useAsk();
+  const voice = useVoiceAssistant();
+  const prevResultRef = useRef<string | null>(null);
+
+  const handleVoiceQuery = useCallback((voiceQuery: string) => {
+    setQuery(voiceQuery);
+    setTimeout(() => {
+      const form = document.querySelector("textarea");
+      if (form) {
+        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+          window.HTMLTextAreaElement.prototype, "value"
+        )?.set;
+        nativeInputValueSetter?.call(form, voiceQuery);
+        form.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+      submit();
+    }, 50);
+  }, [setQuery, submit]);
+
+  useEffect(() => {
+    voice.setOnQueryReady(handleVoiceQuery);
+  }, [handleVoiceQuery, voice]);
+
+  useEffect(() => {
+    if (state === "success" && result?.answer && voice.isVoiceMode) {
+      if (result.answer !== prevResultRef.current) {
+        prevResultRef.current = result.answer;
+        voice.speak(result.answer);
+      }
+    }
+    if (state === "error" && voice.isVoiceMode) {
+      voice.speak("Sorry, I encountered an error processing your request.");
+    }
+  }, [state, result, voice]);
+
+  const handleReset = useCallback(() => {
+    reset();
+    prevResultRef.current = null;
+  }, [reset]);
 
   return (
     <main className="min-h-screen flex flex-col items-center" style={{ background: "var(--bg-primary)" }}>
@@ -33,7 +73,47 @@ export default function Home() {
           onChange={setQuery}
           onSubmit={submit}
           disabled={state === "loading"}
+          voiceState={voice.voiceState}
+          isVoiceMode={voice.isVoiceMode}
+          voiceSupported={voice.supported}
+          onVoiceToggle={voice.toggleVoiceMode}
+          interimTranscript={voice.interimTranscript}
         />
+
+        {voice.isVoiceMode && (
+          <div className="text-center">
+            <span
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium"
+              style={{
+                background: voice.voiceState === "listening"
+                  ? "rgba(59,130,246,0.1)"
+                  : voice.voiceState === "speaking"
+                  ? "rgba(22,163,74,0.1)"
+                  : "rgba(234,88,12,0.1)",
+                color: voice.voiceState === "listening"
+                  ? "#3b82f6"
+                  : voice.voiceState === "speaking"
+                  ? "#16a34a"
+                  : "#ea580c",
+              }}
+            >
+              {voice.voiceState === "listening" && (
+                <>
+                  <span className="h-2 w-2 rounded-full bg-[#3b82f6] animate-pulse" />
+                  Listening — speak your query
+                </>
+              )}
+              {voice.voiceState === "processing" && "Processing your query..."}
+              {voice.voiceState === "speaking" && (
+                <>
+                  <span className="h-2 w-2 rounded-full bg-[#16a34a] animate-pulse" />
+                  Speaking answer...
+                </>
+              )}
+              {voice.voiceState === "idle" && "Voice mode paused"}
+            </span>
+          </div>
+        )}
 
         {state === "loading" && <LoadingState />}
         {state === "error" && (
@@ -42,14 +122,19 @@ export default function Home() {
 
         {state === "success" && result && (
           <>
-            <ResultCard result={result} />
+            <ResultCard
+              result={result}
+              voiceState={voice.voiceState}
+              onSpeak={() => voice.speak(result.answer)}
+              onStopSpeaking={voice.stopSpeaking}
+            />
             <SourcesPanel sources={result.sources} />
           </>
         )}
 
         {state !== "idle" && (
           <button
-            onClick={reset}
+            onClick={handleReset}
             className="text-xs transition-colors self-center py-2 hover:opacity-80"
             style={{ color: "var(--text-muted)" }}
           >

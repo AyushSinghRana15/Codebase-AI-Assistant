@@ -5,6 +5,8 @@ import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import { AskResponse } from "@/lib/types";
 import { useState } from "react";
+import { SpeakButton } from "./SpeakButton";
+import { VoiceState } from "@/hooks/useVoiceAssistant";
 
 const CONFIDENCE_STYLE: Record<string, string> = {
   high: "text-[#16a34a] bg-[#16a34a]/10 border-[#16a34a]/20",
@@ -15,12 +17,14 @@ const CONFIDENCE_STYLE: Record<string, string> = {
 
 interface Props {
   result: AskResponse;
+  voiceState: VoiceState;
+  onSpeak: () => void;
+  onStopSpeaking: () => void;
 }
 
-export function ResultCard({ result }: Props) {
+export function ResultCard({ result, voiceState, onSpeak, onStopSpeaking }: Props) {
   const [copied, setCopied] = useState(false);
 
-  // Get confidence level from either top-level or validation object
   const confidenceLevel = result.confidence ?? (() => {
     const conf = result.validation?.confidence;
     if (conf === undefined) return "medium";
@@ -75,17 +79,24 @@ export function ResultCard({ result }: Props) {
               {confidenceLevel}
             </span>
           </div>
-          <button
-            onClick={handleCopy}
-            className="h-8 w-8 rounded-md flex items-center justify-center transition-colors hover:opacity-80"
-            style={{ color: "var(--text-muted)" }}
-          >
-            {copied ? (
-              <Check className="h-4 w-4 text-[#16a34a]" />
-            ) : (
-              <Copy className="h-4 w-4" />
-            )}
-          </button>
+          <div className="flex items-center gap-1">
+            <SpeakButton
+              voiceState={voiceState}
+              onSpeak={onSpeak}
+              onStop={onStopSpeaking}
+            />
+            <button
+              onClick={handleCopy}
+              className="h-8 w-8 rounded-md flex items-center justify-center transition-colors hover:opacity-80"
+              style={{ color: "var(--text-muted)" }}
+            >
+              {copied ? (
+                <Check className="h-4 w-4 text-[#16a34a]" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
+            </button>
+          </div>
         </div>
 
         <div
