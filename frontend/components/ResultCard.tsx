@@ -44,84 +44,73 @@ export function ResultCard({ result, voiceState, onSpeak, onStopSpeaking }: Prop
   };
 
   return (
-    <div
-      className="w-full rounded-xl overflow-hidden"
-      style={{
-        border: "1px solid var(--border-subtle)",
-        background: "var(--bg-card)",
-      }}
-    >
-      <div className="h-1 bg-gradient-to-r from-[#3b82f6] to-transparent" />
-
-      <div className="p-6">
-        {(result.corrected_query || result.original_query) && (
-          <div className="mb-4 text-xs px-3 py-2 rounded-lg border"
-            style={{ color: "var(--text-secondary)", borderColor: "var(--border-subtle)", background: "var(--muted)" }}
-          >
-            {result.original_query && result.corrected_query ? (
-              <span>
-                Query corrected:{" "}
-                <span className="line-through opacity-50">{result.original_query}</span>{" "}
-                → <span className="font-medium">{result.corrected_query}</span>
-              </span>
-            ) : result.corrected_query ? (
-              <span>Query corrected to: {result.corrected_query}</span>
-            ) : null}
-          </div>
-        )}
-
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Answer</span>
-            <span
-              className={`px-2 py-0.5 text-xs font-mono rounded-md border ${CONFIDENCE_STYLE[confidenceLevel]}`}
-            >
-              {confidenceLevel}
-            </span>
-          </div>
-          <div className="flex items-center gap-1">
-            <SpeakButton
-              voiceState={voiceState}
-              onSpeak={onSpeak}
-              onStop={onStopSpeaking}
-            />
-            <button
-              onClick={handleCopy}
-              className="h-8 w-8 rounded-md flex items-center justify-center transition-colors hover:opacity-80"
-              style={{ color: "var(--text-muted)" }}
-            >
-              {copied ? (
-                <Check className="h-4 w-4 text-[#16a34a]" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
-            </button>
-          </div>
-        </div>
-
+    <div className="w-full">
+      {(result.corrected_query || result.original_query) && (
         <div
-          className="rounded-lg p-5 mb-4 text-sm leading-relaxed"
-          style={{ background: "var(--muted)" }}
+          className="mb-4 rounded-lg border px-3 py-2 text-xs"
+          style={{
+            color: "var(--text-secondary)",
+            borderColor: "var(--border-subtle)",
+            background: "var(--bg-card)",
+          }}
         >
-          <div className="prose prose-sm max-w-none" style={{ color: "var(--text-primary)" }}>
-            <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
-              {result.answer}
-            </ReactMarkdown>
-          </div>
-        </div>
-
-        <div className="flex gap-4 flex-wrap text-xs font-mono" style={{ color: "var(--text-muted)" }}>
-          <span>{latencySec}s</span>
-          <span>{result.retrieved_count} chunks</span>
-          {result.validation && (
+          {result.original_query && result.corrected_query ? (
             <span>
-              {result.validation.is_grounded ? "✓ Grounded" : "⚠ May not be grounded"}
+              Query corrected:{" "}
+              <span className="line-through opacity-50">{result.original_query}</span>{" "}
+              → <span className="font-medium">{result.corrected_query}</span>
             </span>
-          )}
-          {result.rewritten_query && (
-            <span>Rewritten: {result.rewritten_query}</span>
-          )}
+          ) : result.corrected_query ? (
+            <span>Query corrected to: {result.corrected_query}</span>
+          ) : null}
         </div>
+      )}
+
+      <div className="prose prose-sm max-w-none text-sm leading-7" style={{ color: "var(--text-primary)" }}>
+        <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+          {result.answer}
+        </ReactMarkdown>
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <SpeakButton
+          voiceState={voiceState}
+          onSpeak={onSpeak}
+          onStop={onStopSpeaking}
+        />
+        <button
+          onClick={handleCopy}
+          aria-label="Copy answer"
+          title="Copy answer"
+          className="flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-white/10"
+          style={{ color: "var(--text-muted)" }}
+        >
+          {copied ? (
+            <Check className="h-4 w-4 text-[#16a34a]" />
+          ) : (
+            <Copy className="h-4 w-4" />
+          )}
+        </button>
+
+        <span
+          className={`ml-1 rounded-md border px-2 py-1 font-mono text-xs ${CONFIDENCE_STYLE[confidenceLevel]}`}
+        >
+          {confidenceLevel}
+        </span>
+        <span className="font-mono text-xs" style={{ color: "var(--text-muted)" }}>{latencySec}s</span>
+        <span className="font-mono text-xs" style={{ color: "var(--text-muted)" }}>
+          {result.retrieved_count} chunks
+        </span>
+        {result.validation && (
+          <span className="font-mono text-xs" style={{ color: "var(--text-muted)" }}>
+            {result.validation.is_grounded ? "✓ Grounded" : "⚠ May not be grounded"}
+          </span>
+        )}
+        {result.rewritten_query && (
+          <span className="font-mono text-xs" style={{ color: "var(--text-muted)" }}>
+            Rewritten: {result.rewritten_query}
+          </span>
+        )}
       </div>
     </div>
   );

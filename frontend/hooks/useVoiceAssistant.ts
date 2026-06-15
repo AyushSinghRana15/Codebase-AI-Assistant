@@ -15,12 +15,25 @@ interface UseVoiceAssistantReturn {
   stopListening: () => void;
   speak: (text: string) => Promise<void>;
   stopSpeaking: () => void;
-  onQueryReady: ((query: string) => void) | null;
   setOnQueryReady: (fn: ((query: string) => void) | null) => void;
 }
 
+function normalizeTranscript(value: string) {
+  return value.replace(/\s+/g, " ").trim();
+}
+
+function speechTextFromMarkdown(value: string) {
+  return value
+    .replace(/```[\s\S]*?```/g, " code block ")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/[#*_~>|-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function useVoiceAssistant(): UseVoiceAssistantReturn {
-  const [voiceState, setVoiceState] = useState<VoiceState>("idle");
+  const [voiceStateValue, setVoiceStateValue] = useState<VoiceState>("idle");
   const [transcript, setTranscript] = useState("");
   const [interimTranscript, setInterimTranscript] = useState("");
   const [isVoiceMode, setIsVoiceMode] = useState(false);
@@ -29,19 +42,21 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const restartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const startListeningRef = useRef<(() => void) | null>(null);
+  const scheduleListeningRestartRef = useRef<((delay: number) => void) | null>(null);
   const onQueryReadyRef = useRef<((query: string) => void) | null>(null);
   const voiceStateRef = useRef<VoiceState>("idle");
+  const voiceModeRef = useRef(false);
+  const finalTranscriptRef = useRef("");
+  const interimTranscriptRef = useRef("");
+  const isRecognizingRef = useRef(false);
 
-  voiceStateRef.current = voiceState;
-
-  useEffect(() => {
-    const hasSR =
-      typeof window !== "undefined" &&
-      ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
-    setSupported(hasSR);
+  const setVoiceState = useCallback((nextState: VoiceState) => {
+    voiceStateRef.current = nextState;
+    setVoiceStateValue(nextState);
   }, []);
 
-  const cleanup = useCallback(() => {
+  const cleanupTimers = useCallback(() => {
     if (silenceTimerRef.current) {
       clearTimeout(silenceTimerRef.current);
       silenceTimerRef.current = null;
@@ -52,40 +67,71 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
     }
   }, []);
 
-  const submitQuery = useCallback((finalTranscript: string) => {
-    cleanup();
-    const trimmed = finalTranscript.trim();
-    if (!trimmed) return;
-
-    setVoiceState("processing");
-    setInterimTranscript("");
-
-    if (onQueryReadyRef.current) {
-      onQueryReadyRef.current(trimmed);
+  const scheduleListeningRestart = useCallback((delay: number) => {
+    if (restartTimerRef.current) {
+      clearTimeout(restartTimerRef.current);
     }
-  }, [cleanup]);
 
-  const stopListening = useCallback(() => {
-    cleanup();
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch {
-        // already stopped
+    restartTimerRef.current = setTimeout(() => {
+      startListeningRef.current?.();
+    }, delay);
+  }, []);
+
+  const stopRecognition = useCallback((abort = false) => {
+    const recognition = recognitionRef.current;
+    if (!recognition) return;
+
+    recognition.onresult = null;
+    recognition.onerror = null;
+    recognition.onend = null;
+
+    try {
+      if (abort) {
+        recognition.abort();
+      } else {
+        recognition.stop();
       }
-      recognitionRef.current = null;
+    } catch {
+      // The browser may already have stopped recognition.
     }
-    setVoiceState("idle");
-  }, [cleanup]);
+
+    recognitionRef.current = null;
+    isRecognizingRef.current = false;
+  }, []);
+
+  const submitTranscript = useCallback(() => {
+    cleanupTimers();
+
+    const readyQuery = normalizeTranscript(
+      `${finalTranscriptRef.current} ${interimTranscriptRef.current}`
+    );
+
+    if (!readyQuery) return;
+
+    stopRecognition(true);
+    finalTranscriptRef.current = "";
+    interimTranscriptRef.current = "";
+    setTranscript(readyQuery);
+    setInterimTranscript("");
+    setVoiceState("processing");
+    onQueryReadyRef.current?.(readyQuery);
+  }, [cleanupTimers, stopRecognition, setVoiceState]);
 
   const startListening = useCallback(() => {
-    if (!supported) return;
-
-    cleanup();
+    if (!supported || isRecognizingRef.current) return;
 
     const SpeechRecognitionAPI =
       window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognitionAPI) return;
+    if (!SpeechRecognitionAPI) {
+      setSupported(false);
+      return;
+    }
+
+    cleanupTimers();
+    finalTranscriptRef.current = "";
+    interimTranscriptRef.current = "";
+    setTranscript("");
+    setInterimTranscript("");
 
     const recognition = new SpeechRecognitionAPI();
     recognition.continuous = true;
@@ -93,49 +139,61 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
     recognition.lang = "en-US";
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let finalTranscript = "";
-      let interimTranscript = "";
+      let finalText = "";
+      let interimText = "";
 
-      for (let i = event.resultIndex; i < event.results.length; i++) {
+      for (let i = event.resultIndex; i < event.results.length; i += 1) {
         const result = event.results[i];
         if (result.isFinal) {
-          finalTranscript += result[0].transcript;
+          finalText += ` ${result[0].transcript}`;
         } else {
-          interimTranscript += result[0].transcript;
+          interimText += ` ${result[0].transcript}`;
         }
       }
 
-      setTranscript((prev) => prev + finalTranscript);
-      setInterimTranscript(interimTranscript);
-
-      if (finalTranscript) {
-        if (silenceTimerRef.current) {
-          clearTimeout(silenceTimerRef.current);
-        }
-        silenceTimerRef.current = setTimeout(() => {
-          const full = (transcript + finalTranscript + interimTranscript).trim();
-          if (full) {
-            submitQuery(full);
-          }
-        }, 800);
+      if (finalText) {
+        finalTranscriptRef.current = normalizeTranscript(
+          `${finalTranscriptRef.current} ${finalText}`
+        );
+        setTranscript(finalTranscriptRef.current);
       }
+
+      interimTranscriptRef.current = normalizeTranscript(interimText);
+      setInterimTranscript(interimTranscriptRef.current);
+
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+      }
+
+      silenceTimerRef.current = setTimeout(submitTranscript, finalText ? 700 : 1400);
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      if (event.error === "not-allowed") {
-        setVoiceState("idle");
+      if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+        cleanupTimers();
+        voiceModeRef.current = false;
         setIsVoiceMode(false);
+        setVoiceState("idle");
+        stopRecognition(true);
         return;
       }
-      if (event.error === "no-speech") return;
-      if (voiceStateRef.current === "listening") {
-        restartTimerRef.current = setTimeout(() => startListening(), 500);
+
+      if (event.error === "no-speech" || event.error === "aborted") return;
+
+      isRecognizingRef.current = false;
+      if (voiceModeRef.current && voiceStateRef.current === "listening") {
+        scheduleListeningRestartRef.current?.(500);
       }
     };
 
     recognition.onend = () => {
-      if (voiceStateRef.current === "listening") {
-        restartTimerRef.current = setTimeout(() => startListening(), 100);
+      isRecognizingRef.current = false;
+      if (recognitionRef.current === recognition) {
+        recognitionRef.current = null;
+      }
+
+      if (voiceModeRef.current && voiceStateRef.current === "listening") {
+        scheduleListeningRestartRef.current?.(180);
       }
     };
 
@@ -143,40 +201,80 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
 
     try {
       recognition.start();
+      isRecognizingRef.current = true;
       setVoiceState("listening");
     } catch {
-      // already started
+      recognitionRef.current = null;
+      isRecognizingRef.current = false;
     }
-  }, [supported, cleanup, submitQuery, transcript]);
+  }, [
+    cleanupTimers,
+    setVoiceState,
+    stopRecognition,
+    submitTranscript,
+    supported,
+  ]);
 
-  const stopSpeaking = useCallback(() => {
+  useEffect(() => {
+    startListeningRef.current = startListening;
+  }, [startListening]);
+
+  useEffect(() => {
+    scheduleListeningRestartRef.current = scheduleListeningRestart;
+  }, [scheduleListeningRestart]);
+
+  const stopListening = useCallback(() => {
+    cleanupTimers();
+    stopRecognition(true);
+    finalTranscriptRef.current = "";
+    interimTranscriptRef.current = "";
+    setTranscript("");
+    setInterimTranscript("");
+    setVoiceState("idle");
+  }, [cleanupTimers, setVoiceState, stopRecognition]);
+
+  const stopVoiceMode = useCallback(() => {
+    voiceModeRef.current = false;
+    setIsVoiceMode(false);
+    cleanupTimers();
+    stopRecognition(true);
+    finalTranscriptRef.current = "";
+    interimTranscriptRef.current = "";
+    setTranscript("");
+    setInterimTranscript("");
     if ("speechSynthesis" in window) {
       window.speechSynthesis.cancel();
     }
     setVoiceState("idle");
-  }, []);
+  }, [cleanupTimers, setVoiceState, stopRecognition]);
+
+  const startVoiceMode = useCallback(() => {
+    if (!supported) return;
+    voiceModeRef.current = true;
+    setIsVoiceMode(true);
+    startListening();
+  }, [startListening, supported]);
 
   const toggleVoiceMode = useCallback(() => {
-    setIsVoiceMode((prev) => {
-      if (prev) {
-        stopListening();
-        stopSpeaking();
-        setTranscript("");
-        setInterimTranscript("");
-        setVoiceState("idle");
-        return false;
-      } else {
-        setTranscript("");
-        setInterimTranscript("");
-        startListening();
-        return true;
-      }
-    });
-  }, [startListening, stopListening, stopSpeaking]);
+    if (voiceModeRef.current) {
+      stopVoiceMode();
+    } else {
+      startVoiceMode();
+    }
+  }, [startVoiceMode, stopVoiceMode]);
 
   const speak = useCallback((text: string): Promise<void> => {
     return new Promise((resolve) => {
+      cleanupTimers();
+      stopRecognition(true);
+
       if (!("speechSynthesis" in window)) {
+        if (voiceModeRef.current) {
+          setVoiceState("listening");
+          scheduleListeningRestartRef.current?.(250);
+        } else {
+          setVoiceState("idle");
+        }
         resolve();
         return;
       }
@@ -184,24 +282,40 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
       window.speechSynthesis.cancel();
       setVoiceState("speaking");
 
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.9;
-      utterance.pitch = 1.0;
-      utterance.volume = 1.0;
+      const utterance = new SpeechSynthesisUtterance(speechTextFromMarkdown(text));
+      utterance.rate = 0.95;
+      utterance.pitch = 1;
+      utterance.volume = 1;
 
-      utterance.onend = () => {
-        setVoiceState("listening");
+      const complete = () => {
+        if (voiceModeRef.current) {
+          setVoiceState("listening");
+          scheduleListeningRestartRef.current?.(300);
+        } else {
+          setVoiceState("idle");
+        }
         resolve();
       };
 
-      utterance.onerror = () => {
-        setVoiceState("listening");
-        resolve();
-      };
+      utterance.onend = complete;
+      utterance.onerror = complete;
 
       window.speechSynthesis.speak(utterance);
     });
-  }, []);
+  }, [cleanupTimers, setVoiceState, stopRecognition]);
+
+  const stopSpeaking = useCallback(() => {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+
+    if (voiceModeRef.current) {
+      setVoiceState("listening");
+      scheduleListeningRestartRef.current?.(250);
+    } else {
+      setVoiceState("idle");
+    }
+  }, [setVoiceState]);
 
   const setOnQueryReady = useCallback((fn: ((query: string) => void) | null) => {
     onQueryReadyRef.current = fn;
@@ -209,18 +323,17 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
 
   useEffect(() => {
     return () => {
-      cleanup();
-      if (recognitionRef.current) {
-        try { recognitionRef.current.stop(); } catch { /* */ }
-      }
+      voiceModeRef.current = false;
+      cleanupTimers();
+      stopRecognition(true);
       if ("speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
     };
-  }, [cleanup]);
+  }, [cleanupTimers, stopRecognition]);
 
   return {
-    voiceState,
+    voiceState: voiceStateValue,
     transcript,
     interimTranscript,
     supported,
@@ -230,7 +343,6 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
     stopListening,
     speak,
     stopSpeaking,
-    onQueryReady: onQueryReadyRef.current,
     setOnQueryReady,
   };
 }

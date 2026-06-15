@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowUp } from "lucide-react";
+import { ArrowUp, AudioLines } from "lucide-react";
 import { VoiceButton } from "./VoiceButton";
 import { VoiceState } from "@/hooks/useVoiceAssistant";
 
@@ -40,24 +40,28 @@ export function QueryInput({
   const placeholder = voiceState === "listening"
     ? "Listening..."
     : isVoiceMode
-    ? "Voice mode active — speak your query"
-    : "Ask anything about your codebase...";
+    ? "Voice is ready"
+    : "Message CodeBaseAI";
+
+  const displayValue = voiceState === "listening"
+    ? interimTranscript || value
+    : value;
 
   return (
     <div className="relative w-full">
       <div
-        className={`w-full rounded-xl overflow-hidden transition-all duration-200 focus-within:border-[#3b82f6]/40 ${
-          voiceState === "listening" ? "ring-2 ring-[#3b82f6]/30" : ""
+        className={`w-full overflow-hidden rounded-[1.6rem] transition-all duration-200 focus-within:border-[#10a37f]/50 ${
+          voiceState === "listening" ? "ring-2 ring-[#10a37f]/25" : ""
         }`}
         style={{
           border: `1px solid ${
-            voiceState === "listening" ? "rgba(59,130,246,0.4)" : "var(--border-subtle)"
+            voiceState === "listening" ? "rgba(16,163,127,0.45)" : "var(--border-subtle)"
           }`,
-          background: "var(--bg-card)",
+          background: "color-mix(in srgb, var(--bg-card) 94%, white 6%)",
         }}
       >
         <textarea
-          value={value}
+          value={displayValue}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
           onCompositionStart={() => setIsComposing(true)}
@@ -66,18 +70,19 @@ export function QueryInput({
           disabled={disabled || voiceState === "listening"}
           rows={2}
           maxLength={1000}
-          className="w-full bg-transparent text-sm px-5 pt-4 pb-12 pr-20 resize-none focus:outline-none font-sans leading-relaxed disabled:opacity-50 placeholder:opacity-50"
+          className="max-h-44 min-h-[5rem] w-full resize-none bg-transparent px-5 pb-12 pt-4 pr-24 font-sans text-[15px] leading-relaxed focus:outline-none disabled:opacity-70 placeholder:opacity-50"
           style={{ color: "var(--text-primary)" }}
         />
-        {interimTranscript && voiceState === "listening" && (
+        {voiceState === "listening" && (
           <div
-            className="absolute left-5 top-3 text-xs italic opacity-60 pointer-events-none truncate max-w-[calc(100%-6rem)]"
-            style={{ color: "var(--text-primary)" }}
+            className="pointer-events-none absolute bottom-4 left-5 flex max-w-[calc(100%-7.5rem)] items-center gap-2 truncate text-xs"
+            style={{ color: "#10a37f" }}
           >
-            {interimTranscript}
+            <AudioLines className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">{interimTranscript || "Listening"}</span>
           </div>
         )}
-        <div className="absolute right-3 bottom-3 flex items-center gap-1">
+        <div className="absolute bottom-3 right-3 flex items-center gap-1.5">
           {voiceSupported && (
             <VoiceButton
               voiceState={voiceState}
@@ -88,18 +93,19 @@ export function QueryInput({
           )}
           <button
             onClick={onSubmit}
-            disabled={disabled || !value.trim()}
-            className="h-9 w-9 rounded-lg flex items-center justify-center transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed hover:shadow-[0_0_16px_rgba(59,130,246,0.3)]"
+            disabled={disabled || voiceState === "listening" || !value.trim()}
+            aria-label="Send message"
+            className="flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-30 hover:shadow-[0_0_16px_rgba(16,163,127,0.28)]"
             style={{
-              background: value.trim() ? "linear-gradient(135deg, #3b82f6, #8b5cf6)" : "var(--muted)",
+              background: value.trim() ? "#f4f4f5" : "var(--muted)",
             }}
           >
-            <ArrowUp className="h-4 w-4 text-white" />
+            <ArrowUp className="h-4 w-4 text-black" />
           </button>
         </div>
       </div>
       {value.length > 800 && (
-        <span className="absolute right-14 bottom-3 text-xs" style={{ color: "var(--text-muted)" }}>
+        <span className="absolute bottom-3 right-24 text-xs" style={{ color: "var(--text-muted)" }}>
           {value.length}/1000
         </span>
       )}

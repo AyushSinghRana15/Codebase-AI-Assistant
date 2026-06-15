@@ -8,141 +8,274 @@ import { SourcesPanel } from "@/components/SourcesPanel";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { GitHubIngestor } from "@/components/GitHubIngestor";
 import { useAsk } from "@/hooks/useAsk";
-import { useVoiceAssistant } from "@/hooks/useVoiceAssistant";
+import { useVoiceAssistant, VoiceState } from "@/hooks/useVoiceAssistant";
+import { AudioLines, Bot, Loader2, Mic, Square, User, Volume2 } from "lucide-react";
 import { useEffect, useCallback, useRef } from "react";
+import type { ReactNode } from "react";
+
+const VOICE_STATUS: Record<
+  VoiceState,
+  { label: string; tone: string; icon: typeof Mic }
+> = {
+  idle: { label: "Paused", tone: "#ea580c", icon: Mic },
+  listening: { label: "Listening", tone: "#10a37f", icon: AudioLines },
+  processing: { label: "Thinking", tone: "#8b5cf6", icon: Loader2 },
+  speaking: { label: "Speaking", tone: "#10a37f", icon: Volume2 },
+};
+
+function AssistantAvatar() {
+  return (
+    <div
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+      style={{
+        background: "linear-gradient(135deg, rgba(16,163,127,0.22), rgba(59,130,246,0.14))",
+        color: "#10a37f",
+      }}
+    >
+      <Bot className="h-4 w-4" />
+    </div>
+  );
+}
+
+function UserBubble({ children }: { children: string }) {
+  return (
+    <div className="flex justify-end">
+      <div className="flex max-w-[86%] items-start gap-3 sm:max-w-[76%]">
+        <div
+          className="rounded-3xl px-4 py-3 text-sm leading-relaxed"
+          style={{
+            background: "color-mix(in srgb, var(--muted) 78%, white 6%)",
+            color: "var(--text-primary)",
+          }}
+        >
+          {children}
+        </div>
+        <div
+          className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+          style={{ background: "var(--muted)", color: "var(--text-secondary)" }}
+        >
+          <User className="h-4 w-4" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AssistantMessage({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex items-start gap-3">
+      <AssistantAvatar />
+      <div className="min-w-0 flex-1">{children}</div>
+    </div>
+  );
+}
+
+function EmptyState() {
+  return (
+    <section className="flex min-h-[34vh] flex-col items-center justify-center text-center">
+      <AssistantAvatar />
+      <h1
+        className="mt-5 text-2xl font-semibold sm:text-3xl"
+        style={{ color: "var(--text-primary)" }}
+      >
+        What can I help with?
+      </h1>
+    </section>
+  );
+}
+
+function VoiceModeStatus({
+  voiceState,
+  isVoiceMode,
+  onStop,
+}: {
+  voiceState: VoiceState;
+  isVoiceMode: boolean;
+  onStop: () => void;
+}) {
+  if (!isVoiceMode) return null;
+
+  const status = VOICE_STATUS[voiceState];
+  const Icon = status.icon;
+
+  return (
+    <div className="flex justify-center">
+      <div
+        className="inline-flex items-center gap-3 rounded-full border px-3 py-2 text-xs shadow-lg shadow-black/10"
+        style={{
+          borderColor: "var(--border-subtle)",
+          background: "color-mix(in srgb, var(--bg-card) 92%, white 8%)",
+          color: "var(--text-secondary)",
+        }}
+      >
+        <span className="relative flex h-7 w-7 items-center justify-center rounded-full">
+          {voiceState === "listening" && (
+            <span
+              className="absolute inset-0 rounded-full animate-ping"
+              style={{ background: "rgba(16,163,127,0.24)" }}
+            />
+          )}
+          <Icon
+            className={`relative h-4 w-4 ${voiceState === "processing" ? "animate-spin" : ""}`}
+            style={{ color: status.tone }}
+          />
+        </span>
+        <span className="font-medium" style={{ color: "var(--text-primary)" }}>
+          {status.label}
+        </span>
+        <button
+          onClick={onStop}
+          aria-label="Stop voice mode"
+          title="Stop voice mode"
+          className="flex h-7 w-7 items-center justify-center rounded-full transition-colors hover:bg-white/10"
+          style={{ color: "var(--text-muted)" }}
+        >
+          <Square className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
-  const { query, setQuery, result, state, error, submit, reset } = useAsk();
-  const voice = useVoiceAssistant();
-  const prevResultRef = useRef<string | null>(null);
+  const { query, setQuery, submittedQuery, result, state, error, submit, reset } = useAsk();
+  const {
+    voiceState,
+    isVoiceMode,
+    supported: voiceSupported,
+    interimTranscript,
+    toggleVoiceMode,
+    setOnQueryReady,
+    speak,
+    stopSpeaking,
+  } = useVoiceAssistant();
+  const prevSpokenAnswerRef = useRef<string | null>(null);
+  const prevSpokenErrorRef = useRef<string | null>(null);
 
   const handleVoiceQuery = useCallback((voiceQuery: string) => {
-    setQuery(voiceQuery);
-    setTimeout(() => {
-      const form = document.querySelector("textarea");
-      if (form) {
-        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-          window.HTMLTextAreaElement.prototype, "value"
-        )?.set;
-        nativeInputValueSetter?.call(form, voiceQuery);
-        form.dispatchEvent(new Event("input", { bubbles: true }));
-      }
-      submit();
-    }, 50);
-  }, [setQuery, submit]);
+    void submit(voiceQuery);
+  }, [submit]);
 
   useEffect(() => {
-    voice.setOnQueryReady(handleVoiceQuery);
-  }, [handleVoiceQuery, voice]);
+    setOnQueryReady(handleVoiceQuery);
+    return () => setOnQueryReady(null);
+  }, [handleVoiceQuery, setOnQueryReady]);
 
   useEffect(() => {
-    if (state === "success" && result?.answer && voice.isVoiceMode) {
-      if (result.answer !== prevResultRef.current) {
-        prevResultRef.current = result.answer;
-        voice.speak(result.answer);
-      }
-    }
-    if (state === "error" && voice.isVoiceMode) {
-      voice.speak("Sorry, I encountered an error processing your request.");
-    }
-  }, [state, result, voice]);
+    if (state !== "success" || !result?.answer || !isVoiceMode) return;
+    if (result.answer === prevSpokenAnswerRef.current) return;
+
+    prevSpokenAnswerRef.current = result.answer;
+    void speak(result.answer);
+  }, [isVoiceMode, result?.answer, speak, state]);
+
+  useEffect(() => {
+    if (state !== "error" || !error || !isVoiceMode) return;
+    if (error === prevSpokenErrorRef.current) return;
+
+    prevSpokenErrorRef.current = error;
+    void speak("Sorry, I encountered an error processing your request.");
+  }, [error, isVoiceMode, speak, state]);
+
+  const handleSubmit = useCallback(() => {
+    void submit();
+  }, [submit]);
+
+  const handleRetry = useCallback(() => {
+    void submit(submittedQuery);
+  }, [submit, submittedQuery]);
 
   const handleReset = useCallback(() => {
     reset();
-    prevResultRef.current = null;
+    prevSpokenAnswerRef.current = null;
+    prevSpokenErrorRef.current = null;
   }, [reset]);
 
   return (
-    <main className="min-h-screen flex flex-col items-center" style={{ background: "var(--bg-primary)" }}>
+    <main
+      className="flex min-h-screen flex-col"
+      style={{ background: "var(--bg-primary)" }}
+    >
       <Header />
-      <div className="w-full max-w-3xl px-6 py-10 flex flex-col gap-5">
-        <div className="text-center mb-4">
-          <h1 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: "var(--text-primary)" }}>
-            <span className="gradient-text">CodeBaseAI</span>{" "}
-            <span style={{ color: "var(--text-muted)" }}>Assistant</span>
-          </h1>
-          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-            Ask natural language questions about any codebase. Get code-grounded answers with file citations.
-          </p>
-        </div>
 
-        <GitHubIngestor />
+      <div className="flex flex-1 justify-center">
+        <div className="flex min-h-[calc(100vh-3.5rem)] w-full max-w-4xl flex-col px-4 sm:px-6">
+          <div className="flex-1 space-y-6 py-6 sm:py-8">
+            <GitHubIngestor />
 
-        <QueryInput
-          value={query}
-          onChange={setQuery}
-          onSubmit={submit}
-          disabled={state === "loading"}
-          voiceState={voice.voiceState}
-          isVoiceMode={voice.isVoiceMode}
-          voiceSupported={voice.supported}
-          onVoiceToggle={voice.toggleVoiceMode}
-          interimTranscript={voice.interimTranscript}
-        />
-
-        {voice.isVoiceMode && (
-          <div className="text-center">
-            <button
-              onClick={voice.toggleVoiceMode}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-opacity hover:opacity-80 cursor-pointer"
-              style={{
-                background: voice.voiceState === "listening"
-                  ? "rgba(59,130,246,0.1)"
-                  : voice.voiceState === "speaking"
-                  ? "rgba(22,163,74,0.1)"
-                  : "rgba(234,88,12,0.1)",
-                color: voice.voiceState === "listening"
-                  ? "#3b82f6"
-                  : voice.voiceState === "speaking"
-                  ? "#16a34a"
-                  : "#ea580c",
-              }}
-              title="Click to stop voice mode"
-            >
-              {voice.voiceState === "listening" && (
-                <>
-                  <span className="h-2 w-2 rounded-full bg-[#3b82f6] animate-pulse" />
-                  Listening — tap to stop
-                </>
-              )}
-              {voice.voiceState === "processing" && "Processing your query..."}
-              {voice.voiceState === "speaking" && (
-                <>
-                  <span className="h-2 w-2 rounded-full bg-[#16a34a] animate-pulse" />
-                  Speaking — tap to stop
-                </>
-              )}
-              {voice.voiceState === "idle" && "Voice mode paused — tap to resume"}
-            </button>
-          </div>
-        )}
-
-        {state === "loading" && <LoadingState />}
-        {state === "error" && (
-          <ErrorBanner message={error!} onRetry={submit} />
-        )}
-
-        {state === "success" && result && (
-          <>
-            <ResultCard
-              result={result}
-              voiceState={voice.voiceState}
-              onSpeak={() => voice.speak(result.answer)}
-              onStopSpeaking={voice.stopSpeaking}
+            <VoiceModeStatus
+              voiceState={voiceState}
+              isVoiceMode={isVoiceMode}
+              onStop={toggleVoiceMode}
             />
-            <SourcesPanel sources={result.sources} />
-          </>
-        )}
 
-        {state !== "idle" && (
-          <button
-            onClick={handleReset}
-            className="text-xs transition-colors self-center py-2 hover:opacity-80"
-            style={{ color: "var(--text-muted)" }}
+            {state === "idle" ? (
+              <EmptyState />
+            ) : (
+              <div className="space-y-7">
+                {submittedQuery && <UserBubble>{submittedQuery}</UserBubble>}
+
+                {state === "loading" && (
+                  <AssistantMessage>
+                    <LoadingState />
+                  </AssistantMessage>
+                )}
+
+                {state === "error" && error && (
+                  <AssistantMessage>
+                    <ErrorBanner message={error} onRetry={handleRetry} />
+                  </AssistantMessage>
+                )}
+
+                {state === "success" && result && (
+                  <AssistantMessage>
+                    <div className="space-y-4">
+                      <ResultCard
+                        result={result}
+                        voiceState={voiceState}
+                        onSpeak={() => void speak(result.answer)}
+                        onStopSpeaking={stopSpeaking}
+                      />
+                      <SourcesPanel sources={result.sources} />
+                    </div>
+                  </AssistantMessage>
+                )}
+              </div>
+            )}
+
+            {state !== "idle" && (
+              <div className="flex justify-center">
+                <button
+                  onClick={handleReset}
+                  className="rounded-full px-3 py-2 text-xs transition-colors hover:bg-white/10"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  New query
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div
+            className="sticky bottom-0 pb-4 pt-3"
+            style={{
+              background:
+                "linear-gradient(to top, var(--bg-primary) 72%, color-mix(in srgb, var(--bg-primary) 0%, transparent))",
+            }}
           >
-            New query
-          </button>
-        )}
+            <QueryInput
+              value={query}
+              onChange={setQuery}
+              onSubmit={handleSubmit}
+              disabled={state === "loading"}
+              voiceState={voiceState}
+              isVoiceMode={isVoiceMode}
+              voiceSupported={voiceSupported}
+              onVoiceToggle={toggleVoiceMode}
+              interimTranscript={interimTranscript}
+            />
+          </div>
+        </div>
       </div>
     </main>
   );
