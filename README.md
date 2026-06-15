@@ -1,6 +1,8 @@
 # CodeBase AI Assistant
 
 > Ask natural language questions about any codebase. Get code-grounded answers with file citations.
+>
+> **Live demo:** [https://codebase-ai-assistant.vercel.app](https://codebase-ai-assistant.vercel.app)
 
 ## Architecture
 
@@ -170,7 +172,7 @@ Target: 41/48 for demo readiness.
 | `/auth/stats` | GET | User usage stats (auth required) |
 | `/docs` | GET | Swagger UI |
 
-### Frontend (Next.js - localhost:3000)
+### Frontend (Next.js - localhost:3000 / [Vercel](https://codebase-ai-assistant.vercel.app))
 | Route | Method | Description |
 |-------|--------|-------------|
 | `/api/ask` | POST | Proxy to backend /ask |

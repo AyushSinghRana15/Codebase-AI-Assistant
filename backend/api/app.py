@@ -50,7 +50,10 @@ app.add_middleware(SlowAPIMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "*",
+        "https://codebase-ai-assistant.vercel.app",
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
