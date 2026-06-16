@@ -9,17 +9,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-      - name: Install hf CLI
-        run: pip install -q huggingface-hub
-      - name: Sync backend to HF Space
+          fetch-depth: 0
+      - name: Push backend to HF Space via git
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          mkdir -p deploy/backend
-          cp -r backend/* deploy/backend/
-          cp spaces/backend/Dockerfile deploy/Dockerfile
-          [ -f spaces/backend/.gitignore ] && cp spaces/backend/.gitignore deploy/
-          hf upload AyushSingh15/CodeBase deploy/ --repo-type=space --delete="*"
+          if [ -z "$HF_TOKEN" ]; then
+            echo "HF_TOKEN secret not set — skipping sync"
+            exit 0
+          fi
+          git config user.email "github-actions@github.com"
+          git config user.name "GitHub Actions"
+          # Create an orphan branch with only the backend + Dockerfile
+          TMP_DIR=$(mktemp -d)
+          cp -r backend "$TMP_DIR/backend"
+          cp spaces/backend/Dockerfile "$TMP_DIR/Dockerfile"
+          [ -f spaces/backend/.gitignore ] && cp spaces/backend/.gitignore "$TMP_DIR/.gitignore"
+          cd "$TMP_DIR"
+          git init
+          git add -A
+          git commit -m "Sync from GitHub $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git push --force https://AyushSingh15:$HF_TOKEN@huggingface.co/spaces/AyushSingh15/CodeBase main
