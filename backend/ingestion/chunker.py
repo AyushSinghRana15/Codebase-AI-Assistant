@@ -38,6 +38,8 @@ def split_large_chunk(content, start_line, chunk_type, name, file_path, language
         sub_end = cur_start + len(sub) - 1
         sub_name = f"{name}_part_{part}"
         sub_chunks.append(create_chunk(sub_content, cur_start, sub_end, chunk_type, sub_name, file_path, language, **extra))
+        if end_idx >= total:
+            break
         idx = end_idx - CHUNK_OVERLAP_LINES
         cur_start = sub_end - CHUNK_OVERLAP_LINES + 1
         part += 1
