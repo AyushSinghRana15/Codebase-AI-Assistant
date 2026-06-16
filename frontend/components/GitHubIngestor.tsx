@@ -26,6 +26,8 @@ const STATUS_LABELS: Record<string, string> = {
   pending: "Starting...",
   cloning: "Cloning repository...",
   chunking: "Parsing code files...",
+  indexing: "Generating search index...",
+  chunking_complete: "Finalizing...",
   embedding: "Generating embeddings...",
 };
 

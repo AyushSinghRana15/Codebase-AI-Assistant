@@ -42,7 +42,11 @@ def main():
     }
 
     update_status(status_file, {"status": "chunking", "file_count": len(files)})
-    from ingestion.chunker import parse_chunks
+    try:
+        from ingestion.chunker import parse_chunks
+    except Exception as e:
+        update_status(status_file, {"status": "error", "error": f"Failed to load chunker: {e}"})
+        return
     all_chunks = []
     for idx, file_path in enumerate(files):
         ext = os.path.splitext(file_path)[1]
@@ -90,7 +94,11 @@ def main():
 
     total_chunks = len(all_chunks)
 
-    from config import PROJECT_ROOT
+    try:
+        from config import PROJECT_ROOT
+    except Exception as e:
+        update_status(status_file, {"status": "error", "error": f"Failed to load config: {e}"})
+        return
     CHUNKS_PATH = os.path.join(PROJECT_ROOT, "output", "chunks.json")
     VECTOR_STORE_DIR = os.path.join(PROJECT_ROOT, "vector_store")
     os.makedirs(os.path.dirname(CHUNKS_PATH), exist_ok=True)

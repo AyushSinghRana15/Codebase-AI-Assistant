@@ -16,17 +16,33 @@ _model = None
 _index = None
 _metadata = None
 _chunks = None
+_last_load_mtime = 0.0
+
+
+def _get_index_mtime() -> float:
+    faiss_path = os.path.join(VECTOR_STORE_DIR, "code_index.faiss")
+    metadata_path = os.path.join(VECTOR_STORE_DIR, "metadata.pkl")
+    t1 = os.path.getmtime(faiss_path) if os.path.exists(faiss_path) else 0
+    t2 = os.path.getmtime(metadata_path) if os.path.exists(metadata_path) else 0
+    return max(t1, t2)
 
 
 def _load():
-    global _model, _index, _metadata, _chunks
-    if _model is not None:
+    global _model, _index, _metadata, _chunks, _last_load_mtime
+    current_mtime = _get_index_mtime()
+    if _model is not None and _last_load_mtime >= current_mtime:
         return
 
     faiss_path = os.path.join(VECTOR_STORE_DIR, "code_index.faiss")
     metadata_path = os.path.join(VECTOR_STORE_DIR, "metadata.pkl")
 
-    _model = SentenceTransformer(EMBED_MODEL)
+    _last_load_mtime = current_mtime
+
+    if _model is not None:
+        _cached_retrieve.cache_clear()
+
+    if _model is None:
+        _model = SentenceTransformer(EMBED_MODEL)
 
     if os.path.exists(faiss_path):
         _index = faiss.read_index(faiss_path)
