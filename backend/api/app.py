@@ -236,14 +236,23 @@ def run_ingest_sync(task_id: str, repo_url: str, branch: Optional[str], user_id:
         _ingest_tasks[task_id] = {"status": "chunking", "file_count": len(files)}
         repo_path = os.path.commonpath(files) if files else ""
         all_chunks = []
-        for file_path in files:
+        for idx, file_path in enumerate(files):
             ext = os.path.splitext(file_path)[1]
             language = lang_map.get(ext, "text")
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-                content = f.read()
+            try:
+                with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+                    content = f.read()
+            except Exception as e:
+                logger.warning(f"Failed to read {file_path}: {e}")
+                continue
             rel_path = os.path.relpath(file_path, repo_path) if repo_path else file_path
-            chunks = parse_chunks(file_content=content, file_path=rel_path, language=language)
+            try:
+                chunks = parse_chunks(file_content=content, file_path=rel_path, language=language)
+            except Exception as e:
+                logger.warning(f"Failed to parse {rel_path}: {e}")
+                continue
             all_chunks.extend(chunks)
+            _ingest_tasks[task_id] = {"status": "chunking", "file_count": len(files), "current_file": idx + 1, "current_path": rel_path}
 
         if not all_chunks:
             _ingest_tasks[task_id] = {"status": "error", "error": "No chunks generated from repository"}
