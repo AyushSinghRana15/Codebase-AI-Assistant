@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const BACKEND_URL = process.env.BACKEND_URL!;
+const BACKEND_URL = process.env.BACKEND_URL;
 const BACKEND_KEY = process.env.BACKEND_API_KEY;
 
 function getHeaders(req: NextRequest): Record<string, string> {
@@ -11,7 +11,15 @@ function getHeaders(req: NextRequest): Record<string, string> {
   return headers;
 }
 
+function missingBackendErr() {
+  return NextResponse.json(
+    { error: "Backend URL not configured. Set BACKEND_URL env var." },
+    { status: 500 }
+  );
+}
+
 async function proxyToBackend(path: string, req: NextRequest, init?: RequestInit) {
+  if (!BACKEND_URL) return missingBackendErr();
   const url = `${BACKEND_URL}${path}`;
   const res = await fetch(url, {
     headers: { "Content-Type": "application/json", ...getHeaders(req) },
@@ -23,6 +31,8 @@ async function proxyToBackend(path: string, req: NextRequest, init?: RequestInit
 
 export async function POST(req: NextRequest) {
   try {
+    if (!BACKEND_URL) return missingBackendErr();
+
     const { searchParams } = new URL(req.url);
     const repoUrl = searchParams.get("repo_url");
     const branch = searchParams.get("branch");
@@ -73,6 +83,8 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
+    if (!BACKEND_URL) return missingBackendErr();
+
     const { searchParams } = new URL(req.url);
     const taskId = searchParams.get("task_id");
     if (!taskId) {

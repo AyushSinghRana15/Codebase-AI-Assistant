@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const BACKEND_URL = process.env.BACKEND_URL!;
+const BACKEND_URL = process.env.BACKEND_URL;
 const BACKEND_KEY = process.env.BACKEND_API_KEY;
 
 export async function POST(req: NextRequest) {
   try {
+    if (!BACKEND_URL) {
+      return NextResponse.json(
+        { error: "Backend URL not configured. Set BACKEND_URL env var." },
+        { status: 500 }
+      );
+    }
+
     const body = await req.json();
 
     if (!body.query || typeof body.query !== "string") {
@@ -21,7 +28,7 @@ export async function POST(req: NextRequest) {
     if (BACKEND_KEY) headers["X-API-Key"] = BACKEND_KEY;
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 60000); // 60s timeout
+    const timeout = setTimeout(() => controller.abort(), 60000);
 
     try {
       const response = await fetch(`${BACKEND_URL}/ask`, {

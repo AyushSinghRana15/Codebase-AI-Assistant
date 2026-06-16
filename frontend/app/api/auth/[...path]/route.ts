@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const BACKEND_URL = process.env.BACKEND_URL!;
+const BACKEND_URL = process.env.BACKEND_URL;
 const BACKEND_KEY = process.env.BACKEND_API_KEY;
 
 export async function GET(
@@ -21,6 +21,13 @@ export async function PUT(
 
 async function proxyRequest(req: NextRequest, path: string[], method: string) {
   try {
+    if (!BACKEND_URL) {
+      return NextResponse.json(
+        { error: "Backend URL not configured. Set BACKEND_URL env var." },
+        { status: 500 }
+      );
+    }
+
     const queryString = req.nextUrl.searchParams.toString();
     const url = `${BACKEND_URL}/auth/${path.join("/")}${queryString ? `?${queryString}` : ""}`;
 
