@@ -196,7 +196,7 @@ def stats():
 
 import subprocess
 
-INGEST_TMP_DIR = os.path.join(tempfile.gettempdir(), "codebase_ingest")
+INGEST_TMP_DIR = os.path.join(PROJECT_ROOT, ".ingest_status")
 os.makedirs(INGEST_TMP_DIR, exist_ok=True)
 
 

@@ -2,6 +2,10 @@ import sys
 import json
 import os
 import pickle
+import time
+
+MAX_FILE_SIZE = 1024 * 1024
+MAX_TOTAL_CHUNKS = 50000
 
 def update_status(status_file: str, data: dict):
     with open(status_file, "w") as f:
@@ -43,6 +47,13 @@ def main():
     for idx, file_path in enumerate(files):
         ext = os.path.splitext(file_path)[1]
         language = lang_map.get(ext, "text")
+
+        try:
+            if os.path.getsize(file_path) > MAX_FILE_SIZE:
+                continue
+        except OSError:
+            continue
+
         try:
             with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
                 content = f.read()
@@ -54,7 +65,19 @@ def main():
         except Exception:
             continue
         all_chunks.extend(chunks)
-        update_status(status_file, {"status": "chunking", "file_count": len(files), "current_file": idx + 1, "current_path": rel_path})
+
+        if len(all_chunks) > MAX_TOTAL_CHUNKS:
+            all_chunks = all_chunks[:MAX_TOTAL_CHUNKS]
+            break
+
+        if idx % 50 == 0:
+            update_status(status_file, {
+                "status": "chunking",
+                "file_count": len(files),
+                "current_file": idx + 1,
+                "current_path": rel_path,
+                "chunks_so_far": len(all_chunks),
+            })
 
     try:
         cleanup_repo(repo_path)
@@ -80,9 +103,35 @@ def main():
     with open(metadata_path, "wb") as f:
         pickle.dump(all_chunks, f)
 
-    # Remove stale FAISS index so retriever knows to rebuild
+    update_status(status_file, {"status": "indexing", "chunks": total_chunks})
+
+    faiss_built = False
+    try:
+        from sentence_transformers import SentenceTransformer
+        import numpy as np
+        import faiss
+
+        model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+        texts = []
+        for c in all_chunks:
+            m = c["metadata"]
+            texts.append(f"[{m['language']}] {m['chunk_type']}: {m['name']} in {m['file_path']}\n\n{c['content']}")
+        embeddings = model.encode(texts, batch_size=16, show_progress_bar=False)
+        embeddings = np.array(embeddings).astype("float32")
+        dim = embeddings.shape[1]
+        index = faiss.IndexFlatL2(dim)
+        index.add(embeddings)
+        faiss_path = os.path.join(VECTOR_STORE_DIR, "code_index.faiss")
+        faiss.write_index(index, faiss_path)
+        faiss_built = True
+        del model, embeddings, index, texts
+    except Exception as e:
+        update_status(status_file, {"status": "chunking_complete", "warning": f"FAISS build deferred: {e}"})
+
+    del all_chunks
+
     faiss_path = os.path.join(VECTOR_STORE_DIR, "code_index.faiss")
-    if os.path.exists(faiss_path):
+    if not faiss_built and os.path.exists(faiss_path):
         os.remove(faiss_path)
 
     if user_id_str:
@@ -97,6 +146,7 @@ def main():
         "files_processed": len(files),
         "chunks_created": total_chunks,
         "indexing_time_s": 0,
+        "faiss_built": faiss_built,
         "repo_url": repo_url,
     })
 

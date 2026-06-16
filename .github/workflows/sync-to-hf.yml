@@ -1,0 +1,25 @@
+name: Sync to Hugging Face Hub
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install hf CLI
+        run: pip install -q huggingface-hub
+      - name: Sync backend to HF Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          mkdir -p deploy/backend
+          cp -r backend/* deploy/backend/
+          cp spaces/backend/Dockerfile deploy/Dockerfile
+          [ -f spaces/backend/.gitignore ] && cp spaces/backend/.gitignore deploy/
+          hf upload AyushSingh15/CodeBase deploy/ --repo-type=space --delete="*"
