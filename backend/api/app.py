@@ -10,6 +10,15 @@ from slowapi.middleware import SlowAPIMiddleware
 from api.middleware import limiter
 
 from config import EMBED_MODEL, RERANK_MODEL, PROJECT_ROOT
+from sentence_transformers import SentenceTransformer
+
+_embed_model = None
+
+def get_embed_model():
+    global _embed_model
+    if _embed_model is None:
+        _embed_model = SentenceTransformer(EMBED_MODEL)
+    return _embed_model
 
 from api.schemas import (
     QueryRequest,
@@ -200,7 +209,6 @@ def ingest_github(repo_url: str, branch: Optional[str] = None, user=Depends(get_
         import os
         from ingestion.chunker import parse_chunks
         from embeddings.embedder import build_embed_text, EMBED_MODEL, BATCH_SIZE, VECTOR_STORE_DIR
-        from sentence_transformers import SentenceTransformer
         import faiss
         import numpy as np
         import pickle
@@ -241,7 +249,7 @@ def ingest_github(repo_url: str, branch: Optional[str] = None, user=Depends(get_
         os.makedirs(VECTOR_STORE_DIR, exist_ok=True)
 
         logger.info(f"Loading model: {EMBED_MODEL}")
-        model = SentenceTransformer(EMBED_MODEL)
+        model = get_embed_model()
         texts = [build_embed_text(c) for c in all_chunks]
 
         logger.info(f"Generating embeddings for {len(texts)} chunks...")
