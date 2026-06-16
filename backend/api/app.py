@@ -10,13 +10,14 @@ from slowapi.middleware import SlowAPIMiddleware
 from api.middleware import limiter
 
 from config import EMBED_MODEL, RERANK_MODEL, PROJECT_ROOT
-from sentence_transformers import SentenceTransformer
 
 _embed_model = None
+_reranker = None
 
 def get_embed_model():
     global _embed_model
     if _embed_model is None:
+        from sentence_transformers import SentenceTransformer
         _embed_model = SentenceTransformer(EMBED_MODEL)
     return _embed_model
 
@@ -70,10 +71,11 @@ app.add_middleware(
 
 @app.on_event("startup")
 def warm_models():
+    global _embed_model, _reranker
+
     logging.info("Pre-warming embedding model...")
     try:
-        from sentence_transformers import SentenceTransformer
-        SentenceTransformer(EMBED_MODEL)
+        _embed_model = get_embed_model()
         logging.info(f"Embedding model '{EMBED_MODEL}' loaded")
     except Exception as e:
         logging.warning(f"Failed to pre-warm embedding model: {e}")
@@ -81,7 +83,7 @@ def warm_models():
     logging.info("Pre-warming reranker model...")
     try:
         from sentence_transformers import CrossEncoder
-        CrossEncoder(RERANK_MODEL)
+        _reranker = CrossEncoder(RERANK_MODEL)
         logging.info(f"Reranker model '{RERANK_MODEL}' loaded")
     except Exception as e:
         logging.warning(f"Failed to pre-warm reranker model: {e}")
