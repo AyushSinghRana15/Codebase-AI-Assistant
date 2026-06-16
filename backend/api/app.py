@@ -185,6 +185,9 @@ def ask_endpoint(
 @app.get("/stats")
 def stats():
     from embeddings.retriever import _index
+    if _index is None:
+        from embeddings.retriever import _load
+        _load()
     return {
         "total_chunks": _index.ntotal if _index else 0,
         "index_loaded": _index is not None

@@ -3,7 +3,10 @@
 
 import os
 
-PROJECT_ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
+_base = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+if _base == "/":
+    _base = os.getcwd()
+PROJECT_ROOT = _base
 
 # Embedding
 EMBED_MODEL      = "sentence-transformers/all-MiniLM-L6-v2"
