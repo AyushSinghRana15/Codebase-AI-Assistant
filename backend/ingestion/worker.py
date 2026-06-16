@@ -3,21 +3,18 @@ import json
 import os
 import pickle
 import time
+import gc
 
 MAX_FILE_SIZE = 1024 * 1024
-MAX_TOTAL_CHUNKS = 50000
+MAX_TOTAL_CHUNKS = 3000
+
 
 def update_status(status_file: str, data: dict):
     with open(status_file, "w") as f:
         json.dump(data, f)
 
-def main():
-    task_id = sys.argv[1]
-    status_file = sys.argv[2]
-    repo_url = sys.argv[3]
-    branch = sys.argv[4] or None
-    user_id_str = sys.argv[5] or None
 
+def ingest_main(task_id: str, status_file: str, repo_url: str, branch: str | None, user_id: str | None):
     update_status(status_file, {"status": "cloning", "repo_url": repo_url})
 
     try:
@@ -47,6 +44,7 @@ def main():
     except Exception as e:
         update_status(status_file, {"status": "error", "error": f"Failed to load chunker: {e}"})
         return
+
     all_chunks = []
     for idx, file_path in enumerate(files):
         ext = os.path.splitext(file_path)[1]
@@ -93,6 +91,8 @@ def main():
         return
 
     total_chunks = len(all_chunks)
+    del files, lang_map
+    gc.collect()
 
     try:
         from config import PROJECT_ROOT
@@ -111,52 +111,35 @@ def main():
     with open(metadata_path, "wb") as f:
         pickle.dump(all_chunks, f)
 
-    update_status(status_file, {"status": "indexing", "chunks": total_chunks})
-
-    faiss_built = False
-    try:
-        from sentence_transformers import SentenceTransformer
-        import numpy as np
-        import faiss
-
-        model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-        texts = []
-        for c in all_chunks:
-            m = c["metadata"]
-            texts.append(f"[{m['language']}] {m['chunk_type']}: {m['name']} in {m['file_path']}\n\n{c['content']}")
-        embeddings = model.encode(texts, batch_size=16, show_progress_bar=False)
-        embeddings = np.array(embeddings).astype("float32")
-        dim = embeddings.shape[1]
-        index = faiss.IndexFlatL2(dim)
-        index.add(embeddings)
-        faiss_path = os.path.join(VECTOR_STORE_DIR, "code_index.faiss")
-        faiss.write_index(index, faiss_path)
-        faiss_built = True
-        del model, embeddings, index, texts
-    except Exception as e:
-        update_status(status_file, {"status": "chunking_complete", "warning": f"FAISS build deferred: {e}"})
-
     del all_chunks
+    gc.collect()
 
-    faiss_path = os.path.join(VECTOR_STORE_DIR, "code_index.faiss")
-    if not faiss_built and os.path.exists(faiss_path):
-        os.remove(faiss_path)
+    update_status(status_file, {"status": "chunking_complete", "chunks": total_chunks})
 
-    if user_id_str:
+    if user_id:
         try:
             from api.db import save_user_repo
-            save_user_repo(user_id=user_id_str, repo_url=repo_url)
+            save_user_repo(user_id=user_id, repo_url=repo_url)
         except Exception:
             pass
 
     update_status(status_file, {
         "status": "success",
-        "files_processed": len(files),
+        "files_processed": total_chunks,
         "chunks_created": total_chunks,
-        "indexing_time_s": 0,
-        "faiss_built": faiss_built,
         "repo_url": repo_url,
     })
+
+
+def main():
+    ingest_main(
+        task_id=sys.argv[1],
+        status_file=sys.argv[2],
+        repo_url=sys.argv[3],
+        branch=sys.argv[4] or None,
+        user_id=sys.argv[5] or None,
+    )
+
 
 if __name__ == "__main__":
     main()

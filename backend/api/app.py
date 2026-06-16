@@ -4,10 +4,7 @@ import time
 import logging
 import json
 import uuid
-import tempfile
 import os
-import sys
-import subprocess
 from typing import Optional
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -194,10 +191,25 @@ def stats():
     }
 
 
-import subprocess
+import threading
 
 INGEST_TMP_DIR = os.path.join(PROJECT_ROOT, ".ingest_status")
 os.makedirs(INGEST_TMP_DIR, exist_ok=True)
+
+
+def _run_ingestion(task_id: str, status_file: str, repo_url: str, branch: str, user_id: str):
+    import gc
+    from ingestion.worker import ingest_main
+    try:
+        ingest_main(task_id, status_file, repo_url, branch or None, user_id or None)
+    except Exception as e:
+        try:
+            with open(status_file, "w") as f:
+                json.dump({"status": "error", "error": str(e)}, f)
+        except Exception:
+            pass
+    finally:
+        gc.collect()
 
 
 @app.post("/ingest/github")
@@ -207,12 +219,12 @@ def ingest_github(repo_url: str, branch: Optional[str] = None, user=Depends(get_
     with open(status_file, "w") as f:
         json.dump({"status": "queued", "repo_url": repo_url}, f)
 
-    backend_dir = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-    subprocess.Popen(
-        [sys.executable, "-u", "-m", "ingestion.worker", task_id, status_file, repo_url, branch or "", str(user.id) if user else ""],
-        cwd=backend_dir,
-        close_fds=True,
+    t = threading.Thread(
+        target=_run_ingestion,
+        args=(task_id, status_file, repo_url, branch or "", str(user.id) if user else ""),
+        daemon=True,
     )
+    t.start()
     return {"task_id": task_id, "status": "queued"}
 
 
