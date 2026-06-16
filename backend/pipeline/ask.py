@@ -11,7 +11,7 @@ from pipeline.query_corrector import correct_query
 from pipeline.query_rewriter import rewrite_query
 
 
-def ask(query: str, top_k: int = 10) -> Dict:
+def ask(query: str, top_k: int = 10, user_id: str | None = None) -> Dict:
     """
     Full RAG pipeline: query → spell-check → classify → hybrid retrieve → rerank → generate → validate.
     """
