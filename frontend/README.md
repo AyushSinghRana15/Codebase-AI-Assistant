@@ -17,7 +17,7 @@ npm run dev
 | `components/` | React components (chat UI, website landing page, shadcn/ui primitives) |
 | `context/` | React context providers (theme, auth) |
 | `hooks/` | Custom React hooks |
-| `lib/` | Types, API client, Supabase client |
+| `lib/` | Types, API client, Supabase client, modular TTS providers |
 | `public/` | Static assets |
 
 ## Routes
