@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { createTTSProvider } from "@/lib/tts";
+import type { TTSProvider } from "@/lib/tts";
 
 export type VoiceState = "idle" | "listening" | "processing" | "speaking";
 
@@ -18,18 +20,16 @@ interface UseVoiceAssistantReturn {
   setOnQueryReady: (fn: ((query: string) => void) | null) => void;
 }
 
-function normalizeTranscript(value: string) {
-  return value.replace(/\s+/g, " ").trim();
+let _tts: TTSProvider | null = null;
+function getTTS(): TTSProvider {
+  if (!_tts) {
+    _tts = createTTSProvider();
+  }
+  return _tts;
 }
 
-function speechTextFromMarkdown(value: string) {
-  return value
-    .replace(/```[\s\S]*?```/g, " code block ")
-    .replace(/`([^`]+)`/g, "$1")
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
-    .replace(/[#*_~>|-]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+function normalizeTranscript(value: string) {
+  return value.replace(/\s+/g, " ").trim();
 }
 
 export function useVoiceAssistant(): UseVoiceAssistantReturn {
@@ -242,9 +242,7 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
     interimTranscriptRef.current = "";
     setTranscript("");
     setInterimTranscript("");
-    if ("speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-    }
+    getTTS().stop();
     setVoiceState("idle");
   }, [cleanupTimers, setVoiceState, stopRecognition]);
 
@@ -263,51 +261,40 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
     }
   }, [startVoiceMode, stopVoiceMode]);
 
-  const speak = useCallback((text: string): Promise<void> => {
-    return new Promise((resolve) => {
-      cleanupTimers();
-      stopRecognition(true);
+  const speak = useCallback(async (text: string): Promise<void> => {
+    cleanupTimers();
+    stopRecognition(true);
 
-      if (!("speechSynthesis" in window)) {
-        if (voiceModeRef.current) {
-          setVoiceState("listening");
-          scheduleListeningRestartRef.current?.(250);
-        } else {
-          setVoiceState("idle");
-        }
-        resolve();
-        return;
+    const tts = getTTS();
+
+    if (!("speechSynthesis" in window)) {
+      if (voiceModeRef.current) {
+        setVoiceState("listening");
+        scheduleListeningRestartRef.current?.(250);
+      } else {
+        setVoiceState("idle");
       }
+      return;
+    }
 
-      window.speechSynthesis.cancel();
-      setVoiceState("speaking");
+    setVoiceState("speaking");
 
-      const utterance = new SpeechSynthesisUtterance(speechTextFromMarkdown(text));
-      utterance.rate = 0.95;
-      utterance.pitch = 1;
-      utterance.volume = 1;
+    try {
+      await tts.speak(text);
+    } catch {
+      // TTS error — continue silently
+    }
 
-      const complete = () => {
-        if (voiceModeRef.current) {
-          setVoiceState("listening");
-          scheduleListeningRestartRef.current?.(300);
-        } else {
-          setVoiceState("idle");
-        }
-        resolve();
-      };
-
-      utterance.onend = complete;
-      utterance.onerror = complete;
-
-      window.speechSynthesis.speak(utterance);
-    });
+    if (voiceModeRef.current) {
+      setVoiceState("listening");
+      scheduleListeningRestartRef.current?.(300);
+    } else {
+      setVoiceState("idle");
+    }
   }, [cleanupTimers, setVoiceState, stopRecognition]);
 
   const stopSpeaking = useCallback(() => {
-    if ("speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-    }
+    getTTS().stop();
 
     if (voiceModeRef.current) {
       setVoiceState("listening");
@@ -326,9 +313,7 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
       voiceModeRef.current = false;
       cleanupTimers();
       stopRecognition(true);
-      if ("speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
-      }
+      getTTS().stop();
     };
   }, [cleanupTimers, stopRecognition]);
 
