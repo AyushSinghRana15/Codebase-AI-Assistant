@@ -55,7 +55,7 @@ Browser → Next.js Frontend (localhost:3000) → API Proxy → FastAPI Backend 
 
 ### Frontend (Next.js)
 - **Chat Interface** — clean, dark-themed UI inspired by ChatGPT
-- **Voice Assistant** — continuous Siri-like voice mode: press mic, speak queries, hear answers read aloud with modular TTS (pluggable provider architecture in `frontend/lib/tts/`)
+- **Voice Assistant** — continuous voice mode: press mic, speak queries, hear answers read aloud with modular TTS (pluggable provider architecture in `frontend/lib/tts/`)
 - **Markdown Rendering** — syntax-highlighted code blocks
 - **Source References** — collapsible panel with file paths and scores
 - **GitHub Integration** — ingest repos via URL
