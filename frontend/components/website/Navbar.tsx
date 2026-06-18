@@ -49,7 +49,18 @@ export function Navbar() {
           ))}
         </div>
 
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-3">
+          <Link
+            href="/login"
+            className="sketch-btn inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl transition-all duration-300"
+            style={{
+              color: "var(--text-secondary)",
+              border: "1px solid var(--border-subtle)",
+              background: "var(--bg-card)",
+            }}
+          >
+            Sign In
+          </Link>
           <Link
             href="/agent"
             className="sketch-btn inline-flex items-center px-5 py-2 text-sm font-semibold text-white rounded-xl transition-all duration-300"
@@ -99,6 +110,14 @@ export function Navbar() {
               {link.label}
             </a>
           ))}
+          <Link
+            href="/login"
+            className="block text-center text-sm font-medium py-2.5 rounded-xl transition-colors"
+            style={{ color: "var(--text-secondary)", border: "1px solid var(--border-subtle)" }}
+            onClick={() => setMobileOpen(false)}
+          >
+            Sign In
+          </Link>
           <Link
             href="/agent"
             className="block text-center text-sm font-semibold text-white py-2.5 rounded-xl"

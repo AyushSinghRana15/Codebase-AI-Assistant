@@ -98,8 +98,9 @@ export function SettingsDropdown() {
                 <span style={{ color: "var(--text-secondary)" }}>Profile</span>
               </Link>
             ) : (
-              <button
-                onClick={() => { setToast("Sign in to access profile"); setOpen(false); }}
+              <Link
+                href="/login"
+                onClick={() => setOpen(false)}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors hover:opacity-80"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: "var(--text-muted)" }}>
@@ -107,7 +108,7 @@ export function SettingsDropdown() {
                   <circle cx="12" cy="7" r="4" />
                 </svg>
                 <span style={{ color: "var(--text-secondary)" }}>Profile</span>
-              </button>
+              </Link>
             )}
 
             <button
