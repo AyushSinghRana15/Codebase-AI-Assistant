@@ -6,15 +6,17 @@ from pipeline.reranker import rerank, mmr_diversify
 from pipeline.query_classifier import classify_query, get_pipeline_config
 from pipeline.hybrid_retriever import hybrid_retrieve
 from embeddings.retriever import has_indexed_data
-from llm.generator import generate_answer
+from llm.generator import generate_answer, generate_general_answer
 from pipeline.validator import validate_answer
 from pipeline.query_corrector import correct_query
 from pipeline.query_rewriter import rewrite_query
+from web.search import search_web, format_web_context
 
 
 def ask(query: str, top_k: int = 10, user_id: str | None = None) -> Dict:
     """
     Full RAG pipeline: query → spell-check → classify → hybrid retrieve → rerank → generate → validate.
+    Falls back to web search + LLM when no code context is available.
     """
     start = time.time()
 
@@ -22,7 +24,7 @@ def ask(query: str, top_k: int = 10, user_id: str | None = None) -> Dict:
     if "ayush" in query.lower():
         return {
             "answer": "Ayush Singh — the brilliant mind who built this entire system. Ask him about AST parsing, hybrid retrieval, or why he chose FAISS over Pinecone. 🥚",
-            "sources": [{"file_path": "README.md", "name": "Ayush Singh", "score": 0.0}],
+            "sources": [],
             "retrieved_count": 0,
             "rewritten_query": None,
             "corrected_query": None,
@@ -30,16 +32,25 @@ def ask(query: str, top_k: int = 10, user_id: str | None = None) -> Dict:
             "validation": {"is_grounded": True, "confidence": 1.0, "warning": None}
         }
 
-    # Check if any repo has been indexed
+    # Check if any repo has been indexed — if not, use web search + LLM
     if not has_indexed_data():
+        print(f"[No Index] No repos indexed. Falling back to web search + LLM for: '{query}'")
+        web_results = search_web(query)
+        web_context = format_web_context(web_results) if web_results else ""
+        answer = generate_general_answer(query, web_context)
+        sources = (
+            [{"file_path": r["url"], "name": r["title"], "score": 0.0} for r in web_results[:3]]
+            if web_results
+            else []
+        )
         return {
-            "answer": "Please add a repository first. Use the \"Add Repository\" button to index a GitHub repo, then I can answer questions about your code.",
-            "sources": [],
+            "answer": answer,
+            "sources": sources,
             "retrieved_count": 0,
             "rewritten_query": None,
             "corrected_query": None,
             "original_query": None,
-            "validation": {"is_grounded": False, "confidence": 0.0, "warning": "No repo indexed"}
+            "validation": {"is_grounded": True, "confidence": 0.0, "warning": "No repo indexed; answered via web search"}
         }
 
     # Spell-check the query
@@ -79,7 +90,28 @@ def ask(query: str, top_k: int = 10, user_id: str | None = None) -> Dict:
     else:
         results = results[:TOP_K_RERANK]
 
-    # Generate answer
+    # Generate answer from code context
+    if not results:
+        print(f"[No Results] No code matches for '{query}'. Falling back to web search + LLM.")
+        web_results = search_web(query)
+        web_context = format_web_context(web_results) if web_results else ""
+        answer = generate_general_answer(query, web_context)
+        sources = (
+            [{"file_path": r["url"], "name": r["title"], "score": 0.0} for r in web_results[:3]]
+            if web_results
+            else []
+        )
+        return {
+            "answer": answer,
+            "sources": sources,
+            "retrieved_count": 0,
+            "rewritten_query": rewritten_query,
+            "corrected_query": corrected_query if was_corrected else None,
+            "original_query": original_query,
+            "validation": {"is_grounded": True, "confidence": 0.0, "warning": "No code context; answered via web search"},
+            "latency_ms": round((time.time() - start) * 1000, 1),
+        }
+
     answer = generate_answer(query, results)
 
     # Validate
@@ -103,7 +135,7 @@ def ask(query: str, top_k: int = 10, user_id: str | None = None) -> Dict:
         "answer": answer,
         "sources": sources,
         "retrieved_count": len(results),
-        "rewritten_query": None,
+        "rewritten_query": rewritten_query,
         "corrected_query": corrected_query if was_corrected else None,
         "original_query": original_query,
         "validation": validation

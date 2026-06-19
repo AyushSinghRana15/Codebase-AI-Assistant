@@ -7,7 +7,7 @@ import os
 
 from config import PROJECT_ROOT
 from llm.context_builder import build_context
-from llm.prompt_utils import assemble_messages
+from llm.prompt_utils import assemble_messages, assemble_general_messages
 
 load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
 
@@ -39,6 +39,16 @@ def generate_answer(query: str, results: List[Dict]) -> str:
     context = build_context(results)
     messages = assemble_messages(query, context)
 
+    return _call_llm(messages)
+
+
+def generate_general_answer(query: str, context: str = "") -> str:
+    """Generate an answer using the general-purpose system prompt (no code context required)."""
+    messages = assemble_general_messages(query, context)
+    return _call_llm(messages)
+
+
+def _call_llm(messages: List[Dict]) -> str:
     client = _get_client()
 
     max_retries = 2

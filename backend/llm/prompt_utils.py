@@ -4,6 +4,7 @@ from typing import List, Dict
 from config import PROJECT_ROOT
 
 _SYSTEM_PROMPT = None
+_GENERAL_SYSTEM_PROMPT = None
 _SYSTEM_PROMPT_PATH = os.path.join(PROJECT_ROOT, "AGENT.md")
 
 
@@ -31,12 +32,44 @@ ADDITIONAL RULES:
     return _SYSTEM_PROMPT
 
 
+def load_general_system_prompt() -> str:
+    global _GENERAL_SYSTEM_PROMPT
+    if _GENERAL_SYSTEM_PROMPT is not None:
+        return _GENERAL_SYSTEM_PROMPT
+
+    _GENERAL_SYSTEM_PROMPT = """You are CodeBase AI, a helpful voice-enabled assistant that answers questions using both code context and web search results.
+
+When answering:
+- If web search results are provided, use them as your primary source and cite them.
+- If you have prior knowledge about the topic, combine it with any provided web results.
+- Keep your answers concise and natural — this will be read aloud by text-to-speech.
+- Avoid markdown formatting, code blocks, or anything that doesn't sound natural when spoken.
+- If you don't know the answer, say so honestly.
+- Be conversational but informative.
+
+Rules:
+1. Prioritize provided context (code or web) over your own knowledge.
+2. When citing sources, mention them naturally (e.g., "according to...").
+3. Do NOT invent facts. If you're unsure, say you're not sure.
+4. Keep answers brief — 2-4 sentences when possible (spoken aloud)."""
+    return _GENERAL_SYSTEM_PROMPT
+
+
 def build_user_message(query: str, context: str) -> str:
     return f"Query: {query}\n\nContext:\n{context}"
 
 
 def assemble_messages(query: str, context: str) -> List[Dict]:
     system_prompt = load_system_prompt()
+    user_message = build_user_message(query, context)
+    return [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_message}
+    ]
+
+
+def assemble_general_messages(query: str, context: str) -> List[Dict]:
+    system_prompt = load_general_system_prompt()
     user_message = build_user_message(query, context)
     return [
         {"role": "system", "content": system_prompt},
