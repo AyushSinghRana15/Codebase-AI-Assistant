@@ -28,7 +28,12 @@ export default function RootLayout({
     console.log("%c🥚 CodeBase AI by Ayush Singh 🥚", "font-size:20px; font-weight:bold; color:#8b5cf6;");
   }
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{
+          __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='light'){document.documentElement.classList.remove('dark');document.documentElement.classList.add('light')}}catch(e){}})()`
+        }} />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
