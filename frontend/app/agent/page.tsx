@@ -10,8 +10,10 @@ import { GitHubIngestor } from "@/components/GitHubIngestor";
 import { useAsk } from "@/hooks/useAsk";
 import { useAuth } from "@/context/AuthContext";
 import { useVoiceAssistant, VoiceState } from "@/hooks/useVoiceAssistant";
+import { getSupabase } from "@/lib/supabase";
+import { parseVoiceAddRepo } from "@/lib/voice-add-repo";
 import { AudioLines, Bot, Loader2, Mic, Square, User, Volume2, LogIn } from "lucide-react";
-import { useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 const VOICE_STATUS: Record<
@@ -154,9 +156,84 @@ export default function Home() {
   const prevSpokenAnswerRef = useRef<string | null>(null);
   const prevSpokenErrorRef = useRef<string | null>(null);
 
-  const handleVoiceQuery = useCallback((voiceQuery: string) => {
+  const [voiceIngestStatus, setVoiceIngestStatus] = useState<string | null>(null);
+
+  const handleVoiceQuery = useCallback(async (voiceQuery: string) => {
+    const addRepo = parseVoiceAddRepo(voiceQuery);
+
+    if (addRepo.detected) {
+      if (!user) {
+        void speak("Please sign in first to add repositories.");
+        return;
+      }
+
+      if (!addRepo.repoUrl) {
+        void speak("I could not find the repository in your request. Try saying add repository followed by the GitHub URL.");
+        return;
+      }
+
+      setVoiceIngestStatus(`Adding ${addRepo.label}...`);
+      void speak(`Adding ${addRepo.label}. Please wait.`);
+
+      try {
+        const supabase = getSupabase();
+        const headers: Record<string, string> = {};
+        if (supabase) {
+          const { data } = await supabase.auth.getSession();
+          if (data.session?.access_token) {
+            headers["Authorization"] = `Bearer ${data.session.access_token}`;
+          }
+        }
+
+        const res = await fetch(`/api/ingest/github?repo_url=${encodeURIComponent(addRepo.repoUrl)}`, {
+          method: "POST",
+          headers,
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          const errMsg = data.detail || data.error || "Ingestion failed";
+          setVoiceIngestStatus(null);
+          void speak(`Failed to add repository: ${errMsg}`);
+          return;
+        }
+
+        if (data.task_id) {
+          setVoiceIngestStatus(`Indexing ${addRepo.label}...`);
+          void speak(`Started indexing ${addRepo.label}. This will take a few moments.`);
+
+          const poll = setInterval(async () => {
+            try {
+              const pollRes = await fetch(`/api/ingest/github?task_id=${data.task_id}`);
+              const pollData = await pollRes.json();
+              if (pollData.status === "success") {
+                clearInterval(poll);
+                setVoiceIngestStatus(null);
+                void speak(`Successfully added ${addRepo.label}. Processed ${pollData.files_processed} files. You can now ask questions about it.`);
+              } else if (pollData.status === "error") {
+                clearInterval(poll);
+                setVoiceIngestStatus(null);
+                void speak(`Failed to index ${addRepo.label}: ${pollData.error}`);
+              }
+            } catch {
+              // retry on next interval
+            }
+          }, 3000);
+        } else if (data.status === "success") {
+          setVoiceIngestStatus(null);
+          void speak(`Successfully added ${addRepo.label}. Processed ${data.files_processed} files.`);
+        }
+      } catch {
+        setVoiceIngestStatus(null);
+        void speak("Sorry, something went wrong while adding the repository.");
+      }
+
+      return;
+    }
+
     void submit(voiceQuery);
-  }, [submit]);
+  }, [submit, user, speak]);
 
   useEffect(() => {
     setOnQueryReady(handleVoiceQuery);
@@ -226,6 +303,13 @@ export default function Home() {
               isVoiceMode={isVoiceMode}
               onStop={toggleVoiceMode}
             />
+
+            {voiceIngestStatus && (
+              <div className="flex items-center gap-2 justify-center text-sm" style={{ color: "var(--text-muted)" }}>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {voiceIngestStatus}
+              </div>
+            )}
 
             {state === "idle" ? (
               <EmptyState />
