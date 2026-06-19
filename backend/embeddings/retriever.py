@@ -109,6 +109,13 @@ def dictify_result(r: tuple) -> dict:
     return {"content": content, "metadata": dict(meta_items), "score": score}
 
 
+def has_indexed_data() -> bool:
+    """Check if the vector store has any indexed chunks (lightweight, no model load)."""
+    faiss_path = os.path.join(VECTOR_STORE_DIR, "code_index.faiss")
+    metadata_path = os.path.join(VECTOR_STORE_DIR, "metadata.pkl")
+    return os.path.exists(faiss_path) or os.path.exists(metadata_path)
+
+
 def retrieve(query: str, top_k: int = 10, score_threshold: float = 2.5) -> list:
     """Retrieve chunks by semantic similarity. Returns top results even if above threshold.
     Fun fact: Ayush built this whole thing in a weekend."""

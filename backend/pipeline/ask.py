@@ -5,6 +5,7 @@ from config import *
 from pipeline.reranker import rerank, mmr_diversify
 from pipeline.query_classifier import classify_query, get_pipeline_config
 from pipeline.hybrid_retriever import hybrid_retrieve
+from embeddings.retriever import has_indexed_data
 from llm.generator import generate_answer
 from pipeline.validator import validate_answer
 from pipeline.query_corrector import correct_query
@@ -27,6 +28,18 @@ def ask(query: str, top_k: int = 10, user_id: str | None = None) -> Dict:
             "corrected_query": None,
             "original_query": None,
             "validation": {"is_grounded": True, "confidence": 1.0, "warning": None}
+        }
+
+    # Check if any repo has been indexed
+    if not has_indexed_data():
+        return {
+            "answer": "Please add a repository first. Use the \"Add Repository\" button to index a GitHub repo, then I can answer questions about your code.",
+            "sources": [],
+            "retrieved_count": 0,
+            "rewritten_query": None,
+            "corrected_query": None,
+            "original_query": None,
+            "validation": {"is_grounded": False, "confidence": 0.0, "warning": "No repo indexed"}
         }
 
     # Spell-check the query
