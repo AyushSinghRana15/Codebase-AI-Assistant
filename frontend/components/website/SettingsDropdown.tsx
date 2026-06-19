@@ -149,12 +149,12 @@ export function SettingsDropdown() {
                 background: theme === "light" ? "var(--bg-card)" : "transparent",
               }}
             >
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "#faf8f0", border: "1px solid rgba(0,0,0,0.08)" }}>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "#f5f0ea", border: "1px solid rgba(44,36,32,0.1)" }}>
                 <div className="w-3 h-3 rounded-full" style={{ background: "#3b82f6" }} />
               </div>
               <div className="flex-1 text-left">
                 <span className="font-medium" style={{ color: "var(--text-primary)" }}>Sketch</span>
-                <p className="text-xs" style={{ color: "var(--text-muted)" }}>Warm paper with grid</p>
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>Warm earth tones</p>
               </div>
               {theme === "light" && (
                 <svg className="w-4 h-4 text-[#3b82f6]" viewBox="0 0 16 16" fill="none">

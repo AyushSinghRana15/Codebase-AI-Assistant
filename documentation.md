@@ -2894,3 +2894,38 @@ Previously all features (RAG, GitHub ingestion, profile) were accessible without
 | Commit | Message |
 |--------|---------|
 | `HEAD` | feat: gate GitHub ingestion behind login, keep RAG free |
+
+---
+
+### Session: 2026-06-19 — Sketch Theme Redesign
+
+#### Context
+The Sketch (light) theme used a yellow-warm palette (#faf8f0 background, #1a1a2e text). It was redesigned with inspiration from the [CarmoWood](https://www.awwwards.com/sites/carmowood) website by KOBU Agency — an Awwwards Honorable Mention with a warm earthy aesthetic.
+
+#### Design Inspiration
+- **CarmoWood palette**: Dark brown (#31261d) + warm off-white (#ecebe3)
+- **Style**: Clean, flat design with sketch-like quality, typography-driven
+- **Tags**: Sketch, Flat Design, Clean, Typography
+
+#### Changes Made
+
+| # | Change | Files Affected |
+|---|--------|---------------|
+| 1 | **New light theme colors** — warm earthy palette | `frontend/app/globals.css` |
+| 2 | **Updated `.sketch-*` classes** — warmer shadows, organic feel | `frontend/app/globals.css` |
+| 3 | **Updated `.light` overrides** — nav, cards, inputs match new palette | `frontend/app/globals.css` |
+| 4 | **Updated SettingsDropdown** — thumbnail color + description | `frontend/components/website/SettingsDropdown.tsx` |
+
+#### New Color Palette
+
+| Token | Old Value | New Value |
+|-------|-----------|-----------|
+| `--bg-primary` | `#faf8f0` | `#f5f0ea` |
+| `--text-primary` | `#1a1a2e` | `#2c2420` |
+| `--bg-secondary` | `#ffffff` | `#fcf9f5` |
+| `--bg-card` | `#ffffff` | `#fcf9f5` |
+| `--text-secondary` | `#5a5850` | `#6b5f55` |
+| `--text-muted` | `#9a978f` | `#a69a8f` |
+| `--border-subtle` | `rgba(0,0,0,0.08)` | `rgba(44,36,32,0.10)` |
+
+The new palette shifts from a warm paper yellow to a natural warm beige/cream with brown-based shadows and borders, matching the CarmoWood earthy aesthetic.
