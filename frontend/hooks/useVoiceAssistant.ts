@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { createTTSProvider } from "@/lib/tts";
 import type { TTSProvider } from "@/lib/tts";
+import { summarizeForSpeech } from "@/lib/tts/summarize-speech";
 
 export type VoiceState = "idle" | "listening" | "processing" | "speaking";
 
@@ -280,7 +281,8 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
     setVoiceState("speaking");
 
     try {
-      await tts.speak(text);
+      const speechText = summarizeForSpeech(text);
+      await tts.speak(speechText);
     } catch {
       // TTS error — continue silently
     }
