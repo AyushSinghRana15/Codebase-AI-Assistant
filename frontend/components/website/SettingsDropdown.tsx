@@ -2,10 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { useTheme } from "@/context/ThemeContext";
+import { useTheme, THEME_CONFIGS } from "@/context/ThemeContext";
 import { useAuth } from "@/context/AuthContext";
-
-type Theme = "light" | "dark";
 
 export function SettingsDropdown() {
   const { theme, setTheme } = useTheme();
@@ -142,47 +140,29 @@ export function SettingsDropdown() {
               Theme
             </p>
 
-            <button
-              onClick={() => { setTheme("light"); setOpen(false); }}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all ${theme === "light" ? "ring-1 ring-[var(--border-subtle)]" : "hover:opacity-80"}`}
-              style={{
-                background: theme === "light" ? "var(--bg-card)" : "transparent",
-              }}
-            >
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "#f5f0ea", border: "1px solid rgba(44,36,32,0.1)" }}>
-                <div className="w-3 h-3 rounded-full" style={{ background: "#3b82f6" }} />
-              </div>
-              <div className="flex-1 text-left">
-                <span className="font-medium" style={{ color: "var(--text-primary)" }}>Sketch</span>
-                <p className="text-xs" style={{ color: "var(--text-muted)" }}>Warm earth tones</p>
-              </div>
-              {theme === "light" && (
-                <svg className="w-4 h-4 text-[#3b82f6]" viewBox="0 0 16 16" fill="none">
-                  <path d="M4 8l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )}
-            </button>
-
-            <button
-              onClick={() => { setTheme("dark"); setOpen(false); }}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all ${theme === "dark" ? "ring-1 ring-[var(--border-subtle)]" : "hover:opacity-80"}`}
-              style={{
-                background: theme === "dark" ? "var(--bg-card)" : "transparent",
-              }}
-            >
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.08)" }}>
-                <div className="w-3 h-3 rounded-full" style={{ background: "#8b5cf6" }} />
-              </div>
-              <div className="flex-1 text-left">
-                <span className="font-medium" style={{ color: "var(--text-primary)" }}>Dark</span>
-                <p className="text-xs" style={{ color: "var(--text-muted)" }}>Deep contrast mode</p>
-              </div>
-              {theme === "dark" && (
-                <svg className="w-4 h-4 text-[#3b82f6]" viewBox="0 0 16 16" fill="none">
-                  <path d="M4 8l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )}
-            </button>
+            {THEME_CONFIGS.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => { setTheme(t.id); setOpen(false); }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all ${theme === t.id ? "ring-1 ring-[var(--border-subtle)]" : "hover:opacity-80"}`}
+                style={{
+                  background: theme === t.id ? "var(--bg-card)" : "transparent",
+                }}
+              >
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: t.previewBg, border: `1px solid ${t.previewBorder}` }}>
+                  <div className="w-3 h-3 rounded-full" style={{ background: t.previewAccent }} />
+                </div>
+                <div className="flex-1 text-left">
+                  <span className="font-medium" style={{ color: "var(--text-primary)" }}>{t.label}</span>
+                  <p className="text-xs" style={{ color: "var(--text-muted)" }}>{t.description}</p>
+                </div>
+                {theme === t.id && (
+                  <svg className="w-4 h-4" style={{ color: "var(--primary)" }} viewBox="0 0 16 16" fill="none">
+                    <path d="M4 8l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </button>
+            ))}
           </div>
         </div>
       )}

@@ -2897,6 +2897,38 @@ Previously all features (RAG, GitHub ingestion, profile) were accessible without
 
 ---
 
+### Session: 2026-06-19 — Multi-Theme System
+
+#### Context
+The theme system was a simple `"light" | "dark"` toggle branded as "Sketch" vs "Dark". Expanded to support multiple named themes that users can choose from.
+
+#### Changes Made
+
+| # | Change | Files Affected |
+|---|--------|---------------|
+| 1 | **Theme type expanded** — `"sketch" \| "dark" \| "midnight" \| "cream"` | `frontend/context/ThemeContext.tsx` |
+| 2 | **Theme configs** — exported `THEME_CONFIGS` array with labels, descriptions, preview colors | `frontend/context/ThemeContext.tsx` |
+| 3 | **CSS variables** — added `:root.midnight` and `:root.cream` blocks | `frontend/app/globals.css` |
+| 4 | **Updated selectors** — all `.light` → `.sketch, .cream`, all `.dark` → `.dark, .midnight` | `frontend/app/globals.css` |
+| 5 | **SettingsDropdown** — maps over `THEME_CONFIGS` to render all 4 themes dynamically | `frontend/components/website/SettingsDropdown.tsx` |
+| 6 | **Blocking script** — updated to set any theme class, not just light/dark | `frontend/app/layout.tsx` |
+
+#### Available Themes
+
+| Theme | Type | Description | Primary Accent |
+|-------|------|-------------|---------------|
+| **Sketch** | Light | Warm earth tones (CarmoWood) | Blue (#3b82f6) |
+| **Dark** | Dark | Deep contrast | Purple (#8b5cf6) |
+| **Midnight** | Dark | Deep blue tones | Indigo (#6366f1) |
+| **Cream** | Light | Clean warm light | Amber (#d97706) |
+
+#### Design
+- Theme class is applied to both `<html>` and `<body>` for CSS selector compatibility
+- Blocking script sets the correct class before first paint (no flash)
+- `THEME_CONFIGS` exported from context so the dropdown is data-driven; adding a theme is just adding to the array
+
+---
+
 ### Session: 2026-06-19 — Sketch Theme Redesign
 
 #### Context

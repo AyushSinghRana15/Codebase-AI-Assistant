@@ -31,7 +31,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{
-          __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='light'){document.documentElement.classList.remove('dark');document.documentElement.classList.add('light')}}catch(e){}})()`
+          __html: `(function(){try{var t=localStorage.getItem('theme');if(t){document.documentElement.className=t;document.body.className=t}else{document.documentElement.className='dark';document.body.className='dark'}}catch(e){}})()`
         }} />
       </head>
       <body

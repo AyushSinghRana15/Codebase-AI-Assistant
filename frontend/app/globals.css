@@ -50,7 +50,7 @@
   --border-subtle: rgba(255, 255, 255, 0.06);
 }
 
-:root.light {
+:root.sketch {
   --background: #f5f0ea;
   --foreground: #2c2420;
   --card: #fcf9f5;
@@ -68,6 +68,42 @@
   --border-subtle: rgba(44, 36, 32, 0.10);
 }
 
+:root.midnight {
+  --background: #0c1126;
+  --foreground: #e2e8f0;
+  --card: #111827;
+  --border: #1e293b;
+  --primary: #6366f1;
+  --muted: #1e293b;
+  --muted-foreground: #64748b;
+
+  --bg-primary: #0c1126;
+  --bg-secondary: #0f172a;
+  --bg-card: #111827;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #475569;
+  --border-subtle: rgba(99, 102, 241, 0.12);
+}
+
+:root.cream {
+  --background: #faf6f1;
+  --foreground: #1e1b18;
+  --card: #ffffff;
+  --border: #e5ddd0;
+  --primary: #d97706;
+  --muted: #f0ebe3;
+  --muted-foreground: #8a7f74;
+
+  --bg-primary: #faf6f1;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --text-primary: #1e1b18;
+  --text-secondary: #6b6055;
+  --text-muted: #a69a8f;
+  --border-subtle: rgba(30, 27, 24, 0.08);
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -75,13 +111,15 @@ body {
   transition: background 0.3s ease, color 0.3s ease;
 }
 
-body.light {
+body.sketch,
+body.cream {
   background-image:
     radial-gradient(circle at 1px 1px, rgba(44,36,32,0.05) 1px, transparent 0);
   background-size: 32px 32px;
 }
 
-body.dark {
+body.dark,
+body.midnight {
   background-image: none;
 }
 
@@ -198,7 +236,8 @@ body.dark {
   -webkit-backdrop-filter: blur(12px);
 }
 
-.light .glass-nav {
+.sketch .glass-nav,
+.cream .glass-nav {
   background: rgba(245, 240, 234, 0.9);
   border-bottom: 1px solid rgba(44,36,32,0.07);
 }
@@ -210,7 +249,8 @@ body.dark {
   transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.light .gradient-border {
+.sketch .gradient-border,
+.cream .gradient-border {
   box-shadow:
     0 1px 3px rgba(44,36,32,0.05),
     0 4px 12px rgba(44,36,32,0.04);
@@ -244,11 +284,13 @@ body.dark {
   transform: translateY(-4px);
 }
 
-.dark .card-glow:hover {
+.dark .card-glow:hover,
+.midnight .card-glow:hover {
   box-shadow: 0 8px 32px rgba(59, 130, 246, 0.15);
 }
 
-.light .card-glow:hover {
+.sketch .card-glow:hover,
+.cream .card-glow:hover {
   box-shadow:
     0 8px 28px rgba(44,36,32,0.08),
     0 2px 8px rgba(44,36,32,0.04);
@@ -261,8 +303,13 @@ body.dark {
   margin-left: 2px;
 }
 
-.light .terminal-cursor::after {
+.sketch .terminal-cursor::after,
+.cream .terminal-cursor::after {
   color: #2563eb;
+}
+
+.midnight .terminal-cursor::after {
+  color: #6366f1;
 }
 
 .sketch-card {
@@ -271,7 +318,8 @@ body.dark {
   transition: all 0.3s ease;
 }
 
-.light .sketch-card {
+.sketch .sketch-card,
+.cream .sketch-card {
   border: 1.5px solid rgba(44,36,32,0.08);
   box-shadow:
     0 1px 2px rgba(44,36,32,0.03),
@@ -279,19 +327,22 @@ body.dark {
   background: var(--bg-card);
 }
 
-.light .sketch-card:hover {
+.sketch .sketch-card:hover,
+.cream .sketch-card:hover {
   box-shadow:
     0 2px 4px rgba(44,36,32,0.04),
     0 8px 28px rgba(44,36,32,0.07);
 }
 
-.light .sketch-input {
+.sketch .sketch-input,
+.cream .sketch-input {
   border: 1.5px solid rgba(44,36,32,0.12);
   background: #fcf9f5;
   color: var(--text-primary);
 }
 
-.light .sketch-input:focus {
+.sketch .sketch-input:focus,
+.cream .sketch-input:focus {
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
   background: #ffffff;
@@ -301,16 +352,19 @@ body.dark {
   transition: all 0.2s ease;
 }
 
-.light .sketch-btn {
+.sketch .sketch-btn,
+.cream .sketch-btn {
   box-shadow: 0 1px 3px rgba(44,36,32,0.08);
 }
 
-.light .sketch-btn:hover {
+.sketch .sketch-btn:hover,
+.cream .sketch-btn:hover {
   box-shadow: 0 4px 14px rgba(44,36,32,0.12);
   transform: translateY(-1px);
 }
 
-.light .sketch-section {
+.sketch .sketch-section,
+.cream .sketch-section {
   border-top: 1px dashed rgba(44,36,32,0.12);
 }
 
