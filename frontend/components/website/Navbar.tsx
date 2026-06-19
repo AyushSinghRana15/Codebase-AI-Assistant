@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { SettingsDropdown } from "./SettingsDropdown";
+import { useAuth } from "@/context/AuthContext";
 
 const links = [
   { label: "Features", href: "#features" },
@@ -15,6 +16,7 @@ const links = [
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, loading } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -50,27 +52,39 @@ export function Navbar() {
         </div>
 
         <div className="hidden md:flex items-center gap-3">
-          <Link
-            href="/login"
-            className="sketch-btn inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl transition-all duration-300"
-            style={{
-              color: "var(--text-secondary)",
-              border: "1px solid var(--border-subtle)",
-              background: "var(--bg-card)",
-            }}
-          >
-            Sign In
-          </Link>
+          {!loading && !user && (
+            <Link
+              href="/login"
+              className="sketch-btn inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl transition-all duration-300"
+              style={{
+                color: "var(--text-secondary)",
+                border: "1px solid var(--border-subtle)",
+                background: "var(--bg-card)",
+              }}
+            >
+              Sign In
+            </Link>
+          )}
           <Link
             href="/agent"
             className="sketch-btn inline-flex items-center px-5 py-2 text-sm font-semibold text-white rounded-xl transition-all duration-300"
             style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)" }}
           >
-            Try Assistant
+            {user ? "Open Assistant" : "Try Assistant"}
             <svg className="ml-1.5 w-3.5 h-3.5" viewBox="0 0 16 16" fill="none">
               <path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </Link>
+          {user && (
+            <Link
+              href="/agent/profile"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-medium"
+              style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)" }}
+              title={user.email || "Profile"}
+            >
+              {(user.email || "U").charAt(0).toUpperCase()}
+            </Link>
+          )}
           <SettingsDropdown />
         </div>
 
@@ -110,22 +124,34 @@ export function Navbar() {
               {link.label}
             </a>
           ))}
-          <Link
-            href="/login"
-            className="block text-center text-sm font-medium py-2.5 rounded-xl transition-colors"
-            style={{ color: "var(--text-secondary)", border: "1px solid var(--border-subtle)" }}
-            onClick={() => setMobileOpen(false)}
-          >
-            Sign In
-          </Link>
+          {!loading && !user && (
+            <Link
+              href="/login"
+              className="block text-center text-sm font-medium py-2.5 rounded-xl transition-colors"
+              style={{ color: "var(--text-secondary)", border: "1px solid var(--border-subtle)" }}
+              onClick={() => setMobileOpen(false)}
+            >
+              Sign In
+            </Link>
+          )}
           <Link
             href="/agent"
             className="block text-center text-sm font-semibold text-white py-2.5 rounded-xl"
             style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)" }}
             onClick={() => setMobileOpen(false)}
           >
-            Try Assistant
+            {user ? "Open Assistant" : "Try Assistant"}
           </Link>
+          {user && (
+            <Link
+              href="/agent/profile"
+              className="block text-center text-sm font-medium py-2.5 rounded-xl transition-colors"
+              style={{ color: "var(--text-secondary)", border: "1px solid var(--border-subtle)" }}
+              onClick={() => setMobileOpen(false)}
+            >
+              Profile
+            </Link>
+          )}
         </div>
       )}
     </nav>

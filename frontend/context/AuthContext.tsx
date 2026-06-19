@@ -94,12 +94,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = useCallback(async () => {
     const supabase = getSupabase();
     if (!supabase) return;
-    await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/agent`,
       },
     });
+    if (error) {
+      console.error("OAuth sign-in error:", error.message);
+    }
   }, []);
 
   const signOut = useCallback(async () => {

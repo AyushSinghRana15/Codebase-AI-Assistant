@@ -2831,3 +2831,31 @@ async def get_optional_user(authorization: Optional[str] = Header(None)):
 | Commit | Message | Branch |
 |--------|---------|--------|
 | `7bdd0d1` | Implement JWT verification in backend auth via Supabase admin client | `authorization` → `main` |
+
+---
+
+### Session: 2026-06-19 — Google OAuth Frontend Fixes
+
+#### Context
+Google OAuth was configured but the frontend had two issues: (1) `AuthContext.signIn()` did not handle OAuth errors, and (2) the landing page `Navbar` always showed "Sign In" regardless of auth state, making users think they were logged out when navigating from `/agent` to `/`.
+
+#### Changes Made
+
+| # | Change | Files Affected |
+|---|--------|---------------|
+| 1 | **Added error handling** to `signIn()` — logs OAuth errors to console | `frontend/context/AuthContext.tsx` |
+| 2 | **Made Navbar auth-aware** — hides "Sign In" when logged in, shows user avatar, updates CTA text | `frontend/components/website/Navbar.tsx` |
+
+#### Implementation Detail
+
+**Navbar auth state** (`frontend/components/website/Navbar.tsx`):
+- Imports `useAuth()` from `@/context/AuthContext`
+- Desktop: hides "Sign In" button when `user` is set; shows circular avatar with first letter of email; changes "Try Assistant" → "Open Assistant"
+- Mobile menu: same conditional rendering
+- Uses `loading` guard to prevent flash of wrong state during hydration
+
+#### Git Commits
+
+| Commit | Message |
+|--------|---------|
+| `HEAD` | fix: add auth-aware Navbar and OAuth error handling |

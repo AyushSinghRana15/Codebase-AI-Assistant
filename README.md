@@ -106,6 +106,8 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
 > Auth is **optional** — everything works without signing in. Google OAuth kicks in automatically when valid Supabase keys are detected.
 
+> **Vercel deployment:** For Google OAuth to work on Vercel, add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` as **Environment Variables** in your Vercel project settings (Settings → Environment Variables). Also add your Vercel domain to Supabase's allowed redirect URLs and Google Cloud's authorized JavaScript origins.
+
 ### 3. Ingest a Repository (Local)
 ```bash
 python3 main.py --repo /path/to/repo --output output/chunks.json
