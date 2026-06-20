@@ -8,7 +8,6 @@ import { useAuth } from "@/context/AuthContext";
 const links = [
   { label: "Features", href: "#features" },
   { label: "Architecture", href: "#architecture" },
-  { label: "Stack", href: "#stack" },
   { label: "Demos", href: "#demos" },
   { label: "Docs", href: "#docs" },
 ];
@@ -31,14 +30,14 @@ export function Navbar() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2 flex-shrink-0">
           <span className="text-lg font-bold gradient-text">&lt;/&gt;</span>
           <span className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>
             CodeBase<span className="text-[#3b82f6]">AI</span>
           </span>
         </Link>
 
-        <div className="flex-1 flex items-center justify-center gap-8">
+        <div className="hidden md:flex items-center justify-center gap-8 flex-1">
           {links.map((link) => (
             <a
               key={link.label}
@@ -52,22 +51,16 @@ export function Navbar() {
         </div>
 
         <div className="hidden md:flex items-center gap-3">
-          {!loading && !user && (
-            <Link
-              href="/login"
-              className="sketch-btn inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl transition-all duration-300"
-              style={{
-                color: "var(--text-secondary)",
-                border: "1px solid var(--border-subtle)",
-                background: "var(--bg-card)",
-              }}
-            >
-              Sign In
-            </Link>
-          )}
+          <Link
+            href="/login"
+            className="text-sm font-medium transition-colors hover:opacity-80 px-4 py-2"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            {user ? "Dashboard" : "Log In"}
+          </Link>
           <Link
             href="/agent"
-            className="sketch-btn inline-flex items-center px-5 py-2 text-sm font-semibold text-white rounded-xl transition-all duration-300"
+            className="inline-flex items-center px-5 py-2 text-sm font-semibold text-white rounded-xl transition-all duration-300 hover:shadow-[0_0_24px_rgba(59,130,246,0.3)]"
             style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)" }}
           >
             {user ? "Open Assistant" : "Try Assistant"}
@@ -88,7 +81,7 @@ export function Navbar() {
           <SettingsDropdown />
         </div>
 
-        <div className="flex items-center gap-2 md:hidden">
+        <div className="flex items-center gap-2 md:hidden ml-auto">
           <SettingsDropdown />
           <button
             className="p-1"
@@ -124,16 +117,14 @@ export function Navbar() {
               {link.label}
             </a>
           ))}
-          {!loading && !user && (
-            <Link
-              href="/login"
-              className="block text-center text-sm font-medium py-2.5 rounded-xl transition-colors"
-              style={{ color: "var(--text-secondary)", border: "1px solid var(--border-subtle)" }}
-              onClick={() => setMobileOpen(false)}
-            >
-              Sign In
-            </Link>
-          )}
+          <Link
+            href="/login"
+            className="block text-center text-sm font-medium py-2.5 rounded-xl transition-colors"
+            style={{ color: "var(--text-secondary)", border: "1px solid var(--border-subtle)" }}
+            onClick={() => setMobileOpen(false)}
+          >
+            {user ? "Dashboard" : "Log In"}
+          </Link>
           <Link
             href="/agent"
             className="block text-center text-sm font-semibold text-white py-2.5 rounded-xl"

@@ -2,13 +2,10 @@ import type { Metadata } from "next";
 import {
   Navbar,
   Hero,
-  MetricsBar,
+  TrustStrip,
   Features,
-  TechStack,
-  Architecture,
   DemoQueries,
   CodeShowcase,
-  About,
   Blog,
   CTA,
   Footer,
@@ -16,9 +13,9 @@ import {
 } from "@/components/website";
 
 export const metadata: Metadata = {
-  title: "CodeBaseAI — Ask Natural Language Questions About Any Codebase",
+  title: "CodeBaseAI — Ask Your Codebase Anything. Get Answers You Can Trust.",
   description:
-    "Production-ready RAG system for code understanding. AST-aware chunking, hybrid retrieval, anti-hallucination checks. Get code-grounded answers with file citations.",
+    "RAG-powered code assistant that ingests GitHub repos, parses with AST-aware chunking, and answers natural-language questions with precise file citations and zero hallucination.",
 };
 
 export default function WebsitePage() {
@@ -28,13 +25,10 @@ export default function WebsitePage() {
       <Navbar />
       <main>
         <Hero />
-        <MetricsBar />
+        <TrustStrip />
         <Features />
-        <Architecture />
-        <TechStack />
         <DemoQueries />
         <CodeShowcase />
-        <About />
         <Blog />
         <CTA />
       </main>

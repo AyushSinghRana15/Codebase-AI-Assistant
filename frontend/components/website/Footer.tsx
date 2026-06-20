@@ -2,9 +2,9 @@ import Link from "next/link";
 
 const navLinks = [
   { label: "Features", href: "#features" },
-  { label: "Architecture", href: "#architecture" },
   { label: "Demos", href: "#demos" },
   { label: "Blog", href: "#blog" },
+  { label: "Docs", href: "#docs" },
 ];
 
 const socials = [

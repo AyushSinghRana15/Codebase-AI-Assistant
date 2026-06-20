@@ -368,6 +368,23 @@ body.midnight {
   border-top: 1px dashed rgba(44,36,32,0.12);
 }
 
+.mask-edges {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 5%,
+    black 95%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 5%,
+    black 95%,
+    transparent 100%
+  );
+}
+
 @media (prefers-reduced-motion: reduce) {
   .gradient-text,
   .scroll-reveal,
