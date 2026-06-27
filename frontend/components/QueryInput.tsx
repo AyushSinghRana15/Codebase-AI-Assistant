@@ -1,3 +1,5 @@
+// QueryInput — textarea for user queries with voice mode and send button
+
 "use client";
 
 import { useState } from "react";
@@ -30,6 +32,7 @@ export function QueryInput({
 }: Props) {
   const [isComposing, setIsComposing] = useState(false);
 
+  // Submit on Enter (without Shift) when not composing IME text
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey && !isComposing) {
       e.preventDefault();
@@ -37,18 +40,21 @@ export function QueryInput({
     }
   };
 
+  // Dynamic placeholder based on voice state
   const placeholder = voiceState === "listening"
     ? "Listening..."
     : isVoiceMode
     ? "Voice is ready"
     : "Message CodeBaseAI";
 
+  // Show interim transcript when listening
   const displayValue = voiceState === "listening"
     ? interimTranscript || value
     : value;
 
   return (
     <div className="relative w-full">
+      {/* Input container with border highlight during voice */}
       <div
         className={`w-full overflow-hidden rounded-[1.6rem] transition-all duration-200 focus-within:border-[#10a37f]/50 ${
           voiceState === "listening" ? "ring-2 ring-[#10a37f]/25" : ""
@@ -73,6 +79,7 @@ export function QueryInput({
           className="max-h-44 min-h-[5rem] w-full resize-none bg-transparent px-5 pb-12 pt-4 pr-24 font-sans text-[15px] leading-relaxed focus:outline-none disabled:opacity-70 placeholder:opacity-50"
           style={{ color: "var(--text-primary)" }}
         />
+        {/* Live transcript indicator during voice input */}
         {voiceState === "listening" && (
           <div
             className="pointer-events-none absolute bottom-4 left-5 flex max-w-[calc(100%-7.5rem)] items-center gap-2 truncate text-xs"
@@ -82,6 +89,7 @@ export function QueryInput({
             <span className="truncate">{interimTranscript || "Listening"}</span>
           </div>
         )}
+        {/* Action buttons: voice toggle and send */}
         <div className="absolute bottom-3 right-3 flex items-center gap-1.5">
           {voiceSupported && (
             <VoiceButton
@@ -104,6 +112,7 @@ export function QueryInput({
           </button>
         </div>
       </div>
+      {/* Character count warning near limit */}
       {value.length > 800 && (
         <span className="absolute bottom-3 right-24 text-xs" style={{ color: "var(--text-muted)" }}>
           {value.length}/1000

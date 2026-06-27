@@ -1,3 +1,5 @@
+// VoiceButton — microphone toggle button that reflects voice state
+
 "use client";
 
 import { Loader2, Mic, MicOff, Volume2 } from "lucide-react";
@@ -13,6 +15,7 @@ interface Props {
 export function VoiceButton({ voiceState, isVoiceMode, supported, onToggle }: Props) {
   if (!supported) return null;
 
+  // Return icon, label, color, animation based on current voice state
   const getState = () => {
     switch (voiceState) {
       case "listening":
@@ -43,6 +46,7 @@ export function VoiceButton({ voiceState, isVoiceMode, supported, onToggle }: Pr
       style={{ background: isVoiceMode ? "rgba(16,163,127,0.12)" : "transparent" }}
     >
       <Icon className={`h-4 w-4 ${className}`} style={{ color }} />
+      {/* Animated dot indicator when listening */}
       {voiceState === "listening" && (
         <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5">
           <span className="absolute inset-0 rounded-full bg-[#10a37f] animate-ping" />

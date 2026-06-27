@@ -1,6 +1,9 @@
+# context_expander.py — Expand retrieved results with related chunks via dependency graph traversal
+
 from typing import List, Dict, Set
 
 
+# Add related chunks: same-file, call dependencies, and reverse callers up to max_additions
 def expand_context(results: List[dict], graph, max_additions: int = 3) -> List[dict]:
     """
     For each retrieved chunk, find related chunks via:

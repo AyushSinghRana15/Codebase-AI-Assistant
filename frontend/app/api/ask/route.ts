@@ -1,10 +1,14 @@
+// ask API route — proxies query requests to backend with validation and timeout
+
 import { NextRequest, NextResponse } from "next/server";
 
 const BACKEND_URL = process.env.BACKEND_URL;
 const BACKEND_KEY = process.env.BACKEND_API_KEY;
 
+// POST /api/ask — validate query, proxy to backend, handle timeout
 export async function POST(req: NextRequest) {
   try {
+    // Check backend URL is configured
     if (!BACKEND_URL) {
       return NextResponse.json(
         { error: "Backend URL not configured. Set BACKEND_URL env var." },
@@ -12,6 +16,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Parse and validate request body
     const body = await req.json();
 
     if (!body.query || typeof body.query !== "string") {
@@ -22,11 +27,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Query too long" }, { status: 400 });
     }
 
+    // Build headers with API key if available
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
     if (BACKEND_KEY) headers["X-API-Key"] = BACKEND_KEY;
 
+    // Abort controller for 60s timeout
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 60000);
 

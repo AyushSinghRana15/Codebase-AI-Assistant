@@ -1,9 +1,12 @@
+// LoginPage — sign-in/sign-up form with tabbed UI and animated background
+
 "use client";
 
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 
+// Background floating particle data for animation
 const particles = Array.from({ length: 40 }, (_, i) => ({
   id: i,
   size: Math.random() * 4 + 1,
@@ -12,6 +15,7 @@ const particles = Array.from({ length: 40 }, (_, i) => ({
   left: Math.random() * 100,
 }));
 
+// Login/signup page with Google OAuth, tab switching, and animated backdrop
 export default function LoginPage() {
   const { signIn } = useAuth();
   const [tab, setTab] = useState<"login" | "signup">("login");
@@ -68,6 +72,7 @@ export default function LoginPage() {
 
       <div className="relative w-full flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-[420px]" style={{ animation: "form-slide-up 0.6s ease-out" }}>
+          {/* Header with logo and title */}
           <div className="text-center mb-8" style={{ animation: "form-slide-up 0.6s ease-out 0.1s both" }}>
             <Link href="/" className="inline-flex items-center gap-2 mb-6 group">
               <span className="text-2xl font-bold gradient-text">&lt;/&gt;</span>
@@ -83,6 +88,7 @@ export default function LoginPage() {
             </p>
           </div>
 
+          {/* Card container for form */}
           <div
             className="rounded-2xl border p-8 transition-all duration-500"
             style={{
@@ -93,6 +99,7 @@ export default function LoginPage() {
               animation: "card-glow 4s ease-in-out infinite, form-slide-up 0.6s ease-out 0.2s both",
             }}
           >
+            {/* Tab switcher: Sign In / Sign Up */}
             <div
               className="flex mb-8 rounded-xl p-1"
               style={{ background: "var(--bg-secondary)" }}
@@ -121,6 +128,7 @@ export default function LoginPage() {
               </button>
             </div>
 
+            {/* Input form — shows name field for signup, email/password for both */}
             <form onSubmit={handleSubmit} className="space-y-4">
               {tab === "signup" && (
                 <div style={{ animation: "form-slide-up 0.4s ease-out" }}>
@@ -200,6 +208,7 @@ export default function LoginPage() {
                 />
               </div>
 
+              {/* Forgot password link — only shown on login tab */}
               {tab === "login" && (
                 <div className="flex justify-end" style={{ animation: "form-slide-up 0.6s ease-out 0.25s both" }}>
                   <button
@@ -212,6 +221,7 @@ export default function LoginPage() {
                 </div>
               )}
 
+              {/* Primary submit button */}
               <button
                 type="submit"
                 className="w-full py-2.5 text-sm font-semibold text-white rounded-xl transition-all duration-300 hover:opacity-90 active:scale-[0.98] relative overflow-hidden group"
@@ -229,6 +239,7 @@ export default function LoginPage() {
               </button>
             </form>
 
+            {/* Divider between email form and OAuth */}
             <div className="relative my-6" style={{ animation: "form-slide-up 0.6s ease-out 0.35s both" }}>
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t" style={{ borderColor: "var(--border-subtle)" }} />
@@ -240,6 +251,7 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* Google OAuth button */}
             <button
               onClick={signIn}
               className="w-full flex items-center justify-center gap-3 px-4 py-2.5 text-sm font-medium rounded-xl border transition-all duration-300 hover:opacity-80 active:scale-[0.98]"
@@ -260,6 +272,7 @@ export default function LoginPage() {
             </button>
           </div>
 
+          {/* Tab toggle text — prompts user to switch between login/signup */}
           <p className="text-center text-xs mt-6" style={{ animation: "form-slide-up 0.6s ease-out 0.45s both", color: "var(--text-muted)" }}>
             {tab === "login" ? (
               <>Don&apos;t have an account?{" "}<button onClick={() => setTab("signup")} className="font-medium transition-all duration-200 hover:opacity-80 hover:underline" style={{ color: "#3b82f6" }}>Sign up</button></>
@@ -268,6 +281,7 @@ export default function LoginPage() {
             )}
           </p>
 
+          {/* Back link */}
           <div className="text-center mt-8" style={{ animation: "form-slide-up 0.6s ease-out 0.5s both" }}>
             <Link href="/" className="text-xs transition-all duration-200 hover:opacity-80 hover:gap-3 inline-flex items-center gap-2" style={{ color: "var(--text-muted)" }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">

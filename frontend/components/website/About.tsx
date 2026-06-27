@@ -1,5 +1,7 @@
 "use client";
 
+// About — ethos and mission section with bullet points
+
 const ethosBullets = [
   "AST-based chunking that respects code structure, not arbitrary text splits",
   "Hybrid retrieval combining semantic + keyword matching for complete coverage",

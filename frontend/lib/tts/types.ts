@@ -1,3 +1,6 @@
+// TTS type definitions
+
+// Interface for any TTS provider
 export interface TTSProvider {
   name: string;
   speak(text: string): Promise<void>;
@@ -5,6 +8,7 @@ export interface TTSProvider {
   isSpeaking(): boolean;
 }
 
+// Voice metadata
 export interface TTSVoice {
   name: string;
   lang: string;
@@ -12,4 +16,5 @@ export interface TTSVoice {
   localService: boolean;
 }
 
+// Supported TTS provider kinds
 export type TTSProviderKind = "browser";

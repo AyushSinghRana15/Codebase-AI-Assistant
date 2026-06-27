@@ -1,4 +1,7 @@
+// summarizeForSpeech — strips markdown, expands contractions, and extracts key sentences for TTS
+
 export function summarizeForSpeech(text: string): string {
+  // Remove markdown syntax
   let clean = text
     .replace(/```[\s\S]*?```/g, "")
     .replace(/`([^`]+)`/g, "$1")
@@ -8,6 +11,7 @@ export function summarizeForSpeech(text: string): string {
     .replace(/\s+/g, " ")
     .trim();
 
+  // Expand contractions for clearer speech
   clean = clean
     .replace(/\bI'm\b/gi, "I am")
     .replace(/\bIt's\b/gi, "it is")
@@ -35,6 +39,7 @@ export function summarizeForSpeech(text: string): string {
     .replace(/\bWasn't\b/gi, "was not")
     .replace(/\bWeren't\b/gi, "were not");
 
+  // Replace common symbols and abbreviations
   clean = clean
     .replace(/(\d+)\.(\d+)/g, "$1 point $2")
     .replace(/\b(\d+)x\b/g, "$1 times")
@@ -46,12 +51,14 @@ export function summarizeForSpeech(text: string): string {
     .replace(/\bw\/\b/gi, "with")
     .replace(/\bw\/o\b/gi, "without");
 
+  // Remove code keywords and punctuation
   clean = clean
     .replace(/\b(?:const|let|var|function|class|import|export|return|if|else|for|while|async|await)\b/gi, "")
     .replace(/[{}[\]();:]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 
+  // Extract and filter sentences — keep only meaningful ones
   const sentences = clean.match(/[^.!?\n]+[.!?]+/g) || [clean];
   const cleaned = sentences
     .map((s) => s.trim())
@@ -61,6 +68,7 @@ export function summarizeForSpeech(text: string): string {
     return cleaned.join(" ") || "I found the information, but could not summarize it briefly.";
   }
 
+  // Skip introductory sentence if present
   if (cleaned[0].toLowerCase().includes("based on") || cleaned[0].toLowerCase().includes("here")) {
     return cleaned.slice(1, 3).join(" ");
   }

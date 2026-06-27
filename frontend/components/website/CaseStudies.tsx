@@ -1,5 +1,7 @@
 "use client";
 
+// CaseStudies — case study cards with expandable details
+
 import { useState } from "react";
 
 const projects = [

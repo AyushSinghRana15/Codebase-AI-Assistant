@@ -1,3 +1,5 @@
+# ask.py — Top-level RAG pipeline orchestrator
+
 from typing import Dict
 import time
 
@@ -13,6 +15,7 @@ from pipeline.query_rewriter import rewrite_query
 from web.search import search_web, format_web_context
 
 
+# Full RAG pipeline: spell-check → classify → hybrid retrieve → rerank → generate → validate
 def ask(query: str, top_k: int = 10, user_id: str | None = None) -> Dict:
     """
     Full RAG pipeline: query → spell-check → classify → hybrid retrieve → rerank → generate → validate.

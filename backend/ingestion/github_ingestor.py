@@ -1,3 +1,5 @@
+# github_ingestor.py — Clone GitHub repos and list supported source files
+
 import os
 import tempfile
 import shutil
@@ -5,6 +7,7 @@ import subprocess
 from pathlib import Path
 from typing import List, Optional
 
+# Clone a GitHub repo to a temp dir, returns the local path
 def clone_github_repo(repo_url: str, branch: Optional[str] = None) -> str:
     """
     Clone a GitHub repository to a temporary directory.
@@ -27,6 +30,7 @@ def clone_github_repo(repo_url: str, branch: Optional[str] = None) -> str:
         shutil.rmtree(temp_dir, ignore_errors=True)
         raise Exception("Git clone timed out after 180 seconds. Try a smaller repo or a specific branch.")
 
+# Clone and walk a GitHub repo, return all supported source file paths
 def ingest_github_repo(repo_url: str, branch: Optional[str] = None) -> List[str]:
     """
     Clone a GitHub repo and return list of supported file paths.
@@ -77,6 +81,7 @@ def ingest_github_repo(repo_url: str, branch: Optional[str] = None) -> List[str]
 
     return files
 
+# Remove the cloned repo directory
 def cleanup_repo(repo_path: str):
     """Clean up cloned repository."""
     shutil.rmtree(repo_path, ignore_errors=True)

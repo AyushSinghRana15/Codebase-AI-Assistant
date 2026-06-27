@@ -1,7 +1,10 @@
+// Next.js config — API rewrites to backend and legacy URL redirects
+
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   devIndicators: false,
+  // Rewrite /api/* requests to the backend server
   async rewrites() {
     return [
       {
@@ -10,6 +13,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // Redirect old /website/* routes to home
   async redirects() {
     return [
       {

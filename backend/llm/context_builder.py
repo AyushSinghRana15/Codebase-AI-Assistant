@@ -1,3 +1,5 @@
+# context_builder.py — Assemble retrieved code chunks into a single prompt context string
+
 import os
 from typing import List, Dict
 
@@ -5,6 +7,7 @@ from config import MAX_CONTEXT_TOKENS, PER_CHUNK_MAX_TOKENS
 from llm.tokenizer import count_tokens, truncate_to_tokens
 
 
+# Build a context string from retrieved chunks, respecting per-chunk and total token budgets
 def build_context(results: List[Dict], max_tokens: int = MAX_CONTEXT_TOKENS) -> str:
     if not results:
         return ""

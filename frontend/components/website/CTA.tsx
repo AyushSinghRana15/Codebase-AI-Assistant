@@ -1,5 +1,7 @@
 "use client";
 
+// CTA — call-to-action section prompting users to try the assistant
+
 import Link from "next/link";
 
 export function CTA() {

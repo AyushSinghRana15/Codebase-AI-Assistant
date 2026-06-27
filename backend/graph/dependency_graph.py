@@ -1,7 +1,10 @@
+# dependency_graph.py — Build and traverse a call-dependency graph from parsed chunks
+
 from typing import Dict, List, Optional
 from collections import defaultdict
 
 
+# Directed graph of function calls: maps names to callees and reverse for callers
 class DependencyGraph:
     def __init__(self, chunks: List[dict]):
         self.by_name: Dict[str, dict] = {}
@@ -17,9 +20,11 @@ class DependencyGraph:
                 for called in calls:
                     self.reverse_graph[called].append(name)
 
+    # Look up a chunk by its function/class name
     def get_chunk(self, name: str) -> Optional[dict]:
         return self.by_name.get(name)
 
+    # Return chunks that chunk_name depends on, up to `depth` hops
     def get_dependencies(self, chunk_name: str, depth: int = 1) -> List[dict]:
         """Return chunks that chunk_name depends on, up to `depth` hops."""
         visited = set()
@@ -27,6 +32,7 @@ class DependencyGraph:
         self._dfs_deps(chunk_name, depth, 0, visited, result)
         return result
 
+    # Recursive DFS for dependency traversal up to max_depth
     def _dfs_deps(self, name: str, max_depth: int, current_depth: int, visited: set, result: list):
         if current_depth >= max_depth or name in visited:
             return
@@ -37,6 +43,7 @@ class DependencyGraph:
                 result.append(chunk)
                 self._dfs_deps(called, max_depth, current_depth + 1, visited, result)
 
+    # Find all chunks that call chunk_name (reverse dependency lookup)
     def get_callers(self, chunk_name: str) -> List[dict]:
         """Return chunks that call chunk_name (reverse lookup)."""
         callers = []

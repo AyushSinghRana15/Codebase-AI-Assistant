@@ -1,7 +1,10 @@
+# entity_extractor.py — Extract code entities (files, functions, classes, etc.) from user queries
+
 import re
 from typing import List, Dict
 
 
+# Regex patterns for each entity type
 ENTITY_PATTERNS = {
     "file_path": [
         r'`([\w/\\\-\.]+)`',
@@ -38,6 +41,7 @@ TECH_ENTITY_KEYWORDS = [
 ]
 
 
+# Extract file paths, function names, class names, variables, imports, and tech concepts from query
 def extract_entities(query: str) -> Dict[str, List[str]]:
     entities: Dict[str, List[str]] = {k: [] for k in ENTITY_PATTERNS}
     entities["tech_concept"] = []

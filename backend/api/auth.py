@@ -1,3 +1,5 @@
+# auth.py — JWT-based authentication via Supabase
+
 import logging
 import os
 from typing import Optional
@@ -9,6 +11,7 @@ logger = logging.getLogger(__name__)
 _supabase_admin: Optional[Client] = None
 
 
+# Lazy-init Supabase admin client with service role key
 def _get_supabase_admin() -> Optional[Client]:
     global _supabase_admin
     if _supabase_admin is None:
@@ -23,6 +26,7 @@ def _get_supabase_admin() -> Optional[Client]:
     return _supabase_admin
 
 
+# Extract and verify JWT from Authorization header; returns None if no valid token
 async def get_optional_user(authorization: Optional[str] = Header(None)):
     if not authorization:
         return None

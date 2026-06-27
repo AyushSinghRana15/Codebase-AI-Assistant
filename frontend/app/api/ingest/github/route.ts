@@ -1,8 +1,11 @@
+// GitHub ingestion API route — start/poll ingestion tasks, proxy to backend
+
 import { NextRequest, NextResponse } from "next/server";
 
 const BACKEND_URL = process.env.BACKEND_URL;
 const BACKEND_KEY = process.env.BACKEND_API_KEY;
 
+// Build request headers with API key and optional auth token
 function getHeaders(req: NextRequest): Record<string, string> {
   const headers: Record<string, string> = {};
   if (BACKEND_KEY) headers["X-API-Key"] = BACKEND_KEY;
@@ -11,6 +14,7 @@ function getHeaders(req: NextRequest): Record<string, string> {
   return headers;
 }
 
+// Helper for missing backend error response
 function missingBackendErr() {
   return NextResponse.json(
     { error: "Backend URL not configured. Set BACKEND_URL env var." },
@@ -18,6 +22,7 @@ function missingBackendErr() {
   );
 }
 
+// Generic proxy to backend for status polls
 async function proxyToBackend(path: string, req: NextRequest, init?: RequestInit) {
   if (!BACKEND_URL) return missingBackendErr();
   const url = `${BACKEND_URL}${path}`;
@@ -29,6 +34,7 @@ async function proxyToBackend(path: string, req: NextRequest, init?: RequestInit
   return NextResponse.json(data, { status: res.status });
 }
 
+// POST /api/ingest/github — start ingestion for a repo URL
 export async function POST(req: NextRequest) {
   try {
     if (!BACKEND_URL) return missingBackendErr();
@@ -44,6 +50,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 30s timeout for the initial request
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 30000);
 
@@ -85,6 +92,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
+// GET /api/ingest/github?task_id= — poll ingestion status
 export async function GET(req: NextRequest) {
   try {
     if (!BACKEND_URL) return missingBackendErr();

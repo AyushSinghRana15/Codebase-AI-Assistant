@@ -1,6 +1,9 @@
+# query_rewriter.py — Rewrite user queries for improved code search relevance
+
 from typing import Optional
 from config import PROJECT_ROOT
 
+# Keyword-based rewrite templates
 TEMPLATES = {
     "where":   "Find the code that implements: {query}",
     "how":     "Find the code that explains how: {query}",
@@ -17,6 +20,7 @@ _REWRITE_SYSTEM = (
 )
 
 
+# Rewrite query using LLM (preferred) or rule-based templates as fallback
 def rewrite_query(query: str, use_llm: bool = False) -> str:
     if use_llm:
         try:

@@ -1,3 +1,5 @@
+// ResultCard — renders the assistant's answer with markdown, metadata, and actions
+
 "use client";
 
 import { Copy, Check } from "lucide-react";
@@ -8,6 +10,7 @@ import { useState } from "react";
 import { SpeakButton } from "./SpeakButton";
 import { VoiceState } from "@/hooks/useVoiceAssistant";
 
+// Confidence level color styles
 const CONFIDENCE_STYLE: Record<string, string> = {
   high: "text-[#16a34a] bg-[#16a34a]/10 border-[#16a34a]/20",
   medium: "text-[#ca8a04] bg-[#ca8a04]/10 border-[#ca8a04]/20",
@@ -25,6 +28,7 @@ interface Props {
 export function ResultCard({ result, voiceState, onSpeak, onStopSpeaking }: Props) {
   const [copied, setCopied] = useState(false);
 
+  // Determine confidence level from result or validation data
   const confidenceLevel = result.confidence ?? (() => {
     const conf = result.validation?.confidence;
     if (conf === undefined) return "medium";
@@ -37,6 +41,7 @@ export function ResultCard({ result, voiceState, onSpeak, onStopSpeaking }: Prop
   const latencyMs = result.latency_ms ?? 0;
   const latencySec = (latencyMs / 1000).toFixed(1);
 
+  // Copy answer to clipboard with visual feedback
   const handleCopy = async () => {
     await navigator.clipboard.writeText(result.answer);
     setCopied(true);
@@ -45,6 +50,7 @@ export function ResultCard({ result, voiceState, onSpeak, onStopSpeaking }: Prop
 
   return (
     <div className="w-full">
+      {/* Query correction banner */}
       {(result.corrected_query || result.original_query) && (
         <div
           className="mb-4 rounded-lg border px-3 py-2 text-xs"
@@ -66,12 +72,14 @@ export function ResultCard({ result, voiceState, onSpeak, onStopSpeaking }: Prop
         </div>
       )}
 
+      {/* Answer rendered as markdown */}
       <div className="prose prose-sm max-w-none text-sm leading-7" style={{ color: "var(--text-primary)" }}>
         <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
           {result.answer}
         </ReactMarkdown>
       </div>
 
+      {/* Footer: speak, copy, confidence, latency, chunks, validation */}
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <SpeakButton
           voiceState={voiceState}
@@ -92,6 +100,7 @@ export function ResultCard({ result, voiceState, onSpeak, onStopSpeaking }: Prop
           )}
         </button>
 
+        {/* Confidence badge */}
         <span
           className={`ml-1 rounded-md border px-2 py-1 font-mono text-xs ${CONFIDENCE_STYLE[confidenceLevel]}`}
         >

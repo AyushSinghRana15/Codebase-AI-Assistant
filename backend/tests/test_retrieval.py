@@ -1,3 +1,5 @@
+# test_retrieval.py — FAISS retrieval accuracy tests against known queries
+
 import os
 import sys
 
@@ -13,18 +15,22 @@ QUERIES_PATH = os.path.join(_BACKEND_ROOT, "eval", "test_queries.json")
 SCORE_THRESHOLD = 1.4
 
 
+# Load chunks from the JSON file
 def load_chunks():
     import json
     with open(CHUNKS_PATH, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
+# Load test queries from JSON
 def load_queries():
     import json
     with open(QUERIES_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)
+        data = json.load(f)
+    return data if isinstance(data, list) else data["queries"]
 
 
+# Run FAISS retrieval and filter results by score threshold
 def retriever(query: str, top_k: int = 5) -> List[Dict]:
     """
     Retriever using FAISS vector search.
@@ -36,6 +42,7 @@ def retriever(query: str, top_k: int = 5) -> List[Dict]:
     return [{"chunk": r, "score": r["score"]} for r in filtered]
 
 
+# Run all test queries and report pass/fail for each
 def run_retrieval_tests():
     queries = load_queries()
     print(f"Loaded {len(queries)} test queries\n")

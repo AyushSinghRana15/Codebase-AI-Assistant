@@ -1,3 +1,5 @@
+// ErrorBanner — displays error message with a retry button
+
 "use client";
 
 import { AlertCircle, RefreshCw } from "lucide-react";

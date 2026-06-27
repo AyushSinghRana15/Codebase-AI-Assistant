@@ -1,5 +1,7 @@
 "use client";
 
+// Features — grid of product feature cards with icons
+
 const features = [
   {
     icon: (

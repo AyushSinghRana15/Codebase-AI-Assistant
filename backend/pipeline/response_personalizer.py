@@ -1,6 +1,9 @@
+# response_personalizer.py — Tailor answer tone and content to the user's profile
+
 from typing import Dict, Optional
 
 
+# Add personal greeting or language tip based on user profile and intent
 def personalize_response(
     answer: str,
     profile: Optional[Dict] = None,

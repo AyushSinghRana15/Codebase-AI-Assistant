@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "highlight.js/styles/github-dark.css";
 
+/* Theme tokens — mapped to CSS variables for runtime theming */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -31,6 +32,7 @@
   --color-border-subtle: var(--border-subtle);
 }
 
+/* Dark theme (default) */
 :root,
 :root.dark {
   --background: #0a0a0a;
@@ -50,6 +52,7 @@
   --border-subtle: rgba(255, 255, 255, 0.06);
 }
 
+/* Sketch theme — warm earth tones */
 :root.sketch {
   --background: #f5f0ea;
   --foreground: #2c2420;
@@ -68,6 +71,7 @@
   --border-subtle: rgba(44, 36, 32, 0.10);
 }
 
+/* Midnight theme — deep blue tones */
 :root.midnight {
   --background: #0c1126;
   --foreground: #e2e8f0;
@@ -86,6 +90,7 @@
   --border-subtle: rgba(99, 102, 241, 0.12);
 }
 
+/* Cream theme — clean warm light */
 :root.cream {
   --background: #faf6f1;
   --foreground: #1e1b18;
@@ -123,6 +128,7 @@ body.midnight {
   background-image: none;
 }
 
+/* Animation keyframes */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -206,10 +212,12 @@ body.midnight {
   50% { border-color: rgba(59, 130, 246, 0.3); }
 }
 
+/* Utility classes */
 .fade-in {
   animation: fadeIn 0.3s ease-in;
 }
 
+/* Animated gradient text effect */
 .gradient-text {
   background: linear-gradient(135deg, #3b82f6, #8b5cf6, #3b82f6);
   background-size: 200% auto;
@@ -219,6 +227,7 @@ body.midnight {
   animation: gradient-shift 3s ease infinite;
 }
 
+/* Scroll-triggered reveal animation */
 .scroll-reveal {
   opacity: 0;
   transform: translateY(30px);
@@ -230,6 +239,7 @@ body.midnight {
   transform: translateY(0);
 }
 
+/* Frosted-glass navigation bar */
 .glass-nav {
   background: color-mix(in srgb, var(--bg-primary) 88%, transparent);
   backdrop-filter: blur(12px);
@@ -242,6 +252,7 @@ body.midnight {
   border-bottom: 1px solid rgba(44,36,32,0.07);
 }
 
+/* Card with gradient border on hover */
 .gradient-border {
   position: relative;
   background: var(--bg-card);
@@ -276,6 +287,7 @@ body.midnight {
   opacity: 1;
 }
 
+/* Hover lift effect for cards */
 .card-glow {
   transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
 }
@@ -296,6 +308,7 @@ body.midnight {
     0 2px 8px rgba(44,36,32,0.04);
 }
 
+/* Blinking terminal cursor */
 .terminal-cursor::after {
   content: '█';
   animation: terminal-blink 1s step-end infinite;
@@ -312,6 +325,7 @@ body.midnight {
   color: #6366f1;
 }
 
+/* Sketch/cream themed card */
 .sketch-card {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
@@ -334,6 +348,7 @@ body.midnight {
     0 8px 28px rgba(44,36,32,0.07);
 }
 
+/* Sketch/cream themed input */
 .sketch .sketch-input,
 .cream .sketch-input {
   border: 1.5px solid rgba(44,36,32,0.12);
@@ -348,6 +363,7 @@ body.midnight {
   background: #ffffff;
 }
 
+/* Sketch/cream themed button */
 .sketch-btn {
   transition: all 0.2s ease;
 }
@@ -363,11 +379,13 @@ body.midnight {
   transform: translateY(-1px);
 }
 
+/* Section dividers for sketch/cream themes */
 .sketch .sketch-section,
 .cream .sketch-section {
   border-top: 1px dashed rgba(44,36,32,0.12);
 }
 
+/* Fade edges horizontally */
 .mask-edges {
   -webkit-mask-image: linear-gradient(
     to right,
@@ -385,6 +403,7 @@ body.midnight {
   );
 }
 
+/* Respect prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
   .gradient-text,
   .scroll-reveal,

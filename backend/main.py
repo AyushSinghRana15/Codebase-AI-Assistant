@@ -8,6 +8,8 @@ from ingestion.chunker import parse_chunks
 
 
 def run_ingestion(repo_path, output_path):
+    # CLI entry point — walks the given repo directory, reads every supported file,
+    # parses it into AST-aware chunks, and writes all chunks to a JSON file.
     repo_path = os.path.abspath(repo_path)
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
@@ -37,11 +39,13 @@ def run_ingestion(repo_path, output_path):
 
 
 def run_embedding():
+    # Generates sentence-transformers embeddings for all chunks and builds a FAISS index.
     from embeddings.embedder import embed_chunks
     embed_chunks()
 
 
 def run_query(query):
+    # Quick semantic search — returns top-k FAISS results with L2 distances.
     from embeddings.retriever import retrieve
     print(f'Query: "{query}"')
     print("-" * 40)
@@ -53,6 +57,7 @@ def run_query(query):
 
 
 def run_ask(query):
+    # Full RAG pipeline: spell-check → classify → rewrite → hybrid retrieve → rerank → LLM generate → validate.
     from pipeline.ask import ask
     result = ask(query, top_k=5)
 
@@ -69,6 +74,7 @@ def run_ask(query):
 
 
 def run_egg():
+    # Hidden easter egg — because every good project needs one. 🥚
     print("  🥚  🥚  🥚  🥚  🥚")
     print("  🥚             🥚")
     print("  🥚   Ayush    🥚")
@@ -78,6 +84,7 @@ def run_egg():
 
 
 def main():
+    # Parses CLI args and dispatches to the appropriate step (ingest → embed → query/ask).
     parser = argparse.ArgumentParser(description="CodeBase AI Assistant")
     parser.add_argument("--repo", help="Path to the repo to ingest (Step 1)")
     parser.add_argument("--output", default=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "output", "chunks.json"), help="Output JSON file path")

@@ -1,3 +1,5 @@
+// SpeakButton — toggles TTS read-aloud for assistant answers
+
 "use client";
 
 import { Volume2, VolumeX } from "lucide-react";

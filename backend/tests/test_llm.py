@@ -1,15 +1,19 @@
+# test_llm.py — LLM integration tests: context building, response generation, hallucination detection
+
 import os
 from typing import List, Dict
 
 CHUNKS_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "output", "chunks.json")
 
 
+# Load all chunks from disk
 def load_chunks():
     import json
     with open(CHUNKS_PATH, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
+# Build a context string from retrieved chunks (file header + content)
 def build_context(retrieved_chunks: List[Dict]) -> str:
     """Build context string from retrieved chunks."""
     context_parts = []
@@ -21,6 +25,7 @@ def build_context(retrieved_chunks: List[Dict]) -> str:
     return "\n\n".join(context_parts)
 
 
+# Placeholder LLM call — TODO: replace with actual LLM integration
 def call_llm(query: str, context: str) -> str:
     """
     Placeholder LLM call.
@@ -29,6 +34,7 @@ def call_llm(query: str, context: str) -> str:
     return f"[LLM Response] Based on the context provided, I found information about: {query}"
 
 
+# Run LLM test cases: simple, flow, location, hallucination, and missing queries
 def run_llm_tests():
     """
     Test LLM integration with retrieved context.

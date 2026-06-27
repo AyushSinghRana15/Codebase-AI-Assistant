@@ -1,22 +1,31 @@
+# --------------------------------------------------------------------
+# Sync to Hugging Face Hub
+# Automatically deploys the backend to HF Spaces on every push to main.
+# Can also be triggered manually via the GitHub Actions UI.
+# --------------------------------------------------------------------
 name: Sync to Hugging Face Hub
 on:
-  push:
+  push:                     # Trigger on every push to main
     branches: [main]
-  workflow_dispatch:
+  workflow_dispatch:        # Allow manual trigger from Actions tab
 
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
+      # Step 1: Check out the repository so subsequent steps can access files
       - uses: actions/checkout@v4
+      # Step 2: Set up Python 3.11 for running the sync script
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      # Step 3: Install huggingface-hub and upload backend files to the HF Space
       - name: Sync to HF Space
         env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}       # Auth token stored in GitHub Secrets
         run: |
           pip install -q huggingface-hub
+          # Python heredoc: assembles the deployment payload and uploads via HfApi
           python3 << 'PYEOF'
           import os, shutil, tempfile, sys
           from huggingface_hub import HfApi
@@ -26,23 +35,24 @@ jobs:
               print("HF_TOKEN not set — skipping sync")
               sys.exit(0)
 
+          # Stage files in a temp directory so we only upload what we intend
           tmp = tempfile.mkdtemp()
           try:
-              shutil.copytree("backend", os.path.join(tmp, "backend"))
-              shutil.copy("spaces/backend/Dockerfile", os.path.join(tmp, "Dockerfile"))
-              shutil.copy("spaces/backend/README.md", os.path.join(tmp, "README.md"))
-              if os.path.exists("spaces/backend/.gitignore"):
+              shutil.copytree("backend", os.path.join(tmp, "backend"))       # Copy backend code
+              shutil.copy("spaces/backend/Dockerfile", os.path.join(tmp, "Dockerfile"))  # HF Space container config
+              shutil.copy("spaces/backend/README.md", os.path.join(tmp, "README.md"))    # App metadata for HF
+              if os.path.exists("spaces/backend/.gitignore"):                           # Optional ignores
                   shutil.copy("spaces/backend/.gitignore", os.path.join(tmp, ".gitignore"))
 
               api = HfApi(token=hf_token)
-              api.upload_folder(
+              api.upload_folder(                # Replace all files in the HF Space with local content
                   repo_id="AyushSingh15/CodeBase",
                   folder_path=tmp,
                   repo_type="space",
                   path_in_repo=".",
-                  delete_patterns=["*"],
+                  delete_patterns=["*"],        # Wipe previous files before upload
               )
               print("Sync successful")
           finally:
-              shutil.rmtree(tmp, ignore_errors=True)
+              shutil.rmtree(tmp, ignore_errors=True)  # Clean up temp directory
           PYEOF

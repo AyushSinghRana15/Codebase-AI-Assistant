@@ -1,8 +1,11 @@
+# ast_parser.py — Parse Python AST into structured code chunks with metadata
+
 import ast
 from dataclasses import dataclass, field
 from typing import List, Optional
 
 
+# Data holder for a parsed AST node (function or class)
 @dataclass
 class ASTChunk:
     name: str
@@ -16,6 +19,7 @@ class ASTChunk:
     is_async: bool = False
 
 
+# Extract all function call names from an AST node (walks children)
 def _extract_calls(node) -> List[str]:
     calls = []
     for child in ast.walk(node):
@@ -27,6 +31,7 @@ def _extract_calls(node) -> List[str]:
     return list(set(calls))
 
 
+# Extract docstring from a function or class node
 def _get_docstring(node) -> Optional[str]:
     if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
         doc = ast.get_docstring(node)
@@ -35,6 +40,7 @@ def _get_docstring(node) -> Optional[str]:
     return None
 
 
+# Extract decorator names from a function/class node
 def _get_decorators(node) -> List[str]:
     decorators = []
     if hasattr(node, 'decorator_list'):
@@ -49,6 +55,7 @@ def _get_decorators(node) -> List[str]:
     return decorators
 
 
+# Parse Python source using the ast module, return chunk dicts for each top-level function/class
 def parse_python_ast(source_code: str, file_path: str) -> List[dict]:
     try:
         tree = ast.parse(source_code)

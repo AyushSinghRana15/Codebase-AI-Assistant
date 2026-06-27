@@ -1,3 +1,5 @@
+# query_corrector.py — Spell-check and correct user queries while preserving technical terms
+
 from spellchecker import SpellChecker
 import re
 from typing import Set
@@ -15,6 +17,7 @@ TECH_TERMS: Set[str] = {
     'faiss', 'bm25', 'reranker', 'hybrid', 'ast', 'parser',
 }
 
+# Fix misspelled words in the query, skipping technical terms and file paths
 def correct_query(query: str) -> tuple[str, bool]:
     """
     Correct spelling mistakes in the query.
@@ -50,6 +53,7 @@ def correct_query(query: str) -> tuple[str, bool]:
     
     return ' '.join(corrected_words), was_corrected
 
+# Return spelling suggestions for misspelled words in the query
 def get_query_suggestions(query: str) -> list[str]:
     """
     Get spelling suggestions for query words.

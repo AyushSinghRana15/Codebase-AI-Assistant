@@ -1,8 +1,11 @@
+# search.py — Web search via DuckDuckGo for fallback when no code index is available
+
 from typing import List, Dict
 
 WEB_SEARCH_AVAILABLE = False
 _DDGS = None
 
+# Try importing duckduckgo_search (multiple import paths)
 try:
     import ddgs
     _DDGS = ddgs.DDGS
@@ -16,6 +19,7 @@ except ImportError:
         pass
 
 
+# Search the web via DuckDuckGo, return list of {title, snippet, url}
 def search_web(query: str, max_results: int = 5) -> List[Dict[str, str]]:
     """Search the web. Returns list of {title, snippet, url}."""
     if not WEB_SEARCH_AVAILABLE or _DDGS is None:
@@ -35,6 +39,7 @@ def search_web(query: str, max_results: int = 5) -> List[Dict[str, str]]:
         return []
 
 
+# Format web search results into a numbered context string for the LLM
 def format_web_context(results: List[Dict[str, str]]) -> str:
     """Format web search results into a context string for the LLM."""
     if not results:

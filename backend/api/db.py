@@ -1,3 +1,5 @@
+# db.py — CRUD operations for users, query history, and repos via Supabase (with in-memory fallback)
+
 import logging
 from datetime import datetime, timezone
 from typing import Optional, Dict, List
@@ -14,6 +16,7 @@ _query_history: Dict[str, list] = {}
 _user_repos: Dict[str, list] = {}
 
 
+# Lazy-init Supabase client (non-admin, for data operations)
 def _get_client() -> Optional[Client]:
     global _supabase
     if _supabase is None:
@@ -27,6 +30,7 @@ def _get_client() -> Optional[Client]:
     return _supabase
 
 
+# Create or update a user record (falls back to in-memory store)
 def upsert_user(user_id: str, email: str, name: str, avatar_url: str) -> dict:
     client = _get_client()
     if client:
@@ -55,6 +59,7 @@ def upsert_user(user_id: str, email: str, name: str, avatar_url: str) -> dict:
     return profile
 
 
+# Fetch a user by ID (falls back to in-memory store)
 def get_user(user_id: str) -> Optional[dict]:
     client = _get_client()
     if client:
@@ -67,6 +72,7 @@ def get_user(user_id: str) -> Optional[dict]:
     return _user_store.get(user_id)
 
 
+# Update name/bio for a user (falls back to in-memory store)
 def update_user_profile(user_id: str, name: Optional[str] = None, bio: Optional[str] = None) -> Optional[dict]:
     client = _get_client()
     if client:
@@ -94,6 +100,7 @@ def update_user_profile(user_id: str, name: Optional[str] = None, bio: Optional[
     return profile
 
 
+# Save a query/answer pair to history (falls back to in-memory store)
 def save_query_history(user_id: str, query: str, answer: str, sources: list, latency_ms: float):
     client = _get_client()
     if client:
@@ -124,6 +131,7 @@ def save_query_history(user_id: str, query: str, answer: str, sources: list, lat
         _query_history[user_id] = _query_history[user_id][-200:]
 
 
+# Retrieve recent query history for a user (falls back to in-memory store)
 def get_query_history(user_id: str, limit: int = 50) -> list:
     client = _get_client()
     if client:
@@ -143,6 +151,7 @@ def get_query_history(user_id: str, limit: int = 50) -> list:
     return _query_history.get(user_id, [])[-limit:]
 
 
+# Record a repository ingested by a user (falls back to in-memory store)
 def save_user_repo(user_id: str, repo_url: str):
     client = _get_client()
     if client:
@@ -166,6 +175,7 @@ def save_user_repo(user_id: str, repo_url: str):
         _user_repos[user_id].append(repo_entry)
 
 
+# List repos ingested by a user (falls back to in-memory store)
 def get_user_repos(user_id: str) -> list:
     client = _get_client()
     if client:
@@ -184,6 +194,7 @@ def get_user_repos(user_id: str) -> list:
     return _user_repos.get(user_id, [])
 
 
+# Aggregate query and repo counts for a user (falls back to in-memory store)
 def get_user_stats(user_id: str) -> dict:
     client = _get_client()
     if client:

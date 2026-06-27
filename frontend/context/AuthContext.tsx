@@ -1,9 +1,12 @@
+// AuthContext — Supabase auth state management with profile fetching
+
 "use client";
 
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { User } from "@supabase/supabase-js";
 import { getSupabase } from "@/lib/supabase";
 
+// User profile shape from backend
 interface UserProfile {
   id: string;
   email: string;
@@ -30,15 +33,18 @@ const AuthContext = createContext<AuthContextType>({
   refreshProfile: async () => {},
 });
 
+// Hook to access auth context
 export function useAuth() {
   return useContext(AuthContext);
 }
 
+// AuthProvider — manages user session, profile data, and sign in/out
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Fetch user profile from backend
   const fetchProfile = useCallback(async (userId: string) => {
     try {
       const supabase = getSupabase();
@@ -63,12 +69,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, fetchProfile]);
 
+  // Listen for session changes on mount
   useEffect(() => {
     const supabase = getSupabase();
     if (!supabase) {
       setLoading(false);
       return;
     }
+    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -77,6 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
+    // Subscribe to auth state changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -91,6 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, [fetchProfile]);
 
+  // Sign in with Google OAuth
   const signIn = useCallback(async () => {
     const supabase = getSupabase();
     if (!supabase) return;
@@ -105,6 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Sign out and clear state
   const signOut = useCallback(async () => {
     const supabase = getSupabase();
     if (!supabase) return;

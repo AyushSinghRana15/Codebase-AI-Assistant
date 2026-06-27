@@ -1,5 +1,7 @@
 "use client";
 
+// Hero — landing page hero section with title, subtitle, and CTA
+
 import Link from "next/link";
 import { Terminal } from "./Terminal";
 

@@ -1,3 +1,5 @@
+# context_compressor.py — Compress retrieved results to fit within token limits by scoring relevance/token efficiency
+
 from typing import List, Dict
 from llm.context_builder import approx_tokens
 
@@ -5,6 +7,7 @@ from llm.context_builder import approx_tokens
 MAX_CONTEXT_TOKENS = 6000
 
 
+# Select the most token-efficient subset of results (high relevance per token)
 def compress_results(
     query: str,
     results: List[Dict],

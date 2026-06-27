@@ -1,3 +1,5 @@
+// ProfilePage — user profile with details, stats, connected repos, and query history
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -5,6 +7,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { SettingsDropdown } from "@/components/website/SettingsDropdown";
 
+// Types for user history, repos, and stats
 interface HistoryItem {
   id: number;
   query: string;
@@ -22,6 +25,7 @@ interface UserStats {
   repo_count: number;
 }
 
+// Profile page — shows user info, edit form, usage stats, repos, and history
 export default function ProfilePage() {
   const { user, profile, loading, signIn, refreshProfile } = useAuth();
   const [editing, setEditing] = useState(false);
@@ -32,12 +36,14 @@ export default function ProfilePage() {
   const [repos, setRepos] = useState<UserRepo[]>([]);
   const [stats, setStats] = useState<UserStats>({ query_count: 0, repo_count: 0 });
 
+  // Sync form fields when profile data loads
   useEffect(() => {
     if (!user) return;
     setName(profile?.name || "");
     setBio(profile?.bio || "");
   }, [profile, user]);
 
+  // Fetch user history, repos, and stats on mount
   useEffect(() => {
     if (!user) return;
     fetch("/api/auth/history").then(r => r.json()).then(setHistory).catch(() => {});
@@ -45,6 +51,7 @@ export default function ProfilePage() {
     fetch("/api/auth/stats").then(r => r.json()).then(setStats).catch(() => {});
   }, [user]);
 
+  // Save profile changes to backend
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -62,6 +69,7 @@ export default function ProfilePage() {
     }
   };
 
+  // Loading state
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg-primary)" }}>
@@ -70,6 +78,7 @@ export default function ProfilePage() {
     );
   }
 
+  // Not signed in — prompt to authenticate
   if (!user) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ background: "var(--bg-primary)" }}>
@@ -99,11 +108,13 @@ export default function ProfilePage() {
     );
   }
 
+  // Generate initials for avatar fallback
   const initials = (profile?.name || "User")
     .split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 
   return (
     <main className="min-h-screen flex flex-col items-center" style={{ background: "var(--bg-primary)" }}>
+      {/* Header bar with logo, back link, and settings */}
       <header className="w-full border-b backdrop-blur-md" style={{ background: "color-mix(in srgb, var(--bg-secondary) 85%, transparent)", borderColor: "var(--border-subtle)" }}>
         <div className="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
@@ -127,6 +138,7 @@ export default function ProfilePage() {
       </header>
 
       <div className="w-full max-w-2xl px-6 py-12">
+        {/* User avatar and name header */}
         <div className="flex items-center gap-6 mb-10">
           {profile?.avatar_url ? (
             <img
@@ -153,6 +165,7 @@ export default function ProfilePage() {
         </div>
 
         <div className="space-y-6">
+          {/* Profile details section — editable name and bio */}
           <div
             className="rounded-xl p-6 border"
             style={{ background: "var(--bg-card)", borderColor: "var(--border-subtle)" }}
@@ -221,6 +234,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            {/* Edit mode action buttons */}
             {editing && (
               <div className="flex justify-end gap-3 mt-6">
                 <button
@@ -246,6 +260,7 @@ export default function ProfilePage() {
             )}
           </div>
 
+          {/* Usage stats — query and repo counts */}
           <div
             className="rounded-xl p-6 border"
             style={{ background: "var(--bg-card)", borderColor: "var(--border-subtle)" }}
@@ -266,6 +281,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
+          {/* Connected repositories list */}
           <div
             className="rounded-xl p-6 border"
             style={{ background: "var(--bg-card)", borderColor: "var(--border-subtle)" }}
@@ -297,6 +313,7 @@ export default function ProfilePage() {
             )}
           </div>
 
+          {/* Recent queries list */}
           <div
             className="rounded-xl p-6 border"
             style={{ background: "var(--bg-card)", borderColor: "var(--border-subtle)" }}

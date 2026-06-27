@@ -1,5 +1,8 @@
+# synonym_expander.py — Expand queries with synonyms for broader code search coverage
+
 from typing import List, Dict, Set
 
+# Verb synonyms mapping for query expansion
 SYNONYM_MAP: Dict[str, Set[str]] = {
     "find": {"search", "locate", "lookup", "discover", "get", "fetch"},
     "create": {"make", "build", "generate", "construct", "initialize", "new"},
@@ -19,6 +22,7 @@ SYNONYM_MAP: Dict[str, Set[str]] = {
 }
 
 
+# Generate alternative query variants by replacing verbs with synonyms
 def expand_synonyms(query: str) -> List[str]:
     q_lower = query.lower()
     expanded = {query}

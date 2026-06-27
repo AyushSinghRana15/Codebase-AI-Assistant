@@ -1,5 +1,7 @@
 "use client";
 
+// Pipeline — step-by-step RAG pipeline visualization
+
 const steps = [
   {
     num: "01",

@@ -1,5 +1,7 @@
 "use client";
 
+// Contact — contact form with input fields and validation
+
 import { useState } from "react";
 
 const projectTypes = [

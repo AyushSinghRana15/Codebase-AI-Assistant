@@ -1,3 +1,5 @@
+# prompt_utils.py — Load system prompts and assemble message lists for the LLM
+
 import os
 from typing import List, Dict
 
@@ -8,6 +10,7 @@ _GENERAL_SYSTEM_PROMPT = None
 _SYSTEM_PROMPT_PATH = os.path.join(PROJECT_ROOT, "AGENT.md")
 
 
+# Load and cache the code-specific system prompt from AGENT.md (with additional rules)
 def load_system_prompt() -> str:
     global _SYSTEM_PROMPT
     if _SYSTEM_PROMPT is not None:
@@ -32,6 +35,7 @@ ADDITIONAL RULES:
     return _SYSTEM_PROMPT
 
 
+# Load and cache the general-purpose system prompt (for non-code questions)
 def load_general_system_prompt() -> str:
     global _GENERAL_SYSTEM_PROMPT
     if _GENERAL_SYSTEM_PROMPT is not None:
@@ -55,10 +59,12 @@ Rules:
     return _GENERAL_SYSTEM_PROMPT
 
 
+# Build a user message string from query and context
 def build_user_message(query: str, context: str) -> str:
     return f"Query: {query}\n\nContext:\n{context}"
 
 
+# Assemble system + user messages for code-specific Q&A
 def assemble_messages(query: str, context: str) -> List[Dict]:
     system_prompt = load_system_prompt()
     user_message = build_user_message(query, context)
@@ -68,6 +74,7 @@ def assemble_messages(query: str, context: str) -> List[Dict]:
     ]
 
 
+# Assemble system + user messages for general-purpose Q&A (no code context)
 def assemble_general_messages(query: str, context: str) -> List[Dict]:
     system_prompt = load_general_system_prompt()
     user_message = build_user_message(query, context)

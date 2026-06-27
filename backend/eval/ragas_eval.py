@@ -1,8 +1,11 @@
+# ragas_eval.py — Build RAGAS evaluation datasets and run metrics
+
 from typing import List, Dict
 from ragas.datasets import Dataset
 import json
 
 
+# Build a RAGAS-compatible dataset from query/answer/context/ground_truth lists
 def build_ragas_dataset(queries: List[Dict], answers: List[str], contexts: List[List[str]], ground_truths: List[str]) -> Dataset:
     data = {
         "question": [q["query"] for q in queries],
@@ -13,6 +16,7 @@ def build_ragas_dataset(queries: List[Dict], answers: List[str], contexts: List[
     return Dataset.from_dict(data)
 
 
+# Run RAGAS evaluation metrics: faithfulness, answer_relevancy, context_precision, context_recall
 def run_ragas_eval(dataset: Dataset) -> Dict:
     try:
         from ragas import evaluate
@@ -27,6 +31,7 @@ def run_ragas_eval(dataset: Dataset) -> Dict:
         return {"error": "ragas not installed. Run: pip install ragas datasets langchain-openai"}
 
 
+# Load ground truth data from a JSON file
 def load_ground_truth(path: str = "eval/ground_truth.json") -> List[Dict]:
     try:
         with open(path, "r") as f:

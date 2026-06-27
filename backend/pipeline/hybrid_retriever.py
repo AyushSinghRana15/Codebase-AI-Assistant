@@ -1,7 +1,10 @@
+# hybrid_retriever.py — Hybrid search combining FAISS (semantic) and BM25 (keyword) via RRF fusion
+
 import re
 from typing import List, Dict
 
 
+# BM25 keyword index built from all chunks (requires rank_bm25)
 class BM25Index:
     def __init__(self, chunks: List[dict]):
         try:
@@ -13,9 +16,11 @@ class BM25Index:
         except ImportError:
             self.available = False
 
+    # Tokenize text into alphanumeric tokens for BM25
     def _tokenize(self, text: str) -> List[str]:
         return re.findall(r'[a-zA-Z0-9_]+', text)
 
+    # Search the BM25 index and return top_k results with bm25_score
     def search(self, query: str, top_k: int = 10) -> List[dict]:
         if not self.available:
             return []
@@ -35,6 +40,7 @@ class BM25Index:
 _bm25_index = None
 
 
+# Singleton: build and return the BM25 index from all stored chunks
 def get_bm25_index() -> BM25Index:
     global _bm25_index
     if _bm25_index is None:
@@ -44,12 +50,14 @@ def get_bm25_index() -> BM25Index:
     return _bm25_index
 
 
+# Unique dedup key for a chunk: file_path + name + start_line
 def _chunk_key(result: dict) -> str:
     """Composite dedup key: file_path + name + start_line."""
     meta = result["metadata"]
     return f"{meta['file_path']}:{meta.get('name', '')}:{meta.get('start_line', 0)}"
 
 
+# Fuse FAISS and BM25 results using weighted Reciprocal Rank Fusion
 def reciprocal_rank_fusion(
     faiss_results: List[dict],
     bm25_results: List[dict],
@@ -75,6 +83,7 @@ def reciprocal_rank_fusion(
     return [chunk_map[n] for n in sorted_keys]
 
 
+# Combined semantic + keyword search with weighted RRF fusion
 def hybrid_retrieve(
     query: str,
     top_k: int = 15,

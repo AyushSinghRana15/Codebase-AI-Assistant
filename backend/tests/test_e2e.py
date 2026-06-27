@@ -1,6 +1,9 @@
+# test_e2e.py — End-to-end integration tests through the full retrieval + LLM pipeline
+
 import os
 from typing import List, Dict
 
+# Standard queries covering different codebase questions
 QUERIES = [
     "Where is authentication implemented?",
     "Explain the login flow step by step",
@@ -13,6 +16,7 @@ QUERIES = [
 ]
 
 
+# Run all end-to-end queries: retrieve, build context, and call LLM
 def run_e2e_tests():
     """
     End-to-end simulation: run all 8 standard queries against full system.

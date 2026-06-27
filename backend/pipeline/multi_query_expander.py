@@ -1,7 +1,10 @@
+# multi_query_expander.py — Generate multiple search query variations for broader retrieval
+
 from typing import List
 from llm.generator import generate_answer
 
 
+# Template-based query variations per intent type
 TEMPLATE_VARIATIONS = {
     "what": [
         "What is the purpose of {query}",
@@ -26,6 +29,7 @@ TEMPLATE_VARIATIONS = {
 }
 
 
+# Expand query using template-based variations based on leading keyword
 def _template_expand(query: str) -> List[str]:
     q_lower = query.lower().strip()
     for keyword, templates in TEMPLATE_VARIATIONS.items():
@@ -38,6 +42,7 @@ def _template_expand(query: str) -> List[str]:
     ]
 
 
+# Generate query variations using the LLM for more diverse phrasing
 def llm_expand(query: str, num_variations: int = 3) -> List[str]:
     prompt = f"""Generate {num_variations} different search queries for a codebase RAG system based on the original query below.
 
@@ -64,6 +69,7 @@ Return exactly {num_variations} queries:"""
     return _template_expand(query)
 
 
+# Entry point: expand query using LLM (preferred) or template fallback
 def expand_queries(query: str, use_llm: bool = False, num_variations: int = 3) -> List[str]:
     if use_llm:
         return llm_expand(query, num_variations)

@@ -1,6 +1,9 @@
+// API client — askAPI for submitting queries, getAccessToken for auth
+
 import { AskResponse, AskRequest } from "./types";
 import { getSupabase } from "./supabase";
 
+// Retrieve Supabase access token for authenticated requests
 async function getAccessToken(): Promise<string | null> {
   const supabase = getSupabase();
   if (!supabase) return null;
@@ -8,6 +11,7 @@ async function getAccessToken(): Promise<string | null> {
   return data.session?.access_token ?? null;
 }
 
+// Submit a query to the /api/ask endpoint with optional auth
 export async function askAPI(request: AskRequest): Promise<AskResponse> {
   const token = await getAccessToken();
   const headers: Record<string, string> = { "Content-Type": "application/json" };

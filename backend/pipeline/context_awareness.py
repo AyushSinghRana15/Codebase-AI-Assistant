@@ -1,3 +1,5 @@
+# context_awareness.py — Per-user profile and chat history for personalized answers
+
 from typing import Dict, List, Optional
 from collections import deque
 import time
@@ -8,14 +10,17 @@ _chat_history: Dict[str, deque] = {}
 _user_profiles: Dict[str, dict] = {}
 
 
+# Store a user profile in memory for the current session
 def set_user_profile(user_id: str, profile: dict):
     _user_profiles[user_id] = profile
 
 
+# Retrieve the in-memory user profile
 def get_user_profile(user_id: str) -> Optional[dict]:
     return _user_profiles.get(user_id)
 
 
+# Append a query/answer pair to the user's in-memory chat history
 def add_to_history(user_id: str, query: str, answer: str, maxlen: int = 5):
     if user_id not in _chat_history:
         _chat_history[user_id] = deque(maxlen=maxlen)
@@ -26,11 +31,13 @@ def add_to_history(user_id: str, query: str, answer: str, maxlen: int = 5):
     })
 
 
+# Return the most recent N entries from user's chat history
 def get_history(user_id: str, max_count: int = 5) -> List[dict]:
     history = _chat_history.get(user_id, deque())
     return list(history)[-max_count:]
 
 
+# Build a context enrichment dict with profile fields and recent query history
 def build_context_profile(user_id: Optional[str], config: dict) -> dict:
     context = {
         "user_id": user_id,
@@ -55,6 +62,7 @@ def build_context_profile(user_id: Optional[str], config: dict) -> dict:
     return context
 
 
+# Resolve pronouns and relational terms by prepending the last query from history
 def enrich_query_with_context(query: str, context: dict) -> str:
     if not context.get("recent_queries"):
         return query

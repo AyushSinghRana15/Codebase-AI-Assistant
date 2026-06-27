@@ -1,3 +1,5 @@
+# run_eval.py — Evaluate the RAG pipeline against a set of predefined queries
+
 import json
 import os
 import sys
@@ -5,6 +7,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from pipeline.ask import ask
 
+# Evaluation queries with expected file/keyword hints and should_find expectations
 EVAL_QUERIES = [
     {
         "query": "Where is file loading implemented?",
@@ -101,6 +104,7 @@ EVAL_QUERIES = [
 ]
 
 
+# Run all evaluation queries, score results, and print a final report
 def run_eval():
     total_score = 0
     max_score = len(EVAL_QUERIES) * 4

@@ -1,4 +1,6 @@
-[
+{
+  "_comment": "Test query dataset for retrieval evaluation. Each entry has: query (the question text), type (location|explanation|edge), expected_file_hint (optional — file that should appear in results), expected_name_hint (optional — function/class name in results), expect_empty (optional — true if no results expected for edge-case queries).",
+  "queries": [
   {
     "query": "Where is file loading implemented?",
     "type": "location",
@@ -93,3 +95,4 @@
     "expect_empty": true
   }
 ]
+}

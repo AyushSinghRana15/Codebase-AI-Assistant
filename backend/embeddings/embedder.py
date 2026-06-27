@@ -1,3 +1,5 @@
+# embedder.py — Embed code chunks and build a FAISS vector index
+
 import json
 import os
 import pickle
@@ -15,12 +17,14 @@ VECTOR_STORE_DIR = os.path.join(PROJECT_ROOT, "vector_store")
 CHUNKS_PATH = os.path.join(PROJECT_ROOT, "output", "chunks.json")
 
 
+# Build a single embeddable text string from a chunk (header + content)
 def build_embed_text(chunk: dict) -> str:
     m = chunk["metadata"]
     header = f"[{m['language']}] {m['chunk_type']}: {m['name']} in {m['file_path']}"
     return f"{header}\n\n{chunk['content']}"
 
 
+# Load chunks, compute embeddings, build FAISS index, and persist to disk
 def embed_chunks():
     os.makedirs(VECTOR_STORE_DIR, exist_ok=True)
 

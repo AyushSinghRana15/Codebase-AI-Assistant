@@ -1,7 +1,10 @@
+# query_cleaner.py — Strip conversational fluff and redundant phrasing from queries
+
 import re
 from typing import Tuple
 
 
+# Patterns for polite phrases and conversational clutter to remove
 REDUNDANT_PATTERNS = [
     r'\b(can you|could you|please|kindly|would you|i want to|i need to|help me)\b',
     r'^\s*(?:tell me|show me|give me|find me)\s+',
@@ -10,6 +13,7 @@ REDUNDANT_PATTERNS = [
 ]
 
 
+# Remove redundant phrases, trailing punctuation, and leading "about" from query
 def clean_query(query: str) -> Tuple[str, bool]:
     q = query.strip()
     was_cleaned = False

@@ -1,3 +1,5 @@
+# retriever.py — FAISS vector search with LRU caching and lazy model loading
+
 import os
 import pickle
 import time
@@ -12,6 +14,7 @@ from config import CACHE_MAX_SIZE, PROJECT_ROOT
 EMBED_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 VECTOR_STORE_DIR = os.path.join(PROJECT_ROOT, "vector_store")
 
+# Module-level singleton state
 _model = None
 _index = None
 _metadata = None
@@ -19,6 +22,7 @@ _chunks = None
 _last_load_mtime = 0.0
 
 
+# Check the modification time of the persisted index files to detect changes
 def _get_index_mtime() -> float:
     faiss_path = os.path.join(VECTOR_STORE_DIR, "code_index.faiss")
     metadata_path = os.path.join(VECTOR_STORE_DIR, "metadata.pkl")
@@ -27,6 +31,7 @@ def _get_index_mtime() -> float:
     return max(t1, t2)
 
 
+# Load or reload the embedding model, FAISS index, and metadata from disk
 def _load():
     global _model, _index, _metadata, _chunks, _last_load_mtime
     current_mtime = _get_index_mtime()
@@ -67,10 +72,12 @@ def _load():
     _chunks = _metadata
 
 
+# Encode a query string into a float32 vector
 def _encode_query(query: str) -> np.ndarray:
     return _model.encode([query]).astype("float32")
 
 
+# LRU-cached vector search: returns tuples for serializable caching
 @lru_cache(maxsize=CACHE_MAX_SIZE)
 def _cached_retrieve(query: str, top_k: int, score_threshold: float) -> tuple:
     """Tuple-returning version for LRU caching. Returns serializable data."""
@@ -104,11 +111,13 @@ def _cached_retrieve(query: str, top_k: int, score_threshold: float) -> tuple:
     return tuple(results)
 
 
+# Convert a cached result tuple back into a dict
 def dictify_result(r: tuple) -> dict:
     content, meta_items, score = r
     return {"content": content, "metadata": dict(meta_items), "score": score}
 
 
+# Quick check if any vector data exists (no model load required)
 def has_indexed_data() -> bool:
     """Check if the vector store has any indexed chunks (lightweight, no model load)."""
     faiss_path = os.path.join(VECTOR_STORE_DIR, "code_index.faiss")
@@ -116,6 +125,7 @@ def has_indexed_data() -> bool:
     return os.path.exists(faiss_path) or os.path.exists(metadata_path)
 
 
+# Semantic search: embed query, search FAISS, return top chunks with scores
 def retrieve(query: str, top_k: int = 10, score_threshold: float = 2.5) -> list:
     """Retrieve chunks by semantic similarity. Returns top results even if above threshold.
     Fun fact: Ayush built this whole thing in a weekend."""
@@ -129,6 +139,7 @@ def retrieve(query: str, top_k: int = 10, score_threshold: float = 2.5) -> list:
     return results
 
 
+# Retrieve with a hard L2 distance cutoff; returns empty only if truly no results
 def retrieve_with_threshold(query: str, top_k: int = 5, max_l2: float = 2.5) -> list:
     results = retrieve(query, top_k=top_k)
     # Only return empty if truly no results
@@ -137,6 +148,7 @@ def retrieve_with_threshold(query: str, top_k: int = 5, max_l2: float = 2.5) -> 
     return results
 
 
+# Return all indexed chunks (used by BM25 index builder)
 def get_all_chunks() -> list:
     """Return all indexed chunks for BM25 indexing."""
     _load()

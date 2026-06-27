@@ -1,8 +1,11 @@
+# validator.py — Validate answer groundedness, score confidence, and shape the final response
+
 import re
 from typing import Dict
 from config import SCORE_THRESHOLD, ENABLE_CONFIDENCE_SCORING
 
 
+# Check if the answer's backtick-cited symbols appear in the retrieved chunks
 def validate_answer(answer: str, results: list) -> Dict:
     """
     Checks if the answer's key claims appear in the retrieved chunks.
@@ -29,6 +32,7 @@ def validate_answer(answer: str, results: list) -> Dict:
     return {"is_grounded": True, "confidence": 0.9, "warning": None}
 
 
+# Compute a confidence score from L2 distance and reranker score
 def score_confidence(results: list, answer: str, intent: str) -> Dict:
     if not results:
         return {"level": "low", "score": 0.2, "message": "no_results"}
@@ -50,6 +54,7 @@ def score_confidence(results: list, answer: str, intent: str) -> Dict:
     return {"level": level, "score": round(confidence, 2), "message": None}
 
 
+# Build the final response dict with appropriate disclaimers based on confidence level
 def shape_response(answer: str, confidence: dict, results: list) -> Dict:
     if confidence["level"] == "none":
         return {

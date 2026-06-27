@@ -1,5 +1,7 @@
 "use client";
 
+// DemoQueries — interactive demo showing example queries and responses
+
 import { useState } from "react";
 
 const demos = [

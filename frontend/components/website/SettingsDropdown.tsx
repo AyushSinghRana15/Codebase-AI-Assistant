@@ -1,5 +1,7 @@
 "use client";
 
+// SettingsDropdown — theme picker, profile link, and sign-out dropdown
+
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useTheme, THEME_CONFIGS } from "@/context/ThemeContext";

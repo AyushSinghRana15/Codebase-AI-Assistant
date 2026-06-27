@@ -1,12 +1,16 @@
+# chunker.py — Split source code into semantic chunks with overlap for context continuity
+
 import re
 import os
 
 from ingestion.ast_parser import parse_python_ast
 
+# Max lines per chunk before forced splitting; overlap lines between adjacent chunks
 CHUNK_MAX_LINES = 150
 CHUNK_OVERLAP_LINES = 3
 
 
+# Build a single chunk dict with content and metadata
 def create_chunk(content, start_line, end_line, chunk_type, name, file_path, language, **extra):
     meta = {
         "file_path": file_path,
@@ -21,6 +25,7 @@ def create_chunk(content, start_line, end_line, chunk_type, name, file_path, lan
     return {"content": content, "metadata": meta}
 
 
+# Split a chunk exceeding CHUNK_MAX_LINES into multiple sub-chunks with overlap
 def split_large_chunk(content, start_line, chunk_type, name, file_path, language, **extra):
     lines = content.split('\n')
     total = len(lines)
@@ -46,6 +51,7 @@ def split_large_chunk(content, start_line, chunk_type, name, file_path, language
     return sub_chunks
 
 
+# Parse file content into chunks: uses AST for Python, regex boundaries for other languages
 def parse_chunks(file_content, file_path, language):
     if not file_content.strip():
         return []

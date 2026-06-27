@@ -1,5 +1,7 @@
 "use client";
 
+// ScrollReveal — initializes scroll-triggered reveal animations
+
 import { useEffect } from "react";
 
 export function ScrollReveal() {

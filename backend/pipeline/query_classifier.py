@@ -1,6 +1,9 @@
+# query_classifier.py — Classify user query intent for pipeline tuning
+
 import re
 from typing import Dict, List
 
+# Pattern-based intent classification rules
 INTENT_RULES: List[tuple] = [
     (["where is", "which file", "find", "locate", "path", "directory", "file"], "location"),
     (["how does", "explain the flow", "walk me through", "sequence", "step"], "flow"),
@@ -19,6 +22,7 @@ CODE_KEYWORD_WEIGHTS = {
 }
 
 
+# Classify query into one of: location, flow, explanation, debug, comparison, enumeration, general
 def classify_query(query: str) -> str:
     q = query.lower()
 
@@ -47,6 +51,7 @@ def classify_query(query: str) -> str:
     return best_intents[0] if best_intents else "general"
 
 
+# Return pipeline parameters (top_k, bm25_weight, etc.) tuned for the given intent
 def get_pipeline_config(intent: str) -> Dict:
     configs = {
         "location":    {"top_k": 20, "bm25_weight": 0.7, "max_additions": 1, "num_variations": 2},

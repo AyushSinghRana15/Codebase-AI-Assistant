@@ -1,5 +1,7 @@
 "use client";
 
+// Terminal — simulated terminal with typing animation
+
 import { useEffect, useState } from "react";
 
 const terminalLines = [

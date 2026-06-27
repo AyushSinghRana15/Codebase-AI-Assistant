@@ -1,3 +1,6 @@
+// Shared type definitions for the frontend application
+
+// A single source chunk retrieved from the codebase
 export interface SourceReference {
   file_path: string;
   name: string;
@@ -5,12 +8,14 @@ export interface SourceReference {
   rerank_score?: number;
 }
 
+// Validation metadata about the answer
 export interface ValidationInfo {
   is_grounded: boolean;
   confidence: number;
   warning: string | null;
 }
 
+// Complete response from the ask API
 export interface AskResponse {
   answer: string;
   sources: SourceReference[];
@@ -23,9 +28,11 @@ export interface AskResponse {
   latency_ms?: number;
 }
 
+// Request payload for the ask API
 export interface AskRequest {
   query: string;
   top_k?: number;
 }
 
+// UI state machine for the ask flow
 export type AppState = "idle" | "loading" | "success" | "error";

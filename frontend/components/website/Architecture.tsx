@@ -1,5 +1,7 @@
 "use client";
 
+// Architecture — pipeline stages diagram section
+
 const stages = [
   { num: "01", title: "Spell-Check", description: "Correct typos in user queries while preserving technical terms." },
   { num: "02", title: "Classify Intent", description: "Determine query type: location, flow, explanation, debug." },

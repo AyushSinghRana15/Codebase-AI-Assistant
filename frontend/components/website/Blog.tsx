@@ -1,5 +1,7 @@
 "use client";
 
+// Blog — latest blog posts showcase section
+
 import { useState } from "react";
 
 const posts = [

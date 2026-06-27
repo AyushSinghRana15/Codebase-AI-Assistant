@@ -1,9 +1,12 @@
+// RootLayout — global layout, metadata, theme script, providers
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthProvider } from "@/context/AuthContext";
 
+// Load Geist fonts and assign CSS variables
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -14,11 +17,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Page metadata
 export const metadata: Metadata = {
   title: "CodeBase AI Assistant",
   description: "Intelligent RAG system for codebase understanding",
 };
 
+// Root layout — applies fonts, inline theme script, and context providers
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -30,6 +35,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Inline script to restore saved theme before hydration */}
         <script dangerouslySetInnerHTML={{
           __html: `(function(){try{var t=localStorage.getItem('theme');if(t){document.documentElement.className=t;document.body.className=t}else{document.documentElement.className='dark';document.body.className='dark'}}catch(e){}})()`
         }} />

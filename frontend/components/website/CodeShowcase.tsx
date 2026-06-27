@@ -1,5 +1,7 @@
 "use client";
 
+// CodeShowcase — syntax-highlighted code example with tabbed languages
+
 import { useState } from "react";
 
 const codeSnippet = `def ask(query: str) -> dict:

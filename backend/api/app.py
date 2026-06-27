@@ -1,3 +1,5 @@
+# app.py — FastAPI application: routes, middleware, and request handlers
+
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 import time
@@ -16,6 +18,7 @@ from config import EMBED_MODEL, RERANK_MODEL, PROJECT_ROOT
 _embed_model = None
 _reranker = None
 
+# Lazy-loaded singleton models
 def get_embed_model():
     global _embed_model
     if _embed_model is None:
@@ -51,6 +54,7 @@ from pipeline.context_awareness import set_user_profile, get_user_profile
 logging.basicConfig(level=logging.INFO, format='{"time": "%(asctime)s", "level": "%(levelname)s", "msg": "%(message)s", "module": "%(module)s"}')
 logger = logging.getLogger(__name__)
 
+# FastAPI application setup with rate limiting and CORS
 app = FastAPI(
     title="CodeBase AI Assistant",
     description="Natural language Q&A over code repositories",
@@ -71,6 +75,7 @@ app.add_middleware(
 )
 
 
+# Pre-warm FAISS, BM25, and tokenizer on startup
 @app.on_event("startup")
 def warm_models():
     global _embed_model, _reranker
@@ -105,11 +110,13 @@ def warm_models():
     logging.info("Models pre-warmed (embedding/reranker load on demand)")
 
 
+# Health check endpoint
 @app.get("/health")
 def health_check():
     return {"status": "ok", "version": "1.2.0", "developer": "Ayush Singh"}
 
 
+# Fun easter egg endpoint
 @app.get("/egg")
 def easter_egg():
     return {
@@ -120,6 +127,7 @@ def easter_egg():
     }
 
 
+# Main Q&A endpoint — runs the full RAG pipeline
 @app.post("/ask", response_model=QueryResponse)
 def ask_endpoint(
     request: QueryRequest,
@@ -184,6 +192,7 @@ def ask_endpoint(
     return result
 
 
+# Vector store statistics endpoint
 @app.get("/stats")
 def stats():
     from embeddings.retriever import _index
@@ -202,6 +211,7 @@ INGEST_TMP_DIR = os.path.join(PROJECT_ROOT, ".ingest_status")
 os.makedirs(INGEST_TMP_DIR, exist_ok=True)
 
 
+# Background ingestion runner
 def _run_ingestion(task_id: str, status_file: str, repo_url: str, branch: str, user_id: str):
     import gc
     from ingestion.worker import ingest_main
@@ -217,6 +227,7 @@ def _run_ingestion(task_id: str, status_file: str, repo_url: str, branch: str, u
         gc.collect()
 
 
+# Start a GitHub repo ingestion in the background
 @app.post("/ingest/github")
 def ingest_github(repo_url: str, branch: Optional[str] = None, user=Depends(get_optional_user)):
     if not user:
@@ -235,6 +246,7 @@ def ingest_github(repo_url: str, branch: Optional[str] = None, user=Depends(get_
     return {"task_id": task_id, "status": "queued"}
 
 
+# Poll ingestion task status
 @app.get("/ingest/status/{task_id}")
 def ingest_status(task_id: str):
     status_file = os.path.join(INGEST_TMP_DIR, f"{task_id}.json")
@@ -244,6 +256,7 @@ def ingest_status(task_id: str):
         return json.load(f)
 
 
+# Get authenticated user profile
 @app.get("/auth/me")
 def auth_me(user=Depends(get_optional_user)):
     if not user:
@@ -272,6 +285,7 @@ def auth_me(user=Depends(get_optional_user)):
         }
 
 
+# Update user profile (name, bio)
 @app.put("/auth/profile")
 def update_profile(request: UpdateProfileRequest, user=Depends(get_optional_user)):
     if not user:
@@ -288,6 +302,7 @@ def update_profile(request: UpdateProfileRequest, user=Depends(get_optional_user
     return profile
 
 
+# Get query history for the authenticated user
 @app.get("/auth/history")
 def auth_history(limit: int = 50, user=Depends(get_optional_user)):
     if not user:
@@ -295,6 +310,7 @@ def auth_history(limit: int = 50, user=Depends(get_optional_user)):
     return get_query_history(user_id=user.id, limit=limit)
 
 
+# Get ingested repos for the authenticated user
 @app.get("/auth/repos")
 def auth_repos(user=Depends(get_optional_user)):
     if not user:
@@ -302,6 +318,7 @@ def auth_repos(user=Depends(get_optional_user)):
     return get_user_repos(user_id=user.id)
 
 
+# Get user statistics (query count, repo count)
 @app.get("/auth/stats")
 def auth_stats(user=Depends(get_optional_user)):
     if not user:

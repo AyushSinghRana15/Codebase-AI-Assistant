@@ -1,9 +1,12 @@
+// useScrollReveal — IntersectionObserver to animate .scroll-reveal elements on scroll
+
 "use client";
 
 import { useEffect } from "react";
 
 export function useScrollReveal() {
   useEffect(() => {
+    // Observe .scroll-reveal elements and add .visible when they enter the viewport
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {

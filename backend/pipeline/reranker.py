@@ -1,3 +1,5 @@
+# reranker.py — Cross-encoder re-ranking and MMR diversity post-processing
+
 from sentence_transformers import CrossEncoder
 from sentence_transformers import SentenceTransformer
 from config import RERANK_MODEL, EMBED_MODEL
@@ -7,6 +9,7 @@ _reranker = None
 _embedder = None
 
 
+# Lazy-load the cross-encoder reranker model
 def get_reranker():
     global _reranker
     if _reranker is None:
@@ -14,6 +17,7 @@ def get_reranker():
     return _reranker
 
 
+# Re-rank retrieved chunks using a cross-encoder for better relevance ordering
 def rerank(query: str, results: list, top_n: int = 5) -> list:
     if not results:
         return []
@@ -29,6 +33,7 @@ def rerank(query: str, results: list, top_n: int = 5) -> list:
     return ranked[:top_n]
 
 
+# Maximal Marginal Relevance: balance relevance with diversity among top results
 def mmr_diversify(
     results: list,
     query: str,

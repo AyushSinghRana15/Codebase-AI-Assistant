@@ -1,5 +1,7 @@
 "use client";
 
+// TechStack — two-row marquee of technology logos
+
 const row1 = [
   "Python", "AST Parser", "sentence-transformers", "FAISS", "BM25",
   "CrossEncoder", "RAGAS", "pyspellchecker",

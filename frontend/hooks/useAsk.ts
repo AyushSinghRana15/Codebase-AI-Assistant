@@ -1,3 +1,5 @@
+// useAsk — manages query state, submission, and response lifecycle
+
 import { useState, useCallback } from "react";
 import { AskResponse, AppState } from "@/lib/types";
 import { askAPI } from "@/lib/api";
@@ -9,6 +11,7 @@ export function useAsk() {
   const [state, setState] = useState<AppState>("idle");
   const [error, setError] = useState<string | null>(null);
 
+  // Submit the current (or provided) query to the API
   const submit = useCallback(async (nextQuery?: string) => {
     const activeQuery = (nextQuery ?? (query || submittedQuery)).trim();
     if (!activeQuery) return;
@@ -29,6 +32,7 @@ export function useAsk() {
     }
   }, [query, submittedQuery]);
 
+  // Reset state back to idle
   const reset = useCallback(() => {
     setQuery("");
     setSubmittedQuery("");

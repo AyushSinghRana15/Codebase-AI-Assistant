@@ -1,3 +1,5 @@
+// GitHubIngestor — form to ingest a GitHub repository with polling status
+
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
@@ -13,6 +15,7 @@ interface Props {
   onIngestComplete?: () => void;
 }
 
+// Union type for all possible ingestion states
 type IngestStatus =
   | { status: "idle" }
   | { status: "submitting" }
@@ -23,6 +26,7 @@ type IngestStatus =
   | { status: "success"; files_processed: number; chunks_created: number }
   | { status: "error"; error: string };
 
+// Human-readable labels for backend status values
 const STATUS_LABELS: Record<string, string> = {
   queued: "Queued...",
   pending: "Starting...",
@@ -40,6 +44,7 @@ export function GitHubIngestor({ onIngestComplete }: Props) {
   const [state, setState] = useState<IngestStatus>({ status: "idle" });
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Clear the polling interval
   const stopPolling = useCallback(() => {
     if (pollingRef.current) {
       clearInterval(pollingRef.current);
@@ -47,6 +52,7 @@ export function GitHubIngestor({ onIngestComplete }: Props) {
     }
   }, []);
 
+  // Poll ingestion status every 2s until completion or error
   const startPolling = useCallback((taskId: string) => {
     stopPolling();
     pollingRef.current = setInterval(async () => {
@@ -71,6 +77,7 @@ export function GitHubIngestor({ onIngestComplete }: Props) {
           stopPolling();
           setState({ status: "error", error: data.error || "Ingestion failed" });
         } else {
+          // Update state with intermediate progress
           setState((prev) => {
             if (prev.status !== "success" && prev.status !== "error") {
               const newState: Record<string, unknown> = { status: data.status };
@@ -87,10 +94,12 @@ export function GitHubIngestor({ onIngestComplete }: Props) {
     }, 2000);
   }, [onIngestComplete, stopPolling]);
 
+  // Cleanup polling on unmount
   useEffect(() => {
     return () => stopPolling();
   }, [stopPolling]);
 
+  // Submit ingestion request to backend
   const handleIngest = async () => {
     if (!repoUrl.trim()) return;
 
@@ -100,6 +109,7 @@ export function GitHubIngestor({ onIngestComplete }: Props) {
       const params = new URLSearchParams({ repo_url: repoUrl });
       if (branch) params.append("branch", branch);
 
+      // Attach auth token if available
       const headers: Record<string, string> = {};
       try {
         const supabase = getSupabase();

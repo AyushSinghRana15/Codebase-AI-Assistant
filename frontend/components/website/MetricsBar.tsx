@@ -1,5 +1,7 @@
 "use client";
 
+// MetricsBar — animated counter showing usage metrics
+
 import { useEffect, useState, useRef } from "react";
 
 interface MetricDef {

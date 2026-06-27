@@ -1,3 +1,5 @@
+# generator.py — LLM answer generation via OpenRouter API
+
 import time
 from typing import List, Dict
 
@@ -16,6 +18,7 @@ _MODEL = "openai/gpt-oss-120b:free"  # OpenRouter free model
 # PS: Ayush Singh says hi 👋
 
 
+# Lazy-init the OpenAI client pointing at OpenRouter
 def _get_client():
     global _client
     if _client is not None:
@@ -32,6 +35,7 @@ def _get_client():
     return _client
 
 
+# Generate an answer grounded in retrieved code chunks
 def generate_answer(query: str, results: List[Dict]) -> str:
     if not results:
         return "No matching code found. Try being more specific — mention function names, file names, or concepts from your repository."
@@ -42,12 +46,14 @@ def generate_answer(query: str, results: List[Dict]) -> str:
     return _call_llm(messages)
 
 
+# Generate an answer using the general-purpose system prompt (no code context required)
 def generate_general_answer(query: str, context: str = "") -> str:
     """Generate an answer using the general-purpose system prompt (no code context required)."""
     messages = assemble_general_messages(query, context)
     return _call_llm(messages)
 
 
+# Call the LLM with retry logic, return the response text
 def _call_llm(messages: List[Dict]) -> str:
     client = _get_client()
 

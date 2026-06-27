@@ -1,3 +1,5 @@
+// Header — top navigation bar with logo, sign-in link, and settings dropdown
+
 "use client";
 
 import Link from "next/link";
@@ -10,6 +12,7 @@ export function Header() {
   return (
     <header className="w-full border-b backdrop-blur-md" style={{ background: "color-mix(in srgb, var(--bg-secondary) 85%, transparent)", borderColor: "var(--border-subtle)" }}>
       <div className="mx-auto flex h-14 max-w-4xl items-center justify-between gap-3 px-4 sm:px-6">
+        {/* Logo and app name */}
         <Link href="/" className="flex min-w-0 items-center gap-2">
           <span className="text-base font-bold gradient-text">&lt;/&gt;</span>
           <span className="truncate text-base font-bold" style={{ color: "var(--text-primary)" }}>
@@ -18,6 +21,7 @@ export function Header() {
           </span>
         </Link>
 
+        {/* Right nav: back link, sign-in, settings */}
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           <Link
             href="/"
@@ -27,6 +31,7 @@ export function Header() {
             ← Back to site
           </Link>
 
+          {/* Sign-in button for unauthenticated users */}
           {!loading && !user && (
             <Link
               href="/login"

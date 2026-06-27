@@ -1,5 +1,7 @@
 "use client";
 
+// TrustStrip — scrolling trust bar showing tech stack logos
+
 const stack = [
   "FAISS", "BM25", "CrossEncoder", "RAGAS", "Next.js",
   "FastAPI", "OpenRouter", "AST Parser", "sentence-transformers", "shadcn/ui",

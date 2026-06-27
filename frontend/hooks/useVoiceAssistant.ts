@@ -1,3 +1,5 @@
+// useVoiceAssistant — speech recognition, TTS, and voice mode management
+
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
@@ -21,6 +23,7 @@ interface UseVoiceAssistantReturn {
   setOnQueryReady: (fn: ((query: string) => void) | null) => void;
 }
 
+// Singleton TTS provider
 let _tts: TTSProvider | null = null;
 function getTTS(): TTSProvider {
   if (!_tts) {
@@ -29,10 +32,12 @@ function getTTS(): TTSProvider {
   return _tts;
 }
 
+// Normalize whitespace in transcript
 function normalizeTranscript(value: string) {
   return value.replace(/\s+/g, " ").trim();
 }
 
+// Hook managing speech recognition, voice mode toggle, and TTS
 export function useVoiceAssistant(): UseVoiceAssistantReturn {
   const [voiceStateValue, setVoiceStateValue] = useState<VoiceState>("idle");
   const [transcript, setTranscript] = useState("");
@@ -40,6 +45,7 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
   const [isVoiceMode, setIsVoiceMode] = useState(false);
   const [supported, setSupported] = useState(true);
 
+  // Refs to avoid stale closures and hold mutable state
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const restartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -52,11 +58,13 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
   const interimTranscriptRef = useRef("");
   const isRecognizingRef = useRef(false);
 
+  // Sync state value with ref to allow access from callbacks
   const setVoiceState = useCallback((nextState: VoiceState) => {
     voiceStateRef.current = nextState;
     setVoiceStateValue(nextState);
   }, []);
 
+  // Clear all timers
   const cleanupTimers = useCallback(() => {
     if (silenceTimerRef.current) {
       clearTimeout(silenceTimerRef.current);
@@ -68,6 +76,7 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
     }
   }, []);
 
+  // Schedule restart of listening after a delay
   const scheduleListeningRestart = useCallback((delay: number) => {
     if (restartTimerRef.current) {
       clearTimeout(restartTimerRef.current);
@@ -78,6 +87,7 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
     }, delay);
   }, []);
 
+  // Stop recognition and detach handlers
   const stopRecognition = useCallback((abort = false) => {
     const recognition = recognitionRef.current;
     if (!recognition) return;
@@ -100,6 +110,7 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
     isRecognizingRef.current = false;
   }, []);
 
+  // Submit accumulated transcript after silence
   const submitTranscript = useCallback(() => {
     cleanupTimers();
 
@@ -118,6 +129,7 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
     onQueryReadyRef.current?.(readyQuery);
   }, [cleanupTimers, stopRecognition, setVoiceState]);
 
+  // Start the speech recognition engine
   const startListening = useCallback(() => {
     if (!supported || isRecognizingRef.current) return;
 
@@ -139,6 +151,7 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
     recognition.interimResults = true;
     recognition.lang = "en-US";
 
+    // Handle recognition results — separate final and interim text
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       let finalText = "";
       let interimText = "";
@@ -162,6 +175,7 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
       interimTranscriptRef.current = normalizeTranscript(interimText);
       setInterimTranscript(interimTranscriptRef.current);
 
+      // Reset silence timer — submit after pause in speech
       if (silenceTimerRef.current) {
         clearTimeout(silenceTimerRef.current);
       }
@@ -169,6 +183,7 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
       silenceTimerRef.current = setTimeout(submitTranscript, finalText ? 700 : 1400);
     };
 
+    // Handle recognition errors
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       if (event.error === "not-allowed" || event.error === "service-not-allowed") {
         cleanupTimers();
@@ -187,6 +202,7 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
       }
     };
 
+    // Restart listening if voice mode is still active
     recognition.onend = () => {
       isRecognizingRef.current = false;
       if (recognitionRef.current === recognition) {
@@ -216,6 +232,7 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
     supported,
   ]);
 
+  // Keep refs in sync
   useEffect(() => {
     startListeningRef.current = startListening;
   }, [startListening]);
@@ -224,6 +241,7 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
     scheduleListeningRestartRef.current = scheduleListeningRestart;
   }, [scheduleListeningRestart]);
 
+  // Stop listening and reset
   const stopListening = useCallback(() => {
     cleanupTimers();
     stopRecognition(true);
@@ -234,6 +252,7 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
     setVoiceState("idle");
   }, [cleanupTimers, setVoiceState, stopRecognition]);
 
+  // Stop voice mode entirely
   const stopVoiceMode = useCallback(() => {
     voiceModeRef.current = false;
     setIsVoiceMode(false);
@@ -247,6 +266,7 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
     setVoiceState("idle");
   }, [cleanupTimers, setVoiceState, stopRecognition]);
 
+  // Start continuous voice mode
   const startVoiceMode = useCallback(() => {
     if (!supported) return;
     voiceModeRef.current = true;
@@ -254,6 +274,7 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
     startListening();
   }, [startListening, supported]);
 
+  // Toggle voice mode on/off
   const toggleVoiceMode = useCallback(() => {
     if (voiceModeRef.current) {
       stopVoiceMode();
@@ -262,6 +283,7 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
     }
   }, [startVoiceMode, stopVoiceMode]);
 
+  // Speak text using TTS, then resume listening if in voice mode
   const speak = useCallback(async (text: string): Promise<void> => {
     cleanupTimers();
     stopRecognition(true);
@@ -295,6 +317,7 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
     }
   }, [cleanupTimers, setVoiceState, stopRecognition]);
 
+  // Stop TTS and return to listening/idle
   const stopSpeaking = useCallback(() => {
     getTTS().stop();
 
@@ -306,10 +329,12 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
     }
   }, [setVoiceState]);
 
+  // Set callback for when a voice query is ready to submit
   const setOnQueryReady = useCallback((fn: ((query: string) => void) | null) => {
     onQueryReadyRef.current = fn;
   }, []);
 
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       voiceModeRef.current = false;

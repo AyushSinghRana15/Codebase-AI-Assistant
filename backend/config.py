@@ -3,12 +3,13 @@
 
 import os
 
+# Resolve project root to an absolute path
 _base = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 if _base == "/":
     _base = os.getcwd()
 PROJECT_ROOT = _base
 
-# Embedding
+# Embedding model — lightweight 384-dim model for fast vector search
 EMBED_MODEL      = "sentence-transformers/all-MiniLM-L6-v2"
 EMBED_BATCH_SIZE = 64
 

@@ -1,6 +1,9 @@
+// Browser TTS provider — uses the Web Speech API for speech synthesis
+
 import type { TTSProvider } from "../types";
 import { stripMarkdown } from "../strip-markdown";
 
+// Load available voices from the browser
 function loadVoices(): SpeechSynthesisVoice[] {
   const voices = window.speechSynthesis.getVoices();
   if (voices.length) return voices;
@@ -8,6 +11,7 @@ function loadVoices(): SpeechSynthesisVoice[] {
   return [];
 }
 
+// Pick the best English voice (prefer non-Microsoft for quality)
 function pickBestVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
   if (!voices.length) return null;
 
@@ -24,6 +28,7 @@ function pickBestVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | n
 
 let voicesPromise: Promise<SpeechSynthesisVoice[]> | null = null;
 
+// Ensure voices are loaded, with a 2s fallback timeout
 function ensureVoices(): Promise<SpeechSynthesisVoice[]> {
   if (voicesPromise) return voicesPromise;
 
@@ -54,6 +59,7 @@ function ensureVoices(): Promise<SpeechSynthesisVoice[]> {
   return voicesPromise;
 }
 
+// Factory that creates a browser-based TTS provider
 export function createBrowserTTSProvider(): TTSProvider {
   let speaking = false;
 

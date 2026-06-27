@@ -1,7 +1,10 @@
+// LoadingState — animated loading placeholder with rotating status messages
+
 "use client";
 
 import { useEffect, useState } from "react";
 
+// Rotating status messages to indicate progress stages
 const MESSAGES = [
   "Searching codebase...",
   "Retrieving relevant chunks...",
@@ -14,6 +17,7 @@ const MESSAGES = [
 export function LoadingState() {
   const [messageIndex, setMessageIndex] = useState(0);
 
+  // Cycle through messages every 1.5s
   useEffect(() => {
     const interval = setInterval(() => {
       setMessageIndex((prev) => (prev + 1) % MESSAGES.length);
@@ -29,6 +33,7 @@ export function LoadingState() {
         background: "var(--bg-card)",
       }}
     >
+      {/* Animated dot and current status message */}
       <div className="flex items-center gap-2 mb-4">
         <div className="relative w-2 h-2">
           <span className="absolute inset-0 rounded-full bg-[#3b82f6] animate-ping opacity-40" />
@@ -38,6 +43,7 @@ export function LoadingState() {
           {MESSAGES[messageIndex]}
         </span>
       </div>
+      {/* Skeleton lines */}
       <div className="space-y-3">
         <div className="h-3 rounded-full w-full animate-pulse" style={{ background: "var(--border-subtle)" }} />
         <div className="h-3 rounded-full w-[90%] animate-pulse" style={{ background: "var(--border-subtle)" }} />

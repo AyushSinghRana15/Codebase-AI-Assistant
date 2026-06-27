@@ -1,3 +1,5 @@
+# worker.py — Background worker that ingests a repo, chunks files, and builds the vector store
+
 import sys
 import json
 import os
@@ -9,11 +11,13 @@ MAX_FILE_SIZE = 1024 * 1024
 MAX_TOTAL_CHUNKS = 3000
 
 
+# Write ingestion progress to a JSON status file (polled by the API)
 def update_status(status_file: str, data: dict):
     with open(status_file, "w") as f:
         json.dump(data, f)
 
 
+# Main ingestion pipeline: clone → chunk → save chunks.json → build vector store
 def ingest_main(task_id: str, status_file: str, repo_url: str, branch: str | None, user_id: str | None):
     update_status(status_file, {"status": "cloning", "repo_url": repo_url})
 
@@ -131,6 +135,7 @@ def ingest_main(task_id: str, status_file: str, repo_url: str, branch: str | Non
     })
 
 
+# CLI entry point: takes args from sys.argv
 def main():
     ingest_main(
         task_id=sys.argv[1],

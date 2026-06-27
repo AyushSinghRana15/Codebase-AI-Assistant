@@ -1,6 +1,9 @@
+# language_detector.py — Detect programming language and natural language from user queries
+
 import re
 from typing import Dict
 
+# Regex patterns identifying each programming language
 LANG_PATTERNS: Dict[str, list] = {
     "python": [r"\bdef \w+\(", r"\bimport \w+", r"\bclass \w+", r"\breturn\b", r"\bif __name__"],
     "javascript": [r"\bfunction\b", r"\bconst \w+ =", r"\blet \w+ =", r"\bvar \w+ =", r"=>"],
@@ -10,12 +13,14 @@ LANG_PATTERNS: Dict[str, list] = {
     "rust": [r"\bfn \w+", r"\blet mut\b", r"\bimpl \w+", r"\bpub \w+"],
 }
 
+# Words that strongly indicate a natural-language (non-code) query
 NATURAL_LANG_TRIGGERS = [
     "how", "what", "why", "where", "when", "which", "who",
     "explain", "describe", "find", "show", "tell", "is", "are", "does", "do",
     "can you", "could you", "write", "create", "implement", "fix", "debug",
 ]
 
+# Common English stop words filtered before language detection
 STOP_LANG_WORDS = {
     "the", "a", "an", "is", "are", "was", "were", "be", "been",
     "have", "has", "had", "do", "does", "did", "will", "would",
@@ -30,6 +35,7 @@ STOP_LANG_WORDS = {
 }
 
 
+# Detect a programming language referenced in the query via code patterns
 def detect_programming_language(query: str) -> str | None:
     q = query.strip()
     for lang, patterns in LANG_PATTERNS.items():
@@ -38,6 +44,7 @@ def detect_programming_language(query: str) -> str | None:
     return None
 
 
+# Detect the natural language of the query (currently returns "en" for all)
 def detect_natural_language(query: str) -> str:
     q = query.strip().lower()
     q_clean = re.sub(r'[^\w\s]', '', q)
@@ -59,6 +66,7 @@ def detect_natural_language(query: str) -> str:
     return "en"
 
 
+# Combined language detection — returns both natural and programming language info
 def detect_language(query: str) -> dict:
     return {
         "query": query,

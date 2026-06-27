@@ -1,3 +1,5 @@
+// SourcesPanel — expandable list of source chunks with relevance scores
+
 "use client";
 
 import { useState } from "react";
@@ -8,6 +10,7 @@ interface Props {
   sources: SourceReference[];
 }
 
+// Color-code score thresholds
 function getScoreColor(score: number): string {
   if (score < 0.5) return "text-[#16a34a]";
   if (score < 1.0) return "text-[#ca8a04]";
@@ -21,6 +24,7 @@ export function SourcesPanel({ sources }: Props) {
 
   return (
     <div className="w-full">
+      {/* Expandable header showing source count */}
       <button
         onClick={() => setExpanded(!expanded)}
         className="flex items-center gap-2 w-full text-left px-3 py-2.5 rounded-lg transition-colors hover:opacity-80"
@@ -36,6 +40,7 @@ export function SourcesPanel({ sources }: Props) {
         </span>
       </button>
 
+      {/* Expanded source list */}
       {expanded && (
         <div className="mt-2 space-y-2 pl-1">
           {sources.map((source, idx) => (

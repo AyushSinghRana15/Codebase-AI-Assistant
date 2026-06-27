@@ -1,3 +1,5 @@
+// Footer — site-wide footer with nav links and branding
+
 import Link from "next/link";
 
 const navLinks = [

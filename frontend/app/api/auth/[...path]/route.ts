@@ -1,8 +1,11 @@
+// Auth API route — dynamic proxy for auth endpoints (GET, PUT) to backend
+
 import { NextRequest, NextResponse } from "next/server";
 
 const BACKEND_URL = process.env.BACKEND_URL;
 const BACKEND_KEY = process.env.BACKEND_API_KEY;
 
+// GET /api/auth/[...path] — proxy to backend auth endpoints
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
@@ -11,6 +14,7 @@ export async function GET(
   return proxyRequest(req, path, "GET");
 }
 
+// PUT /api/auth/[...path] — proxy to backend auth endpoints with body
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
@@ -19,6 +23,7 @@ export async function PUT(
   return proxyRequest(req, path, "PUT");
 }
 
+// Generic proxy — forwards auth requests to backend with auth headers and 15s timeout
 async function proxyRequest(req: NextRequest, path: string[], method: string) {
   try {
     if (!BACKEND_URL) {
@@ -31,6 +36,7 @@ async function proxyRequest(req: NextRequest, path: string[], method: string) {
     const queryString = req.nextUrl.searchParams.toString();
     const url = `${BACKEND_URL}/auth/${path.join("/")}${queryString ? `?${queryString}` : ""}`;
 
+    // Forward Authorization header and API key
     const headers: Record<string, string> = {};
     const authHeader = req.headers.get("authorization");
     if (authHeader) headers["Authorization"] = authHeader;

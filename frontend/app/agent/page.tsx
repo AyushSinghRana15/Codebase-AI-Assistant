@@ -1,3 +1,5 @@
+// Home — main agent page with chat, voice mode, and GitHub ingestion
+
 "use client";
 
 import { Header } from "@/components/Header";
@@ -16,6 +18,7 @@ import { AudioLines, Bot, Loader2, Mic, Square, User, Volume2, LogIn } from "luc
 import { useEffect, useCallback, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
+// Voice state display config — label, color, and icon per state
 const VOICE_STATUS: Record<
   VoiceState,
   { label: string; tone: string; icon: typeof Mic }
@@ -26,6 +29,7 @@ const VOICE_STATUS: Record<
   speaking: { label: "Speaking", tone: "#10a37f", icon: Volume2 },
 };
 
+// Assistant avatar icon
 function AssistantAvatar() {
   return (
     <div
@@ -40,6 +44,7 @@ function AssistantAvatar() {
   );
 }
 
+// User message bubble — right-aligned with avatar
 function UserBubble({ children }: { children: string }) {
   return (
     <div className="flex justify-end">
@@ -64,6 +69,7 @@ function UserBubble({ children }: { children: string }) {
   );
 }
 
+// Assistant message wrapper — avatar + content
 function AssistantMessage({ children }: { children: ReactNode }) {
   return (
     <div className="flex items-start gap-3">
@@ -73,6 +79,7 @@ function AssistantMessage({ children }: { children: ReactNode }) {
   );
 }
 
+// Initial empty state — shown when no query has been submitted
 function EmptyState() {
   return (
     <section className="flex min-h-[34vh] flex-col items-center justify-center text-center">
@@ -87,6 +94,7 @@ function EmptyState() {
   );
 }
 
+// Voice mode status bar — shows microphone/listening/speaking indicator
 function VoiceModeStatus({
   voiceState,
   isVoiceMode,
@@ -140,6 +148,7 @@ function VoiceModeStatus({
   );
 }
 
+// Main agent page — orchestrates query input, result display, voice mode, and GitHub ingestion
 export default function Home() {
   const { query, setQuery, submittedQuery, result, state, error, submit, reset } = useAsk();
   const { user, signIn } = useAuth();
@@ -156,8 +165,10 @@ export default function Home() {
   const prevSpokenAnswerRef = useRef<string | null>(null);
   const prevSpokenErrorRef = useRef<string | null>(null);
 
+  // Status message shown during voice-triggered repo ingestion
   const [voiceIngestStatus, setVoiceIngestStatus] = useState<string | null>(null);
 
+  // Handle voice query — detects "add repo" commands or submits as normal query
   const handleVoiceQuery = useCallback(async (voiceQuery: string) => {
     const addRepo = parseVoiceAddRepo(voiceQuery);
 
@@ -235,11 +246,13 @@ export default function Home() {
     void submit(voiceQuery);
   }, [submit, user, speak]);
 
+  // Register voice query handler with the voice assistant hook
   useEffect(() => {
     setOnQueryReady(handleVoiceQuery);
     return () => setOnQueryReady(null);
   }, [handleVoiceQuery, setOnQueryReady]);
 
+  // Speak answer aloud in voice mode when a new result arrives
   useEffect(() => {
     if (state !== "success" || !result?.answer || !isVoiceMode) return;
     if (result.answer === prevSpokenAnswerRef.current) return;
@@ -248,6 +261,7 @@ export default function Home() {
     void speak(result.answer);
   }, [isVoiceMode, result?.answer, speak, state]);
 
+  // Speak error aloud in voice mode
   useEffect(() => {
     if (state !== "error" || !error || !isVoiceMode) return;
     if (error === prevSpokenErrorRef.current) return;

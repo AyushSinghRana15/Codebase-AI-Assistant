@@ -1,5 +1,7 @@
 "use client";
 
+// Services — overview of service offerings with cards
+
 import Link from "next/link";
 
 const services = [

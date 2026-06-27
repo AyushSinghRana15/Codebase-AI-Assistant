@@ -1,5 +1,7 @@
 "use client";
 
+// Navbar — top navigation bar with links, mobile menu, and theme-aware styling
+
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { SettingsDropdown } from "./SettingsDropdown";

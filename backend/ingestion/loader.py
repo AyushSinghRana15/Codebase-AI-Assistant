@@ -1,7 +1,10 @@
+# loader.py — Walk a repository directory and yield supported source files
+
 import os
 from ingestion.utils import detect_language, is_excluded, relative_path, MAX_FILE_SIZE
 
 
+# Walk repo tree, skip excluded dirs/files, yield (full_path, rel_path, language)
 def walk_repo(root_path):
     root_path = os.path.abspath(root_path)
     for dirpath, dirnames, filenames in os.walk(root_path):
@@ -23,6 +26,7 @@ def walk_repo(root_path):
             yield (full_path, rel_path, language)
 
 
+# Read a file's text content (UTF-8); returns None on decode/OS errors
 def read_file(path):
     try:
         with open(path, "r", encoding="utf-8") as f:

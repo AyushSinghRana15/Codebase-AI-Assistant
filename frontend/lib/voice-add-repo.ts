@@ -1,5 +1,8 @@
+// Voice-add-repo — parses spoken commands to detect GitHub repo ingestion requests
+
 const OWN_GITHUB_URL = "https://github.com/AyushSinghRana15/Codebase-AI-Assistant";
 
+// Patterns to detect "add repo" intent in voice transcripts
 const ADD_REPO_PATTERNS = [
   /add\s+(?:the\s+)?(?:repo(?:sitory)?|project|codebase)\s+(?:of\s+)?(?:this\s+)?(?:project|repo(?:sitory)?)?/i,
   /add\s+(?:a\s+|this\s+)?(?:repo(?:sitory|s))\s+(?:called\s+|named\s+)?/i,
@@ -8,8 +11,10 @@ const ADD_REPO_PATTERNS = [
   /start\s+(?:ingesting|indexing)\s+(?:a\s+)?(?:repo(?:sitory)|project)/i,
 ];
 
+// Match full GitHub URLs
 const URL_PATTERN = /https?:\/\/github\.com\/[\w.-]+\/[\w.-]+/i;
 
+// Match owner/repo pattern
 const OWNER_REPO_PATTERN = /([\w.-]+)\/([\w.-]+)/;
 
 export interface VoiceAddRepoResult {
@@ -19,14 +24,17 @@ export interface VoiceAddRepoResult {
   needsLogin: boolean;
 }
 
+// Parse a voice transcript to determine if the user wants to add a repo
 export function parseVoiceAddRepo(transcript: string): VoiceAddRepoResult {
   const trimmed = transcript.trim().toLowerCase();
 
+  // Check if transcript matches any add-repo pattern
   const matchesAdd = ADD_REPO_PATTERNS.some((p) => p.test(trimmed));
   if (!matchesAdd) {
     return { detected: false, repoUrl: null, label: null, needsLogin: false };
   }
 
+  // Try to extract a full GitHub URL
   const urlMatch = trimmed.match(URL_PATTERN);
   if (urlMatch) {
     return {
@@ -37,6 +45,7 @@ export function parseVoiceAddRepo(transcript: string): VoiceAddRepoResult {
     };
   }
 
+  // "this" refers to the project's own repo
   if (/\bthis\b/.test(trimmed)) {
     return {
       detected: true,
@@ -46,6 +55,7 @@ export function parseVoiceAddRepo(transcript: string): VoiceAddRepoResult {
     };
   }
 
+  // Try to infer owner/repo from remaining text
   const afterAdd = trimmed.replace(/add\s+(?:the\s+)?(?:repo(?:sitory)?|project|codebase)\s+(?:of\s+)?/i, "").trim();
   if (afterAdd) {
     const ownerRepoMatch = afterAdd.match(OWNER_REPO_PATTERN);
@@ -59,6 +69,7 @@ export function parseVoiceAddRepo(transcript: string): VoiceAddRepoResult {
       };
     }
 
+    // Fall back to interpreting words as owner/repo
     const words = afterAdd.replace(/[^a-zA-Z0-9\s-]/g, "").split(/\s+/).filter(Boolean);
     if (words.length >= 2) {
       const owner = words[0].toLowerCase();
