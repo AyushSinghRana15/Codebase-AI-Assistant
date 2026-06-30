@@ -47,7 +47,7 @@ export function Hero() {
           </h1>
 
           <p className="text-lg max-w-xl mb-8 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-            CodeBaseAI is a RAG-powered code assistant that ingests repositories,
+            RepoSplit is a RAG-powered code assistant that ingests repositories,
             understands their structure via AST parsing, and answers natural language
             questions with precise file citations and zero hallucination.
           </p>

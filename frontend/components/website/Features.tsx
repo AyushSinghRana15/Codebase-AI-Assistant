@@ -81,7 +81,7 @@ export function Features() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-16 scroll-reveal">
           <p className="text-sm font-mono text-[#3b82f6] mb-3 tracking-wider uppercase">
-            Why CodeBaseAI
+            Why RepoSplit
           </p>
           <h2 className="text-3xl sm:text-4xl font-bold mb-4" style={{ color: "var(--text-primary)" }}>
             Built for understanding, not just search

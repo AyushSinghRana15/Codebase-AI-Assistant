@@ -24,7 +24,7 @@ export function Footer() {
             <Link href="/" className="flex items-center gap-2 mb-3">
               <span className="text-lg font-bold gradient-text">&lt;/&gt;</span>
               <span className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>
-                CodeBase<span className="text-[#3b82f6]">AI</span>
+                RepoSplit
               </span>
             </Link>
             <p className="text-sm" style={{ color: "var(--text-muted)" }}>
@@ -74,7 +74,7 @@ export function Footer() {
 
         <div className="pt-8 border-t flex flex-col sm:flex-row items-center justify-between gap-4" style={{ borderColor: "var(--border-subtle)" }}>
           <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-            &copy; 2026 CodeBaseAI. All rights reserved.
+            &copy; 2026 RepoSplit. All rights reserved.
           </p>
           <p className="text-xs" style={{ color: "var(--text-muted)" }}>
             Production-ready RAG for code understanding.

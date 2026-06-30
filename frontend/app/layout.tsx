@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 
 // Page metadata
 export const metadata: Metadata = {
-  title: "CodeBase AI Assistant",
+  title: "RepoSplit",
   description: "Intelligent RAG system for codebase understanding",
 };
 
@@ -30,7 +30,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   if (typeof window !== "undefined") {
-    console.log("%c🥚 CodeBase AI by Ayush Singh 🥚", "font-size:20px; font-weight:bold; color:#8b5cf6;");
+    console.log("%c🥚 RepoSplit by Ayush Singh 🥚", "font-size:20px; font-weight:bold; color:#8b5cf6;");
   }
   return (
     <html lang="en" suppressHydrationWarning>

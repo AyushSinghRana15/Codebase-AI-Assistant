@@ -1,4 +1,4 @@
-# CodeBase AI Assistant
+# RepoSplit
 
 > Ask natural language questions about any codebase. Get code-grounded answers with file citations.
 >
@@ -227,7 +227,7 @@ Target: 41/48 for demo readiness.
 ## Project Structure
 
 ```
-CodeBase AI Assistant/
+RepoSplit/
 ├── api/                    # FastAPI layer
 │   ├── app.py            # Routes: /ask, /health, /stats, /ingest/github, /auth/*
 │   ├── auth.py           # Supabase JWT verification (active)

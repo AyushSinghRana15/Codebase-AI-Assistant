@@ -32,7 +32,7 @@ export function About() {
               <span className="gradient-text">zero hallucination.</span>
             </h2>
             <p className="leading-relaxed mb-8" style={{ color: "var(--text-secondary)" }}>
-              CodeBaseAI is a production-ready RAG system for code understanding.
+              RepoSplit is a production-ready RAG system for code understanding.
               It ingests any Python repository, parses it with AST-aware chunking,
               builds a hybrid search index (FAISS + BM25), and answers natural
               language questions with precise file citations. Every answer is

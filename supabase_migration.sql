@@ -1,5 +1,5 @@
 -- ============================================================================
--- CodeBase AI Assistant — Supabase Database Schema
+-- RepoSplit — Supabase Database Schema
 -- Normalized to 3NF with RLS, indexes, and constraints.
 -- Run this in Supabase SQL Editor.
 -- ============================================================================

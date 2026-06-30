@@ -1,6 +1,6 @@
 # API — FastAPI Backend
 
-REST API server for the CodeBase AI Assistant.
+REST API server for RepoSplit.
 
 | File | Description |
 |------|-------------|

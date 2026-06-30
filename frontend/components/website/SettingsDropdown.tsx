@@ -33,7 +33,7 @@ export function SettingsDropdown() {
 
   const initials = profile?.name
     ? profile.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
-    : "CB";
+    : "RS";
 
   return (
     <div ref={ref} className="relative">
@@ -80,7 +80,7 @@ export function SettingsDropdown() {
               )}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold truncate" style={{ color: "var(--text-primary)" }}>
-                  {profile?.name || "CodeBaseAI"}
+                  {profile?.name || "RepoSplit"}
                 </p>
                 <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>
                   {profile?.email || (user ? "Signed in" : "AI Engineer")}

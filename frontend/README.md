@@ -1,6 +1,6 @@
 # Frontend — Next.js Application
 
-Next.js 16 TypeScript frontend for the CodeBase AI Assistant.
+Next.js 16 TypeScript frontend for RepoSplit.
 
 ## Quick Start
 

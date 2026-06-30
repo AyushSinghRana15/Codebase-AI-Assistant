@@ -1,4 +1,4 @@
-# CodeBase AI Assistant — Development Documentation
+# RepoSplit — Development Documentation
 
 > **Purpose:** This file tracks every implementation step, decision rationale, and code changes in detail.
 > **Update Interval:** Updated after each major step (Step 1, Step 2, etc.) and when significant changes are made.
@@ -17,7 +17,7 @@
 
 ## Project Overview
 
-**Goal:** Build a RAG-based CodeBase AI Assistant that enables natural language querying over code repositories.
+**Goal:** Build a RAG-based RepoSplit that enables natural language querying over code repositories.
 
 **Architecture:**
 ```
@@ -1714,7 +1714,7 @@ python3 eval/run_eval.py
 
 ## Final Status
 
-**Project:** CodeBase AI Assistant  
+**Project:** RepoSplit  
 **Status:** ✅ Production-Ready (Demo-Quality)  
 **Version:** 1.0.0  
 
@@ -2000,7 +2000,7 @@ pip install rank-bm25 ragas datasets langchain-openai
 
 ## Final Status (After Elite Upgrade)
 
-**Project:** CodeBase AI Assistant  
+**Project:** RepoSplit  
 **Version:** 2.0.0 (Elite Upgrade Complete)  
 **Status:** ✅ Production-Ready + Code-Intelligent  
 
@@ -2121,21 +2121,21 @@ npm run dev
 
 ---
 
-## Step 5: CodeBaseAI Marketing Website (Next.js Landing Page)
+## Step 5: RepoSplit Marketing Website (Next.js Landing Page)
 
 **Date:** 2026-05-01  
 **Status:** ✅ Complete  
-**Goal:** Build a product marketing website for CodeBaseAI — the RAG-powered code understanding assistant — as a `/website` route within the existing Next.js frontend.
+**Goal:** Build a product marketing website for RepoSplit — the RAG-powered code understanding assistant — as a `/website` route within the existing Next.js frontend.
 
 ### 5.1 What This Project Is
 
-CodeBaseAI is a **production-ready RAG system for code understanding**. You ingest any Python repository (local or GitHub URL), it parses it with AST-aware chunking, builds a hybrid search index (FAISS + BM25), and answers natural language questions with precise file citations and zero hallucination.
+RepoSplit is a **production-ready RAG system for code understanding**. You ingest any Python repository (local or GitHub URL), it parses it with AST-aware chunking, builds a hybrid search index (FAISS + BM25), and answers natural language questions with precise file citations and zero hallucination.
 
 The website showcases this product — its architecture, features, demo queries, and a direct path to try the assistant at `/`.
 
 ### 5.2 Design Approach
 
-Built inside the existing `frontend/` Next.js 16 app with Tailwind v4. Reuses existing globals.css tokens and adds CodeBaseAI-specific design tokens.
+Built inside the existing `frontend/` Next.js 16 app with Tailwind v4. Reuses existing globals.css tokens and adds RepoSplit-specific design tokens.
 
 **Design System:**
 - Background: `#080808` (dark), `#0f0f0f` (cards), `#141414` (elevated)
@@ -2466,7 +2466,7 @@ npm run dev
 
 ## Final Status (Updated: 2026-05-07)
 
-**Project:** CodeBase AI Assistant  
+**Project:** RepoSplit  
 **Version:** 2.1.0 (UI Fixes + Ingestion Improvements)  
 **Status:** ✅ Production-Ready + Code-Intelligent  
 
@@ -2597,7 +2597,7 @@ CREATE TABLE user_repos (
 
 ## Final Status (Updated: 2026-05-12)
 
-**Project:** CodeBase AI Assistant  
+**Project:** RepoSplit  
 **Version:** 2.2.0 (Google OAuth + Personalization)  
 **Status:** ✅ Production-Ready + Code-Intelligent + Personalized  
 

@@ -1,4 +1,4 @@
-// WebsitePage — landing page for CodeBaseAI marketing site
+// WebsitePage — landing page for RepoSplit marketing site
 
 import type { Metadata } from "next";
 import {
@@ -16,7 +16,7 @@ import {
 
 // Page metadata
 export const metadata: Metadata = {
-  title: "CodeBaseAI — Ask Your Codebase Anything. Get Answers You Can Trust.",
+  title: "RepoSplit — Ask Your Codebase Anything. Get Answers You Can Trust.",
   description:
     "RAG-powered code assistant that ingests GitHub repos, parses with AST-aware chunking, and answers natural-language questions with precise file citations and zero hallucination.",
 };

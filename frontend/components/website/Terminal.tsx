@@ -5,7 +5,7 @@
 import { useEffect, useState } from "react";
 
 const terminalLines = [
-  { text: '$ codebaseai --repo github.com/pallets/flask', delay: 800 },
+  { text: '$ reposplit --repo github.com/pallets/flask', delay: 800 },
   { text: "→ Cloning repository...", delay: 1200 },
   { text: "→ AST parsing: 142 files, 387 chunks", delay: 1500 },
   { text: "→ Generating embeddings (384-dim)...", delay: 1000 },
@@ -65,7 +65,7 @@ export function Terminal() {
         <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
         <div className="w-3 h-3 rounded-full bg-[#28c840]" />
         <span className="ml-2 text-xs font-mono" style={{ color: "var(--text-muted)" }}>
-          codebaseai
+          reposplit
         </span>
       </div>
       <div className="p-5 font-mono text-sm leading-relaxed min-h-[280px]">

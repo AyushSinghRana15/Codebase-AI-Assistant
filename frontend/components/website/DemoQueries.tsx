@@ -73,7 +73,7 @@ export function DemoQueries() {
             Real queries, grounded answers
           </h2>
           <p className="max-w-2xl mx-auto" style={{ color: "var(--text-secondary)" }}>
-            These are actual responses from CodeBaseAI running against its own codebase —
+            These are actual responses from RepoSplit running against its own codebase —
             with citations, confidence scores, and latency.
           </p>
         </div>
@@ -113,7 +113,7 @@ export function DemoQueries() {
               <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
               <div className="w-3 h-3 rounded-full bg-[#28c840]" />
               <span className="ml-2 text-xs font-mono" style={{ color: "var(--text-muted)" }}>
-                codebaseai — Live Demo
+                reposplit — Live Demo
               </span>
             </div>
 

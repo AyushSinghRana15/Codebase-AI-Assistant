@@ -45,7 +45,7 @@ export function QueryInput({
     ? "Listening..."
     : isVoiceMode
     ? "Voice is ready"
-    : "Message CodeBaseAI";
+    : "Message RepoSplit";
 
   // Show interim transcript when listening
   const displayValue = voiceState === "listening"

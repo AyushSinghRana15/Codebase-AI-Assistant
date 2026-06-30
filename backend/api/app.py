@@ -56,7 +56,7 @@ logger = logging.getLogger(__name__)
 
 # FastAPI application setup with rate limiting and CORS
 app = FastAPI(
-    title="CodeBase AI Assistant",
+    title="RepoSplit",
     description="Natural language Q&A over code repositories",
     version="1.2.0"
 )

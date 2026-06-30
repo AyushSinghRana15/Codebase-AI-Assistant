@@ -1,5 +1,5 @@
 ---
-title: CodeBase AI Assistant Backend
+title: RepoSplit Backend
 emoji: 🧠
 colorFrom: blue
 colorTo: purple
@@ -8,9 +8,9 @@ pinned: false
 license: mit
 ---
 
-# CodeBase AI Assistant — Backend
+# RepoSplit — Backend
 
-FastAPI backend for the CodeBase AI Assistant. Provides the RAG pipeline: ingest repos, ask questions, get code-grounded answers.
+FastAPI backend for RepoSplit. Provides the RAG pipeline: ingest repos, ask questions, get code-grounded answers.
 
 ## Environment Variables
 
